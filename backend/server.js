@@ -1,0 +1,147 @@
+require('dotenv').config();
+require('express-async-errors');
+const express = require('express');
+const cors = require('cors');
+const cron = require('node-cron');
+const connectDB = require('./config/database');
+const basketRoutes = require('./routes/baskets');
+const { rebalanceBasket } = require('./services/rebalanceService');
+const { testEmailConnection } = require('./services/emailService');
+const Basket = require('./models/Basket');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Connect to database
+connectDB();
+
+// Routes
+app.use('/api/baskets', basketRoutes);
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'Server is running', timestamp: new Date() });
+});
+
+// Initialize baskets on startup (if they don't exist)
+const initializeBaskets = async () => {
+  try {
+    const basketCount = await Basket.countDocuments();
+    if (basketCount === 0) {
+      const baskets = [
+        {
+          name: 'Bluechip Giants',
+          description: 'Top 10 large-cap companies with strong market presence',
+          category: 'Market Cap Based',
+          theme: 'Large Cap',
+          stocks: [],
+          subscribers: [],
+          nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        },
+        {
+          name: 'Midcap Momentum',
+          description: 'Promising mid-cap companies with growth potential',
+          category: 'Market Cap Based',
+          theme: 'Mid Cap',
+          stocks: [],
+          subscribers: [],
+          nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        },
+        {
+          name: 'Smallcap Leaders',
+          description: 'Quality small-cap companies with high growth prospects',
+          category: 'Market Cap Based',
+          theme: 'Small Cap',
+          stocks: [],
+          subscribers: [],
+          nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        },
+        {
+          name: 'Tech Innovators',
+          description: 'Best tech and IT companies driving digital transformation',
+          category: 'Thematic',
+          theme: 'Technology',
+          stocks: [],
+          subscribers: [],
+          nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        },
+        {
+          name: 'Finance Leaders',
+          description: 'Top financial institutions with strong ROE',
+          category: 'Thematic',
+          theme: 'Finance',
+          stocks: [],
+          subscribers: [],
+          nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        },
+        {
+          name: 'Healthcare Growth',
+          description: 'Healthcare and pharma companies with strong growth',
+          category: 'Thematic',
+          theme: 'Healthcare',
+          stocks: [],
+          subscribers: [],
+          nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        }
+      ];
+
+      await Basket.insertMany(baskets);
+      console.log('Baskets initialized successfully');
+    }
+  } catch (error) {
+    console.error('Error initializing baskets:', error);
+  }
+};
+
+// Scheduler for automatic rebalancing (every 30 days at 9:30 AM)
+const scheduleRebalancing = () => {
+  // Run every day at 9:30 AM IST to check if rebalancing is needed
+  cron.schedule('30 9 * * *', async () => {
+    console.log('Running scheduled rebalance check...');
+    try {
+      const baskets = await Basket.find();
+      for (const basket of baskets) {
+        if (new Date() >= basket.nextRebalanceDate) {
+          console.log(`Rebalancing basket: ${basket.name}`);
+          await rebalanceBasket(basket._id, false);
+        }
+      }
+    } catch (error) {
+      console.error('Error in scheduled rebalance:', error);
+    }
+  });
+
+  console.log('Rebalance scheduler initialized (9:30 AM daily check)');
+};
+
+// Start server
+const startServer = async () => {
+  try {
+    await initializeBaskets();
+    scheduleRebalancing();
+    await testEmailConnection();
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
+
+// Error handling
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ message: err.message });
+});
+
+module.exports = app;
