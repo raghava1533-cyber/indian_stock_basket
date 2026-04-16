@@ -129,6 +129,24 @@ When Root Directory = `backend`, Render looks in the right place.
 
 ---
 
+## 🔄 Alternative Fix (If Root Directory is already `.`)
+
+If your Root Directory is already set to `.` (dot), use this configuration instead:
+
+```
+Root Directory: . (dot)
+Build Command: cd backend && npm install
+Start Command: cd backend && npm start
+```
+
+This tells Render to:
+1. Start in project root (.)
+2. Change into backend folder
+3. Run npm install there
+4. Run npm start there
+
+This is equivalent to setting Root Directory to `backend`.
+
 ## 🆘 Troubleshooting
 
 ### Still seeing "Could not read package.json"?
