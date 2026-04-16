@@ -17,10 +17,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Connect to database
-connectDB();
-
-// Routes
+// Routes (will be started after DB connection)
 app.use('/api/baskets', basketRoutes);
 
 // Health check
@@ -122,8 +119,17 @@ const scheduleRebalancing = () => {
 // Start server
 const startServer = async () => {
   try {
+    console.log('Connecting to MongoDB...');
+    await connectDB();
+    console.log('MongoDB connection established');
+
+    console.log('Initializing baskets...');
     await initializeBaskets();
+    
+    console.log('Setting up rebalance scheduler...');
     scheduleRebalancing();
+    
+    console.log('Testing email connection...');
     await testEmailConnection();
 
     app.listen(PORT, () => {
@@ -131,7 +137,7 @@ const startServer = async () => {
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('Failed to start server:', error.message);
     process.exit(1);
   }
 };
