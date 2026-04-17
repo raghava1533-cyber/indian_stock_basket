@@ -480,6 +480,7 @@ router.get('/:id/stocks', async (req, res) => {
     const YAHOO_TICKER_MAP = {
       'DEEPAKNITRITE': 'DEEPAKNTR',  // Yahoo uses DEEPAKNTR.NS
       'MAHINDCIE': '532756.BO',       // Not on NSE Yahoo Finance; use BSE code
+      'KALPATPOWR': 'KPIL',           // Renamed to Kalpataru Projects International
     };
 
     const nseSymbols   = basket.stocks.map(s => toNSESymbol(s.ticker));
@@ -871,7 +872,7 @@ router.get('/:id/benchmark', async (req, res) => {
       // Strip existing suffix then re-add appropriate suffix
       const base = ticker.replace(/\.(NS|BO)$/i, '');
       // Apply known Yahoo ticker remaps (values with . suffix are used as-is)
-      const YAHOO_CHART_MAP = { 'DEEPAKNITRITE': 'DEEPAKNTR', 'MAHINDCIE': '532756.BO' };
+      const YAHOO_CHART_MAP = { 'DEEPAKNITRITE': 'DEEPAKNTR', 'MAHINDCIE': '532756.BO', 'KALPATPOWR': 'KPIL' };
       const mapped = YAHOO_CHART_MAP[base];
       if (mapped) return mapped.includes('.') ? mapped : mapped + '.NS';
       return base + '.NS';

@@ -284,6 +284,24 @@ const migrateReplaceUnfetchableStocks = async () => {
       newCompanyName: 'Tata Consumer Products',
       newPrice: 1113,
     },
+    {
+      oldTicker: 'WEBSOL.NS',
+      newTicker: 'IREDA.NS',
+      newCompanyName: 'Indian Renewable Energy Development Agency',
+      newPrice: 133,
+    },
+    {
+      oldTicker: 'ORIENTGREEN.NS',
+      newTicker: 'RPOWER.NS',
+      newCompanyName: 'Reliance Power',
+      newPrice: 29,
+    },
+    {
+      oldTicker: 'KALPATPOWR.NS',
+      newTicker: 'KPIL.NS',
+      newCompanyName: 'Kalpataru Projects International',
+      newPrice: 1232,
+    },
   ];
 
   for (const rep of REPLACEMENTS) {

@@ -304,7 +304,9 @@ const getEnrichedStockData = async (ticker) => {
     if (!meta) throw new Error('Empty v8 result');
 
     const closes = history?.close || [];
-    const currentPrice = meta.regularMarketPrice ?? 0;
+    const validCloses = closes.filter(c => c != null);
+    // BSE (.BO) tickers sometimes return null regularMarketPrice but have close data
+    const currentPrice = meta.regularMarketPrice ?? (validCloses.length ? validCloses[validCloses.length - 1] : 0);
     const highs = (history?.high  || []).filter(h => h != null);
     const lows  = (history?.low   || []).filter(l => l != null);
     const high52Week = highs.length ? Math.max(...highs) : currentPrice;
