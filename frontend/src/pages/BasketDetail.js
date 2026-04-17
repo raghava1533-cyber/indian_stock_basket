@@ -552,7 +552,7 @@ function BasketDetail({ onReload }) {
                 <td>{activeStocks.reduce((s, st) => s + (st.quantity || 1), 0)}</td>
                 <td>100%</td>
                 <td>₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
-                <td style={{ color: 'var(--color-text-secondary)' }}>Min ₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                <td style={{ color: 'var(--color-text-secondary)' }}>To Maintain Allocation</td>
               </tr>
             </tfoot>
           </table>
@@ -680,7 +680,7 @@ function BasketDetail({ onReload }) {
               <div className="benchmark-basket-card">
                 <h3>{benchmark.basket.name}</h3>
                 <div className="benchmark-big-value">₹{benchmark.basket.totalValue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '—'}</div>
-                <div className="benchmark-meta">{benchmark.basket.stockCount} stocks | Min: ₹{benchmark.basket.minimumInvestment?.toLocaleString('en-IN') || '—'}</div>
+                <div className="benchmark-meta\">{benchmark.basket.stockCount} stocks | Total Value to Maintain Allocation</div>
               </div>
               <div className="benchmark-vs">VS</div>
               <div className="benchmark-indices">
