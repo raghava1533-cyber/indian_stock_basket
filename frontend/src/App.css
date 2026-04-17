@@ -347,6 +347,39 @@ body {
 
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
+/* ═══ Index Chips (Header) ═══ */
+.index-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 4px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.index-name {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.index-price {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.index-change {
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.index-change.pos { color: var(--color-accent); }
+.index-change.neg { color: var(--color-negative); }
+
 /* ═══ Basket Detail ═══ */
 .basket-detail {
   background: var(--color-background-primary);
@@ -1132,6 +1165,8 @@ body {
 /* ═══ Responsive ═══ */
 @media (max-width: 768px) {
   .main-content { padding: 16px; }
+
+  .index-chip { display: none; }
 
   .baskets-grid { grid-template-columns: 1fr; }
 

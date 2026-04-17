@@ -11,16 +11,31 @@ import './App.css';
 
 function App() {
   const [baskets, setBaskets] = useState([]);
+  const [indices, setIndices] = useState(null);
 
   useEffect(() => {
     console.log('App.js mounted - checking API connectivity');
     loadBaskets();
+    loadIndices();
+    // Refresh indices every 60s
+    const timer = setInterval(loadIndices, 60000);
     
     // Also check backend connectivity on startup
     basketAPI.checkHealth()
       .then(() => console.log('Backend is reachable'))
       .catch(err => console.warn('Backend not immediately available, will retry on demand:', err.message));
+
+    return () => clearInterval(timer);
   }, []);
+
+  const loadIndices = async () => {
+    try {
+      const res = await basketAPI.getMarketIndices();
+      setIndices(res.data);
+    } catch (e) {
+      // silently fail — indices are decorative
+    }
+  };
 
   const loadBaskets = async () => {
     try {
@@ -50,6 +65,28 @@ function App() {
               <NavLink to="/portfolio" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Portfolio</NavLink>
             </nav>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {indices && (
+                <>
+                  <div className="index-chip">
+                    <span className="index-name">NIFTY 50</span>
+                    <span className="index-price">{indices.nifty50?.price?.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+                    {indices.nifty50?.dayChangePercent != null && (
+                      <span className={`index-change ${indices.nifty50.dayChangePercent >= 0 ? 'pos' : 'neg'}`}>
+                        {indices.nifty50.dayChangePercent >= 0 ? '+' : ''}{indices.nifty50.dayChangePercent.toFixed(2)}%
+                      </span>
+                    )}
+                  </div>
+                  <div className="index-chip">
+                    <span className="index-name">BANK NIFTY</span>
+                    <span className="index-price">{indices.bankNifty?.price?.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+                    {indices.bankNifty?.dayChangePercent != null && (
+                      <span className={`index-change ${indices.bankNifty.dayChangePercent >= 0 ? 'pos' : 'neg'}`}>
+                        {indices.bankNifty.dayChangePercent >= 0 ? '+' : ''}{indices.bankNifty.dayChangePercent.toFixed(2)}%
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
               <span className="live-badge"><span className="live-dot"></span> Live NSE/BSE</span>
             </div>
           </div>

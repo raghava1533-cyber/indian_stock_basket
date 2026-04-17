@@ -69,6 +69,7 @@ export const basketAPI = {
   getBasketStocks: (id) => api.get(`/baskets/${id}/stocks`),
   getBasketNews: (id) => api.get(`/baskets/${id}/news`),
   getBasketBenchmark: (id) => api.get(`/baskets/${id}/benchmark`),
+  getMarketIndices: () => api.get('/market/indices'),
 };
 
 export default api;

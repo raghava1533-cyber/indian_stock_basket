@@ -7,6 +7,7 @@ const connectDB = require('./config/database');
 const basketRoutes = require('./routes/baskets');
 const { rebalanceBasket } = require('./services/rebalanceService');
 const { testEmailConnection } = require('./services/emailService');
+const { getEnrichedUniverseData } = require('./services/stockDataService');
 const Basket = require('./models/Basket');
 
 const app = express();
@@ -53,6 +54,43 @@ app.get('/', (req, res) => {
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'Server is running', timestamp: new Date() });
+});
+
+// ── Live Market Indices (Nifty 50, Bank Nifty) ─────────────────────────────
+let _indicesCache = null;
+let _indicesCacheTime = 0;
+const INDICES_CACHE_TTL = 60 * 1000; // 1 minute
+
+app.get('/api/market/indices', async (req, res) => {
+  try {
+    const now = Date.now();
+    if (_indicesCache && now - _indicesCacheTime < INDICES_CACHE_TTL) {
+      return res.json(_indicesCache);
+    }
+    const results = await getEnrichedUniverseData(['^NSEI', '^NSEBANK'], 2);
+    const nifty    = results[0];
+    const bankNifty = results[1];
+
+    const fmt = (d) => d ? {
+      price:           d.currentPrice,
+      dayChange:       d.dayChange,
+      dayChangePercent: d.dayChangePercent,
+      high52Week:      d.high52Week,
+      low52Week:       d.low52Week,
+    } : null;
+
+    const payload = {
+      nifty50:   { name: 'NIFTY 50',   ...fmt(nifty) },
+      bankNifty: { name: 'BANK NIFTY', ...fmt(bankNifty) },
+      updatedAt: new Date(),
+    };
+    _indicesCache = payload;
+    _indicesCacheTime = now;
+    res.json(payload);
+  } catch (err) {
+    console.error('[indices]', err.message);
+    res.status(500).json({ message: 'Could not fetch indices' });
+  }
 });
 
 // API Health check (separate endpoint for frontend monitoring)

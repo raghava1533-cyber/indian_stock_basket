@@ -75,6 +75,10 @@ const getEnrichedStockData = async (ticker) => {
       revenueGrowth,
       futureGrowth,
       socialSentiment,
+      dayChange:        price.regularMarketChange?.raw        ?? null,
+      dayChangePercent: price.regularMarketChangePercent?.raw != null
+        ? price.regularMarketChangePercent.raw * 100
+        : null,
       lastUpdated: new Date(),
     };
   } catch (v10Err) {
@@ -106,6 +110,10 @@ const getEnrichedStockData = async (ticker) => {
       ? currentPrice / meta.epsTrailingTwelveMonths
       : null;
 
+    const prevClose = meta.chartPreviousClose ?? meta.previousClose ?? null;
+    const dayChange = prevClose ? currentPrice - prevClose : null;
+    const dayChangePercent = prevClose && prevClose > 0 ? ((currentPrice - prevClose) / prevClose) * 100 : null;
+
     const range52 = high52Week - low52Week;
     const socialSentiment = range52 > 0
       ? Math.max(0, Math.min(10, ((currentPrice - low52Week) / range52) * 10))
@@ -124,6 +132,8 @@ const getEnrichedStockData = async (ticker) => {
       revenueGrowth:   null,
       futureGrowth:    5,
       socialSentiment,
+      dayChange,
+      dayChangePercent,
       lastUpdated: new Date(),
     };
   } catch (v8Err) {

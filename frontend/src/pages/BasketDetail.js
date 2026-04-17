@@ -260,6 +260,7 @@ function BasketDetail({ onReload }) {
                 <th>#</th>
                 <th>Company</th>
                 <th>Price</th>
+                <th>Day Change</th>
                 <th>52W High</th>
                 <th>52W Low</th>
                 <th>PE</th>
@@ -293,6 +294,18 @@ function BasketDetail({ onReload }) {
                       </div>
                     </td>
                     <td>₹{price.toFixed(0)}</td>
+                    <td>
+                      {stock.dayChange != null ? (
+                        <div style={{ lineHeight: 1.3 }}>
+                          <div className={stock.dayChange >= 0 ? 'price-positive' : 'price-negative'} style={{ fontWeight: '500' }}>
+                            {stock.dayChange >= 0 ? '+' : ''}₹{stock.dayChange.toFixed(1)}
+                          </div>
+                          <div style={{ fontSize: '11px', color: stock.dayChangePercent >= 0 ? 'var(--color-accent)' : 'var(--color-negative)' }}>
+                            {stock.dayChangePercent >= 0 ? '+' : ''}{stock.dayChangePercent?.toFixed(2)}%
+                          </div>
+                        </div>
+                      ) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}
+                    </td>
                     <td className="price-positive">₹{h52.toFixed(0)}</td>
                     <td className="price-negative">₹{l52.toFixed(0)}</td>
                     <td>{stock.peRatio != null ? stock.peRatio.toFixed(1) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}</td>
@@ -312,7 +325,7 @@ function BasketDetail({ onReload }) {
             </tbody>
             <tfoot>
               <tr style={{ fontWeight: '500', background: 'var(--color-background-secondary)', fontSize: '12px' }}>
-                <td colSpan="7">Total</td>
+                <td colSpan="8">Total</td>
                 <td>{activeStocks.reduce((s, st) => s + (st.quantity || 1), 0)}</td>
                 <td>100%</td>
                 <td>₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
