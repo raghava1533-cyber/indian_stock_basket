@@ -19,8 +19,7 @@ router.post('/signup', async (req, res) => {
   if (existing)
     return res.status(409).json({ message: 'Email already registered' });
 
-  const hashed = await bcrypt.hash(password, 10);
-  const user = await User.create({ name, email: email.toLowerCase(), password: hashed });
+  const user = await User.create({ name, email: email.toLowerCase(), password });
 
   const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: JWT_EXPIRE });
   res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email } });
