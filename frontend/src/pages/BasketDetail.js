@@ -174,7 +174,7 @@ function BasketDetail({ onReload }) {
   const [benchmark, setBenchmark] = useState(null);
   const [newsLoading, setNewsLoading] = useState(false);
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
-  const [email, setEmail] = useState(localStorage.getItem('userEmail') || '');
+  const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [liveRefreshing, setLiveRefreshing] = useState(false);
@@ -607,6 +607,22 @@ function BasketDetail({ onReload }) {
               <span>Last Rebalance: {new Date(latestHistory.rebalanceDate).toLocaleDateString()}</span>
               <span>{latestHistory.reason || 'Auto rebalance'}</span>
             </div>
+
+            {/* Show current holdings if history is incomplete */}
+            {addedStocks.length < 5 && activeStocks.length > 0 && (
+              <div className="changes-section">
+                <h3 className="changes-title added">📊 Current Holdings ({activeStocks.length})</h3>
+                <div className="changes-list">
+                  {activeStocks.map((s, i) => (
+                    <div key={i} className="change-item added">
+                      <div className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</div>
+                      <div className="change-detail">Qty: {s.quantity || 1} shares @ ₹{s.currentPrice?.toFixed(0) || '—'}</div>
+                      <div className="change-reason">{s.reason || 'Current portfolio allocation'}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="changes-section">
               <h3 className="changes-title added">✅ Added Stocks ({addedStocks.length})</h3>

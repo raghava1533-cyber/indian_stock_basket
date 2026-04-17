@@ -8,6 +8,7 @@ import Debug from './pages/Debug';
 import Status from './pages/Status';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Disclaimer from './components/Disclaimer';
 import { basketAPI } from './services/api';
 import './App.css';
 
@@ -129,6 +130,8 @@ function App() {
             <Route path="/status" element={<Status />} />
           </Routes>
         </main>
+
+        <Disclaimer />
 
         <footer className="footer">
           <p>&copy; 2026 Indian Stock Basket Management System. All rights reserved.</p>
