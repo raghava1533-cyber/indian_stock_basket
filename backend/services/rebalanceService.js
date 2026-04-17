@@ -909,8 +909,10 @@ const STATIC_FALLBACK = {
 };
 
 // ─── Enhanced Quality Scoring (0-100 pts total) ──────────────────────────────
-// 7 factors: Market Trend(15), Valuation(20), Earnings(15), FutureGrowth(15),
-//            Sentiment(10), Momentum/RSI(15), Analyst(10)
+// 7 factors + quality penalties for risk/complications
+// Market Trend(15), Valuation(20), Earnings(15), FutureGrowth(15),
+// Sentiment(12), Momentum/RSI(13), Analyst(10) = 100
+// Then apply penalties for red flags (below SMA, low sentiment, negative growth)
 const scoreStock = (stock) => {
   let score = 0;
 
@@ -921,8 +923,8 @@ const scoreStock = (stock) => {
   if (range > 0) {
     const pos = (stock.currentPrice - stock.low52Week) / range;
     if (pos >= 0.3 && pos <= 0.7) marketTrend = 15;
-    else if (pos < 0.3) marketTrend = pos * 30;
-    else marketTrend = (1 - pos) * 30;
+    else if (pos < 0.3) marketTrend = pos * 30;     // near 52W low → lower score
+    else marketTrend = (1 - pos) * 30;               // near 52W high → lower score
   } else {
     marketTrend = 7;
   }
@@ -937,7 +939,7 @@ const scoreStock = (stock) => {
     else if (stock.peRatio < 60) valuation = 6;
     else                         valuation = 2;
   } else {
-    valuation = 8;
+    valuation = 8;   // no PE data → neutral
   }
   score += valuation;
 
@@ -948,37 +950,46 @@ const scoreStock = (stock) => {
   else if (eg >= 25) earnings = 12;
   else if (eg >= 15) earnings = 9;
   else if (eg >= 8)  earnings = 6;
-  else               earnings = 3;
+  else if (eg >= 0)  earnings = 3;
+  else               earnings = 0;   // negative growth = 0 pts
   score += earnings;
 
   // 4. Future Growth / Analyst Target (0-15 pts)
-  //    Uses futureGrowth (0-10 from analyst target upside)
-  const futureGrowthScore = Math.min((stock.futureGrowth ?? 5) * 1.5, 15);
+  //    futureGrowth is 0-10 based on analyst target upside
+  const fg = stock.futureGrowth ?? 5;
+  const futureGrowthScore = Math.min(fg * 1.5, 15);
   score += futureGrowthScore;
 
-  // 5. Sentiment — blended news + momentum (0-10 pts)
-  const sentimentScore = Math.min((stock.socialSentiment ?? 5) * 1.0, 10);
+  // 5. Sentiment — blended news + momentum (0-12 pts)
+  //    Stronger weight: low sentiment now costs more
+  const rawSent = stock.socialSentiment ?? 5;
+  const sentimentScore = Math.min(rawSent * 1.2, 12);
   score += sentimentScore;
 
-  // 6. Technical Momentum — RSI + SMA signals (0-15 pts)
-  let momentum = 7; // default neutral
+  // 6. Technical Momentum — RSI + SMA signals (0-13 pts)
+  let momentum = 6; // default neutral
   const rsi = stock.rsi;
   if (rsi != null) {
-    // RSI 40-60 is neutral, 30-40 or 60-70 mild signal, <30 oversold (buy), >70 overbought (caution)
-    if (rsi >= 30 && rsi <= 50) momentum = 15;       // oversold to fair — best buy zone
-    else if (rsi > 50 && rsi <= 65) momentum = 12;   // moderate uptrend
-    else if (rsi > 65 && rsi <= 75) momentum = 8;    // getting overbought
-    else if (rsi > 75) momentum = 4;                  // overbought — risky
-    else if (rsi < 30) momentum = 10;                 // deeply oversold — contrarian buy
-    else momentum = 7;
+    if (rsi >= 30 && rsi <= 50) momentum = 13;       // oversold to fair — best buy zone
+    else if (rsi > 50 && rsi <= 60) momentum = 11;   // healthy uptrend
+    else if (rsi > 60 && rsi <= 70) momentum = 8;    // moderately extended
+    else if (rsi > 70) momentum = 3;                  // overbought — risky
+    else if (rsi < 30) momentum = 9;                  // deeply oversold — contrarian
+    else momentum = 6;
   }
-  // SMA bonus: price above SMA50 and SMA200 = uptrend (bonus up to +3)
-  if (stock.sma50 && stock.currentPrice > stock.sma50) momentum = Math.min(15, momentum + 1.5);
-  if (stock.sma200 && stock.currentPrice > stock.sma200) momentum = Math.min(15, momentum + 1.5);
+  // SMA: REWARD above, PENALIZE below
+  if (stock.sma50 != null) {
+    if (stock.currentPrice > stock.sma50) momentum = Math.min(13, momentum + 1.5);
+    else momentum = Math.max(0, momentum - 2);   // PENALTY: below SMA50
+  }
+  if (stock.sma200 != null) {
+    if (stock.currentPrice > stock.sma200) momentum = Math.min(13, momentum + 1.5);
+    else momentum = Math.max(0, momentum - 3);   // BIGGER PENALTY: below SMA200 = downtrend
+  }
   score += momentum;
 
   // 7. Analyst Consensus (0-10 pts)
-  let analystScore = 5; // default
+  let analystScore = 5; // default if no data
   const recKey = stock.recommendationKey;
   if (recKey) {
     if (recKey === 'strong_buy') analystScore = 10;
@@ -987,12 +998,40 @@ const scoreStock = (stock) => {
     else if (recKey === 'underperform' || recKey === 'sell') analystScore = 2;
     else if (recKey === 'strong_sell') analystScore = 0;
   }
-  // Boost if many analysts cover (more reliable)
   if (stock.numberOfAnalysts && stock.numberOfAnalysts >= 10) analystScore = Math.min(10, analystScore + 1);
   score += analystScore;
 
+  // ── Quality Penalties (complications filter) ──────────────────────────────
+  // Stocks with problems get penalized so they drop in ranking
+
+  // P1: Very low sentiment (< 3) = bearish news / complications → penalty up to -8
+  if (rawSent < 3) score -= (3 - rawSent) * 2.5;
+
+  // P2: Negative earnings growth = shrinking profits → penalty up to -5
+  if (eg < 0) score -= Math.min(5, Math.abs(eg) * 0.1);
+
+  // P3: No analyst coverage at all → slight penalty (less reliable data)
+  if (stock.numberOfAnalysts == null || stock.numberOfAnalysts === 0) score -= 2;
+
+  // P4: Analyst target below current price = analysts see downside → penalty
+  if (stock.targetMeanPrice != null && stock.currentPrice > 0) {
+    const upside = (stock.targetMeanPrice - stock.currentPrice) / stock.currentPrice;
+    if (upside < 0) score -= Math.min(8, Math.abs(upside) * 20); // e.g., -10% target → -2 pts
+  }
+
+  // P5: Below BOTH SMA50 and SMA200 = confirmed downtrend → extra penalty
+  const belowSma50  = stock.sma50  != null && stock.currentPrice < stock.sma50;
+  const belowSma200 = stock.sma200 != null && stock.currentPrice < stock.sma200;
+  if (belowSma50 && belowSma200) score -= 5;
+
+  // P6: Extremely high PE (> 80) with low growth = overvalued complication
+  if (stock.peRatio > 80 && eg < 20) score -= 4;
+
+  // Floor at 0
+  score = Math.max(0, score);
+
   return {
-    total: Math.round(score * 100) / 100,
+    total:         Math.round(score * 100) / 100,
     marketTrend:   Math.round(marketTrend        * 100) / 100,
     valuation:     Math.round(valuation          * 100) / 100,
     earnings:      Math.round(earnings           * 100) / 100,
