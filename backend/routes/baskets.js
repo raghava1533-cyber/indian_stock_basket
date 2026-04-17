@@ -23,18 +23,39 @@ const authenticateToken = (req, res, next) => {
 // ─── Helper: fill null PE/EPS/futureGrowth from STATIC_FALLBACK ───────────────
 const supplementStock = (stock) => {
   const fb = STATIC_FALLBACK[stock.ticker] || {};
-  const peRatio        = stock.peRatio        ?? fb.peRatio        ?? null;
-  const earningsGrowth = stock.earningsGrowth ?? fb.earningsGrowth ?? null;
-  const futureGrowth   = stock.futureGrowth   ?? fb.futureGrowth   ?? 5;
+  const peRatio         = stock.peRatio         ?? fb.peRatio         ?? null;
+  const earningsGrowth  = stock.earningsGrowth  ?? fb.earningsGrowth  ?? null;
+  const futureGrowth    = stock.futureGrowth    ?? fb.futureGrowth    ?? 5;
   const socialSentiment = stock.socialSentiment ?? fb.socialSentiment ?? 5;
   // Derive rank from stock position if not in reason
   const rankMatch = (stock.reason || '').match(/Rank #(\d+)/);
   const rank = rankMatch ? parseInt(rankMatch[1]) : 1;
+  const obj = stock.toObject ? stock.toObject() : stock;
   const reason = buildReason(
-    { ...stock, peRatio, earningsGrowth, futureGrowth, socialSentiment },
+    { ...obj, peRatio, earningsGrowth, futureGrowth, socialSentiment },
     rank
   );
-  return { ...stock.toObject ? stock.toObject() : stock, peRatio, earningsGrowth, futureGrowth, socialSentiment, reason };
+  return {
+    ...obj,
+    peRatio,
+    earningsGrowth,
+    futureGrowth,
+    socialSentiment,
+    newsSentiment:     stock.newsSentiment     ?? null,
+    targetMeanPrice:   stock.targetMeanPrice   ?? null,
+    targetHighPrice:   stock.targetHighPrice   ?? null,
+    targetLowPrice:    stock.targetLowPrice    ?? null,
+    recommendationKey: stock.recommendationKey ?? null,
+    numberOfAnalysts:  stock.numberOfAnalysts  ?? null,
+    analystBuy:        stock.analystBuy        ?? null,
+    analystHold:       stock.analystHold       ?? null,
+    analystSell:       stock.analystSell       ?? null,
+    rsi:               stock.rsi               ?? null,
+    sma20:             stock.sma20             ?? null,
+    sma50:             stock.sma50             ?? null,
+    sma200:            stock.sma200            ?? null,
+    reason,
+  };
 };
 
 // Get all baskets
@@ -373,6 +394,19 @@ router.get('/:id/stocks', async (req, res) => {
         earningsGrowth: liveInfo?.earningsGrowth ?? s.earningsGrowth ?? null,
         futureGrowth: liveInfo?.futureGrowth ?? s.futureGrowth ?? null,
         socialSentiment: liveInfo?.socialSentiment ?? s.socialSentiment ?? null,
+        newsSentiment: liveInfo?.newsSentiment ?? s.newsSentiment ?? null,
+        targetMeanPrice: liveInfo?.targetMeanPrice ?? s.targetMeanPrice ?? null,
+        targetHighPrice: liveInfo?.targetHighPrice ?? s.targetHighPrice ?? null,
+        targetLowPrice: liveInfo?.targetLowPrice ?? s.targetLowPrice ?? null,
+        recommendationKey: liveInfo?.recommendationKey ?? s.recommendationKey ?? null,
+        numberOfAnalysts: liveInfo?.numberOfAnalysts ?? s.numberOfAnalysts ?? null,
+        analystBuy: liveInfo?.analystBuy ?? s.analystBuy ?? null,
+        analystHold: liveInfo?.analystHold ?? s.analystHold ?? null,
+        analystSell: liveInfo?.analystSell ?? s.analystSell ?? null,
+        rsi: liveInfo?.rsi ?? s.rsi ?? null,
+        sma20: liveInfo?.sma20 ?? s.sma20 ?? null,
+        sma50: liveInfo?.sma50 ?? s.sma50 ?? null,
+        sma200: liveInfo?.sma200 ?? s.sma200 ?? null,
         dayChange: dcAbs,
         dayChangePercent: dcPct,
         lastUpdated: liveInfo?.lastUpdated || new Date(),

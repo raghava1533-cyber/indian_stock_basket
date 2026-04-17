@@ -576,6 +576,33 @@ function BasketDetail({ onReload }) {
                               {stock.socialSentiment != null && (
                                 <span className="why-pill">Sentiment: {stock.socialSentiment.toFixed(1)}/10</span>
                               )}
+                              {stock.rsi != null && (
+                                <span className={`why-pill ${stock.rsi <= 30 ? 'accent' : stock.rsi >= 70 ? 'negative' : ''}`}>
+                                  RSI: {stock.rsi.toFixed(0)} {stock.rsi <= 30 ? '(Oversold)' : stock.rsi >= 70 ? '(Overbought)' : ''}
+                                </span>
+                              )}
+                              {stock.recommendationKey && (
+                                <span className={`why-pill ${stock.recommendationKey === 'buy' || stock.recommendationKey === 'strong_buy' ? 'accent' : stock.recommendationKey === 'sell' || stock.recommendationKey === 'strong_sell' ? 'negative' : ''}`}>
+                                  Analyst: {stock.recommendationKey.replace('_', ' ').toUpperCase()}
+                                  {stock.numberOfAnalysts ? ` (${stock.numberOfAnalysts})` : ''}
+                                </span>
+                              )}
+                              {stock.targetMeanPrice != null && stock.currentPrice > 0 && (
+                                <span className={`why-pill ${stock.targetMeanPrice > stock.currentPrice ? 'accent' : 'negative'}`}>
+                                  Target: ₹{Math.round(stock.targetMeanPrice).toLocaleString('en-IN')}
+                                  {' '}({stock.targetMeanPrice > stock.currentPrice ? '+' : ''}{((stock.targetMeanPrice - stock.currentPrice) / stock.currentPrice * 100).toFixed(1)}%)
+                                </span>
+                              )}
+                              {stock.sma50 != null && (
+                                <span className={`why-pill ${stock.currentPrice > stock.sma50 ? 'accent' : 'negative'}`}>
+                                  {stock.currentPrice > stock.sma50 ? '▲ Above' : '▼ Below'} SMA50
+                                </span>
+                              )}
+                              {stock.sma200 != null && (
+                                <span className={`why-pill ${stock.currentPrice > stock.sma200 ? 'accent' : 'negative'}`}>
+                                  {stock.currentPrice > stock.sma200 ? '▲ Above' : '▼ Below'} SMA200
+                                </span>
+                              )}
                               {stock.marketCapCr != null && (
                                 <span className="why-pill">Mkt Cap: ₹{stock.marketCapCr.toLocaleString('en-IN')} Cr</span>
                               )}
@@ -583,6 +610,15 @@ function BasketDetail({ onReload }) {
                                 <span className="why-pill score">Score: {stock.score.toFixed(0)}/100</span>
                               )}
                             </div>
+                            {/* Analyst target detail when available */}
+                            {stock.targetMeanPrice != null && (
+                              <div className="why-analyst-detail">
+                                <span>🎯 Avg Target: <strong>₹{Math.round(stock.targetMeanPrice).toLocaleString('en-IN')}</strong></span>
+                                {stock.targetHighPrice != null && <span> | High: ₹{Math.round(stock.targetHighPrice).toLocaleString('en-IN')}</span>}
+                                {stock.targetLowPrice != null && <span> | Low: ₹{Math.round(stock.targetLowPrice).toLocaleString('en-IN')}</span>}
+                                {stock.numberOfAnalysts != null && <span> | {stock.numberOfAnalysts} analyst{stock.numberOfAnalysts > 1 ? 's' : ''}</span>}
+                              </div>
+                            )}
                             {stock.reason && (
                               <div className="why-reason">{stock.reason}</div>
                             )}

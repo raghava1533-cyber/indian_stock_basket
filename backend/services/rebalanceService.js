@@ -908,53 +908,88 @@ const STATIC_FALLBACK = {
   'KAYNES.NS':         { currentPrice: 4500, high52Week: 6450, low52Week: 2500, marketCapCr:   26700, peRatio: 85.0, earningsGrowth: 50, futureGrowth: 9,  socialSentiment: 9 },
 };
 
-// ─── Quality scoring (0-100 pts total) ────────────────────────────────────────
+// ─── Enhanced Quality Scoring (0-100 pts total) ──────────────────────────────
+// 7 factors: Market Trend(15), Valuation(20), Earnings(15), FutureGrowth(15),
+//            Sentiment(10), Momentum/RSI(15), Analyst(10)
 const scoreStock = (stock) => {
   let score = 0;
 
-  // 1. Market Trend — 52W position (0-20 pts)
+  // 1. Market Trend — 52W position (0-15 pts)
+  //    Sweet spot 30-70% of 52W range
   const range = stock.high52Week - stock.low52Week;
   let marketTrend = 0;
   if (range > 0) {
     const pos = (stock.currentPrice - stock.low52Week) / range;
-    if (pos >= 0.3 && pos <= 0.7) marketTrend = 20;
-    else if (pos < 0.3) marketTrend = pos * 40;
-    else marketTrend = (1 - pos) * 40;
+    if (pos >= 0.3 && pos <= 0.7) marketTrend = 15;
+    else if (pos < 0.3) marketTrend = pos * 30;
+    else marketTrend = (1 - pos) * 30;
   } else {
-    marketTrend = 10;
+    marketTrend = 7;
   }
   score += marketTrend;
 
-  // 2. Valuation — PE ratio (0-25 pts)
+  // 2. Valuation — PE ratio (0-20 pts)
   let valuation = 0;
   if (stock.peRatio && stock.peRatio > 0) {
-    if      (stock.peRatio < 15) valuation = 25;
-    else if (stock.peRatio < 25) valuation = 20;
-    else if (stock.peRatio < 40) valuation = 14;
-    else if (stock.peRatio < 60) valuation = 8;
-    else                         valuation = 3;
+    if      (stock.peRatio < 15) valuation = 20;
+    else if (stock.peRatio < 25) valuation = 16;
+    else if (stock.peRatio < 40) valuation = 11;
+    else if (stock.peRatio < 60) valuation = 6;
+    else                         valuation = 2;
   } else {
-    valuation = 10;
+    valuation = 8;
   }
   score += valuation;
 
-  // 3. Earnings Growth (0-20 pts)
+  // 3. Earnings Growth (0-15 pts)
   const eg = stock.earningsGrowth ?? 0;
   let earnings = 0;
-  if      (eg >= 50) earnings = 20;
-  else if (eg >= 25) earnings = 16;
-  else if (eg >= 15) earnings = 12;
-  else if (eg >= 8)  earnings = 8;
-  else               earnings = 4;
+  if      (eg >= 50) earnings = 15;
+  else if (eg >= 25) earnings = 12;
+  else if (eg >= 15) earnings = 9;
+  else if (eg >= 8)  earnings = 6;
+  else               earnings = 3;
   score += earnings;
 
-  // 4. Future Growth (0-20 pts)
-  const futureGrowthScore = Math.min((stock.futureGrowth ?? 5) * 2, 20);
+  // 4. Future Growth / Analyst Target (0-15 pts)
+  //    Uses futureGrowth (0-10 from analyst target upside)
+  const futureGrowthScore = Math.min((stock.futureGrowth ?? 5) * 1.5, 15);
   score += futureGrowthScore;
 
-  // 5. Social/Sentiment (0-15 pts)
-  const sentimentScore = Math.min((stock.socialSentiment ?? 5) * 1.5, 15);
+  // 5. Sentiment — blended news + momentum (0-10 pts)
+  const sentimentScore = Math.min((stock.socialSentiment ?? 5) * 1.0, 10);
   score += sentimentScore;
+
+  // 6. Technical Momentum — RSI + SMA signals (0-15 pts)
+  let momentum = 7; // default neutral
+  const rsi = stock.rsi;
+  if (rsi != null) {
+    // RSI 40-60 is neutral, 30-40 or 60-70 mild signal, <30 oversold (buy), >70 overbought (caution)
+    if (rsi >= 30 && rsi <= 50) momentum = 15;       // oversold to fair — best buy zone
+    else if (rsi > 50 && rsi <= 65) momentum = 12;   // moderate uptrend
+    else if (rsi > 65 && rsi <= 75) momentum = 8;    // getting overbought
+    else if (rsi > 75) momentum = 4;                  // overbought — risky
+    else if (rsi < 30) momentum = 10;                 // deeply oversold — contrarian buy
+    else momentum = 7;
+  }
+  // SMA bonus: price above SMA50 and SMA200 = uptrend (bonus up to +3)
+  if (stock.sma50 && stock.currentPrice > stock.sma50) momentum = Math.min(15, momentum + 1.5);
+  if (stock.sma200 && stock.currentPrice > stock.sma200) momentum = Math.min(15, momentum + 1.5);
+  score += momentum;
+
+  // 7. Analyst Consensus (0-10 pts)
+  let analystScore = 5; // default
+  const recKey = stock.recommendationKey;
+  if (recKey) {
+    if (recKey === 'strong_buy') analystScore = 10;
+    else if (recKey === 'buy') analystScore = 8;
+    else if (recKey === 'hold') analystScore = 5;
+    else if (recKey === 'underperform' || recKey === 'sell') analystScore = 2;
+    else if (recKey === 'strong_sell') analystScore = 0;
+  }
+  // Boost if many analysts cover (more reliable)
+  if (stock.numberOfAnalysts && stock.numberOfAnalysts >= 10) analystScore = Math.min(10, analystScore + 1);
+  score += analystScore;
 
   return {
     total: Math.round(score * 100) / 100,
@@ -963,6 +998,8 @@ const scoreStock = (stock) => {
     earnings:      Math.round(earnings           * 100) / 100,
     futureGrowth:  Math.round(futureGrowthScore  * 100) / 100,
     sentiment:     Math.round(sentimentScore     * 100) / 100,
+    momentum:      Math.round(momentum           * 100) / 100,
+    analyst:       Math.round(analystScore       * 100) / 100,
   };
 };
 
@@ -1006,7 +1043,12 @@ const computeQuantities = (sortedStocks, weights, investmentAmount = 100000) => 
 const buildReason = (stock, rank, scores) => {
   const pe = stock.peRatio ? `PE ${stock.peRatio.toFixed(1)}` : 'PE N/A';
   const eg = stock.earningsGrowth != null ? `${stock.earningsGrowth.toFixed(1)}%` : 'N/A';
-  return `Rank #${rank} | ${pe} | EPS growth ${eg} | Future growth ${(stock.futureGrowth ?? 5).toFixed(1)}/10 | Sentiment ${(stock.socialSentiment ?? 5).toFixed(1)}/10`;
+  const fg = (stock.futureGrowth ?? 5).toFixed(1);
+  const sent = (stock.socialSentiment ?? 5).toFixed(1);
+  const rsiStr = stock.rsi != null ? ` | RSI ${stock.rsi.toFixed(0)}` : '';
+  const analystStr = stock.recommendationKey ? ` | Analyst: ${stock.recommendationKey.toUpperCase()}` : '';
+  const targetStr = stock.targetMeanPrice ? ` | Target ₹${Math.round(stock.targetMeanPrice)}` : '';
+  return `Rank #${rank} | ${pe} | EPS growth ${eg} | Future ${fg}/10 | Sentiment ${sent}/10${rsiStr}${analystStr}${targetStr}`;
 };
 
 const getCategoryFromName = (name) => {
@@ -1044,10 +1086,23 @@ const mergeWithFallback = (universeDefs, liveResults) => {
       // Supplement missing fundamentals from static fallback (v8 chart lacks PE/EPS)
       return {
         ...live,
-        peRatio:         live.peRatio         ?? fallback.peRatio         ?? null,
-        earningsGrowth:  live.earningsGrowth  ?? fallback.earningsGrowth  ?? null,
-        futureGrowth:    live.futureGrowth     ?? fallback.futureGrowth    ?? 5,
-        socialSentiment: live.socialSentiment  ?? fallback.socialSentiment ?? 5,
+        peRatio:           live.peRatio            ?? fallback.peRatio           ?? null,
+        earningsGrowth:    live.earningsGrowth     ?? fallback.earningsGrowth    ?? null,
+        futureGrowth:      live.futureGrowth       ?? fallback.futureGrowth      ?? 5,
+        socialSentiment:   live.socialSentiment    ?? fallback.socialSentiment   ?? 5,
+        newsSentiment:     live.newsSentiment      ?? null,
+        targetMeanPrice:   live.targetMeanPrice    ?? null,
+        targetHighPrice:   live.targetHighPrice    ?? null,
+        targetLowPrice:    live.targetLowPrice     ?? null,
+        recommendationKey: live.recommendationKey  ?? null,
+        numberOfAnalysts:  live.numberOfAnalysts   ?? null,
+        analystBuy:        live.analystBuy         ?? null,
+        analystHold:       live.analystHold        ?? null,
+        analystSell:       live.analystSell        ?? null,
+        rsi:               live.rsi                ?? null,
+        sma20:             live.sma20              ?? null,
+        sma50:             live.sma50              ?? null,
+        sma200:            live.sma200             ?? null,
       };
     }
 
@@ -1057,19 +1112,32 @@ const mergeWithFallback = (universeDefs, liveResults) => {
         ? Math.max(0, Math.min(10, ((fallback.currentPrice - fallback.low52Week) / range) * 10))
         : fallback.socialSentiment;
       return {
-        ticker:          def.ticker,
-        companyName:     def.companyName,
-        currentPrice:    fallback.currentPrice,
-        high52Week:      fallback.high52Week,
-        low52Week:       fallback.low52Week,
-        marketCap:       fallback.marketCapCr * 1e7,
-        marketCapCr:     fallback.marketCapCr,
-        peRatio:         fallback.peRatio,
-        earningsGrowth:  fallback.earningsGrowth,
-        revenueGrowth:   null,
-        futureGrowth:    fallback.futureGrowth,
-        socialSentiment: socialSentiment,
-        lastUpdated:     new Date(),
+        ticker:            def.ticker,
+        companyName:       def.companyName,
+        currentPrice:      fallback.currentPrice,
+        high52Week:        fallback.high52Week,
+        low52Week:         fallback.low52Week,
+        marketCap:         fallback.marketCapCr * 1e7,
+        marketCapCr:       fallback.marketCapCr,
+        peRatio:           fallback.peRatio,
+        earningsGrowth:    fallback.earningsGrowth,
+        revenueGrowth:     null,
+        futureGrowth:      fallback.futureGrowth,
+        socialSentiment:   socialSentiment,
+        newsSentiment:     null,
+        targetMeanPrice:   null,
+        targetHighPrice:   null,
+        targetLowPrice:    null,
+        recommendationKey: null,
+        numberOfAnalysts:  null,
+        analystBuy:        null,
+        analystHold:       null,
+        analystSell:       null,
+        rsi:               null,
+        sma20:             null,
+        sma50:             null,
+        sma200:            null,
+        lastUpdated:       new Date(),
       };
     }
 
@@ -1143,25 +1211,38 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
     const quantities = computeQuantities(top15, qualityWeights, 100000);
 
     const newStocks = top15.map((stock, idx) => ({
-      ticker:          stock.ticker,
-      companyName:     stock.companyName,
-      symbol:          stock.ticker,
-      currentPrice:    stock.currentPrice,
-      high52Week:      stock.high52Week,
-      low52Week:       stock.low52Week,
-      marketCap:       stock.marketCapCr ? `${stock.marketCapCr} Cr` : null,
-      peRatio:         stock.peRatio,
-      earningsGrowth:  stock.earningsGrowth,
-      revenueGrowth:   stock.revenueGrowth,
-      futureGrowth:    stock.futureGrowth,
-      socialSentiment: stock.socialSentiment != null ? Number(stock.socialSentiment.toFixed(2)) : null,
-      weight:          qualityWeights[idx],
-      quantity:        quantities[idx],
-      reason:          buildReason(stock, idx + 1, stock.qualityScores),
-      status:          'active',
-      addedDate:       basket.stocks.find(b => b.ticker === stock.ticker)?.addedDate || new Date(),
-      score:           stock.score,
-      qualityScores:   stock.qualityScores,
+      ticker:            stock.ticker,
+      companyName:       stock.companyName,
+      symbol:            stock.ticker,
+      currentPrice:      stock.currentPrice,
+      high52Week:        stock.high52Week,
+      low52Week:         stock.low52Week,
+      marketCap:         stock.marketCapCr ? `${stock.marketCapCr} Cr` : null,
+      peRatio:           stock.peRatio,
+      earningsGrowth:    stock.earningsGrowth,
+      revenueGrowth:     stock.revenueGrowth,
+      futureGrowth:      stock.futureGrowth,
+      socialSentiment:   stock.socialSentiment != null ? Number(stock.socialSentiment.toFixed(2)) : null,
+      newsSentiment:     stock.newsSentiment ?? null,
+      targetMeanPrice:   stock.targetMeanPrice ?? null,
+      targetHighPrice:   stock.targetHighPrice ?? null,
+      targetLowPrice:    stock.targetLowPrice  ?? null,
+      recommendationKey: stock.recommendationKey ?? null,
+      numberOfAnalysts:  stock.numberOfAnalysts ?? null,
+      analystBuy:        stock.analystBuy ?? null,
+      analystHold:       stock.analystHold ?? null,
+      analystSell:       stock.analystSell ?? null,
+      rsi:               stock.rsi ?? null,
+      sma20:             stock.sma20 ?? null,
+      sma50:             stock.sma50 ?? null,
+      sma200:            stock.sma200 ?? null,
+      weight:            qualityWeights[idx],
+      quantity:          quantities[idx],
+      reason:            buildReason(stock, idx + 1, stock.qualityScores),
+      status:            'active',
+      addedDate:         basket.stocks.find(b => b.ticker === stock.ticker)?.addedDate || new Date(),
+      score:             stock.score,
+      qualityScores:     stock.qualityScores,
     }));
 
     const changes = { added: [], removed: [], partialRemoved: [] };
