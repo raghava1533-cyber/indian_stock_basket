@@ -303,6 +303,16 @@ const computeQualityWeights = (sortedStocks) => {
   return weights;
 };
 
+// ─── Compute quantity of shares per stock based on quality weight ──────────────
+const computeQuantities = (sortedStocks, weights, investmentAmount = 100000) => {
+  return sortedStocks.map((stock, idx) => {
+    const alloc = (weights[idx] / 100) * investmentAmount;
+    const price = stock.currentPrice || 1;
+    const qty = Math.max(1, Math.floor(alloc / price));
+    return qty;
+  });
+};
+
 const buildReason = (stock, rank, scores) => {
   const pe = stock.peRatio ? `PE ${stock.peRatio.toFixed(1)}` : 'PE N/A';
   const eg = stock.earningsGrowth != null ? `${stock.earningsGrowth.toFixed(1)}%` : 'N/A';
@@ -366,6 +376,7 @@ const selectTopStocks = (category) => {
   scored.sort((a, b) => b.score - a.score);
   const top10 = scored.slice(0, 10);
   const qualityWeights = computeQualityWeights(top10);
+  const quantities = computeQuantities(top10, qualityWeights, 100000);
   return top10.map((stock, idx) => ({
     ticker:        stock.ticker,
     companyName:   stock.companyName,
@@ -375,8 +386,11 @@ const selectTopStocks = (category) => {
     low52Week:     stock.low52Week,
     marketCap:     stock.marketCapCr ? `${stock.marketCapCr} Cr` : null,
     peRatio:       stock.peRatio,
+    earningsGrowth: stock.earningsGrowth,
+    futureGrowth:  stock.futureGrowth,
+    socialSentiment: stock.socialSentiment != null ? Number(stock.socialSentiment.toFixed ? stock.socialSentiment.toFixed(2) : stock.socialSentiment) : null,
     weight:        qualityWeights[idx],
-    quantity:      1,
+    quantity:      quantities[idx],
     reason:        buildReason(stock, idx + 1, stock.qualityScores),
     status:        'active',
     addedDate:     new Date(),
@@ -411,6 +425,7 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
     scored.sort((a, b) => b.score - a.score);
     const top10 = scored.slice(0, 10);
     const qualityWeights = computeQualityWeights(top10);
+    const quantities = computeQuantities(top10, qualityWeights, 100000);
 
     const newStocks = top10.map((stock, idx) => ({
       ticker:          stock.ticker,
@@ -422,9 +437,11 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
       marketCap:       stock.marketCapCr ? `${stock.marketCapCr} Cr` : null,
       peRatio:         stock.peRatio,
       earningsGrowth:  stock.earningsGrowth,
+      revenueGrowth:   stock.revenueGrowth,
+      futureGrowth:    stock.futureGrowth,
       socialSentiment: stock.socialSentiment != null ? Number(stock.socialSentiment.toFixed(2)) : null,
       weight:          qualityWeights[idx],
-      quantity:        1,
+      quantity:        quantities[idx],
       reason:          buildReason(stock, idx + 1, stock.qualityScores),
       status:          'active',
       addedDate:       basket.stocks.find(b => b.ticker === stock.ticker)?.addedDate || new Date(),
@@ -432,18 +449,23 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
       qualityScores:   stock.qualityScores,
     }));
 
-    const changes = { added: [], removed: [] };
+    const changes = { added: [], removed: [], partialRemoved: [] };
     for (const old of basket.stocks) {
-      if (!newStocks.find(s => s.ticker === old.ticker))
-        changes.removed.push({ ticker: old.ticker, companyName: old.companyName });
+      const newMatch = newStocks.find(s => s.ticker === old.ticker);
+      if (!newMatch) {
+        changes.removed.push({ ticker: old.ticker, companyName: old.companyName, quantity: old.quantity, salePrice: old.currentPrice });
+      } else if (newMatch.quantity < old.quantity) {
+        changes.partialRemoved.push({ ticker: old.ticker, companyName: old.companyName, quantityRemoved: old.quantity - newMatch.quantity, reason: 'Quality score decreased' });
+      }
     }
     for (const ns of newStocks) {
       if (!basket.stocks.find(s => s.ticker === ns.ticker))
-        changes.added.push({ ticker: ns.ticker, companyName: ns.companyName, reason: ns.reason });
+        changes.added.push({ ticker: ns.ticker, companyName: ns.companyName, quantity: ns.quantity, reason: ns.reason });
     }
 
     basket.stocks            = newStocks;
-    basket.minimumInvestment = Math.ceil(newStocks.reduce((sum, s) => sum + ((s.currentPrice || 0) * (s.weight / 100)), 0));
+    basket.totalValue        = Math.ceil(newStocks.reduce((sum, s) => sum + ((s.currentPrice || 0) * (s.quantity || 1)), 0));
+    basket.minimumInvestment = basket.totalValue;
     basket.lastRebalanceDate = new Date();
     basket.nextRebalanceDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await basket.save();

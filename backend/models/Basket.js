@@ -28,7 +28,7 @@ const basketSchema = new mongoose.Schema({
     ticker: String,
     symbol: String,
     companyName: String,
-    quantity: Number,
+    quantity: { type: Number, default: 1 },
     buyPrice: Number,
     currentPrice: Number,
     weight: Number,
@@ -46,6 +46,8 @@ const basketSchema = new mongoose.Schema({
     marketCap: String,
     peRatio: Number,
     earningsGrowth: Number,
+    revenueGrowth: Number,
+    futureGrowth: Number,
     socialSentiment: Number,
     score: Number,
     qualityScores: {

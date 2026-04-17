@@ -94,6 +94,21 @@
   color: #558b2f;
 }
 
+.badge-renewable {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badge-consumer {
+  background-color: #fef3e2;
+  color: #bf360c;
+}
+
+.badge-infrastructure {
+  background-color: #ede7f6;
+  color: #4527a0;
+}
+
 .basket-description {
   color: #666;
   font-size: 0.95rem;
@@ -104,9 +119,9 @@
 .basket-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin: 20px 0;
-  padding: 15px 0;
+  gap: 8px;
+  margin: 15px 0;
+  padding: 12px 0;
   border-top: 1px solid #eee;
   border-bottom: 1px solid #eee;
 }
@@ -117,16 +132,16 @@
 
 .stat-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #999;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .stat-value {
   display: block;
-  font-size: 1.3rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #333;
 }

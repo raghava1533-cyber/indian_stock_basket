@@ -111,36 +111,54 @@ function Baskets({ baskets, onReload }) {
 
       <div className="basket-grid">
         {localBaskets && localBaskets.length > 0 ? (
-          localBaskets.map((basket) => (
-            <Link to={`/basket/${basket._id}`} key={basket._id} className="basket-card-link">
-              <div className="basket-card">
-                <div className="basket-card-header">
-                  <h3>{basket.name}</h3>
-                  <span className={`badge badge-${basket.theme.toLowerCase().replace(/\s+/g, '-')}`}>
-                    {basket.theme}
-                  </span>
+          localBaskets.map((basket) => {
+            const stockCount = basket.stocks?.length || 0;
+            const totalQty = basket.stocks?.reduce((s, st) => s + (st.quantity || 1), 0) || 0;
+            const totalValue = basket.stocks?.reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0) || 0;
+
+            return (
+              <Link to={`/basket/${basket._id}`} key={basket._id} className="basket-card-link">
+                <div className="basket-card">
+                  <div className="basket-card-header">
+                    <h3>{basket.name}</h3>
+                    <span className={`badge badge-${basket.theme?.toLowerCase().replace(/\s+/g, '-')}`}>
+                      {basket.theme}
+                    </span>
+                  </div>
+                  <p className="basket-description">{basket.description}</p>
+                  <div className="basket-stats">
+                    <div className="stat">
+                      <span className="stat-label">Stocks</span>
+                      <span className="stat-value">{stockCount}/10</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">Total Shares</span>
+                      <span className="stat-value">{totalQty}</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">Min Investment</span>
+                      <span className="stat-value">₹{(basket.minimumInvestment || totalValue).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">Subscribers</span>
+                      <span className="stat-value">{basket.subscribers?.length || 0}</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">Category</span>
+                      <span className="stat-value">{basket.category}</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">Next Rebalance</span>
+                      <span className="stat-value">{basket.nextRebalanceDate ? new Date(basket.nextRebalanceDate).toLocaleDateString() : 'TBD'}</span>
+                    </div>
+                  </div>
+                  <button className="btn btn-primary" onClick={(e) => e.preventDefault()}>
+                    View Details →
+                  </button>
                 </div>
-                <p className="basket-description">{basket.description}</p>
-                <div className="basket-stats">
-                  <div className="stat">
-                    <span className="stat-label">Stocks</span>
-                    <span className="stat-value">{basket.stocks?.length || 0}/10</span>
-                  </div>
-                  <div className="stat">
-                    <span className="stat-label">Subscribers</span>
-                    <span className="stat-value">{basket.subscribers?.length || 0}</span>
-                  </div>
-                  <div className="stat">
-                    <span className="stat-label">Category</span>
-                    <span className="stat-value">{basket.category}</span>
-                  </div>
-                </div>
-                <button className="btn btn-primary" onClick={(e) => e.preventDefault()}>
-                  View Details →
-                </button>
-              </div>
-            </Link>
-          ))
+              </Link>
+            );
+          })
         ) : (
           <div className="empty-state">
             <p>No baskets available yet. Check back soon!</p>
