@@ -23,7 +23,8 @@ const authenticateToken = (req, res, next) => {
 
 // ─── Helper: fill null PE/EPS/futureGrowth from STATIC_FALLBACK ───────────────
 const supplementStock = (stock) => {
-  const fb = STATIC_FALLBACK[stock.ticker] || {};
+  // Look up fallback using both the stored ticker and the .NS variant
+  const fb = STATIC_FALLBACK[stock.ticker] || STATIC_FALLBACK[stock.ticker + '.NS'] || {};
   const peRatio         = stock.peRatio         ?? fb.peRatio         ?? null;
   const earningsGrowth  = stock.earningsGrowth  ?? fb.earningsGrowth  ?? null;
   const futureGrowth    = stock.futureGrowth    ?? fb.futureGrowth    ?? 5;
@@ -465,25 +466,30 @@ router.get('/:id/stocks', async (req, res) => {
       return res.json([]);
     }
 
-    const tickers = basket.stocks.map(s => s.ticker);
+    const isIndian = basket.country !== 'US';
+    const normalizeTicker = (t) => isIndian && !t.includes('.') ? t + '.NS' : t;
+
+    const normalizedTickers = basket.stocks.map(s => normalizeTicker(s.ticker));
     const [liveData, dayChanges] = await Promise.all([
-      getMultipleStocksData(tickers),
-      getBatchDayChanges(tickers),
+      getMultipleStocksData(normalizedTickers),
+      getBatchDayChanges(normalizedTickers),
     ]);
 
-    const INVESTMENT = 100000;
+    const INVESTMENT = basket.country === 'US' ? 10000 * 83 : 100000; // normalise to INR-equivalent
+    const INVEST_BASE = basket.country === 'US' ? 10000 : 100000;
 
     const enrichedStocks = basket.stocks.map(stock => {
       const s = stock.toObject ? stock.toObject() : { ...stock };
-      const liveInfo = liveData.find(d => d.ticker === s.ticker);
-      const dc = dayChanges[s.ticker]; // { pct, price } or undefined
+      const normTicker = normalizeTicker(s.ticker);
+      const liveInfo = liveData.find(d => d.ticker === normTicker);
+      const dc = dayChanges[normTicker]; // { pct, price } or undefined
 
       // Prefer v8 batch price (most accurate), then liveInfo, then stored
       const price = dc?.price || liveInfo?.currentPrice || s.currentPrice;
 
       // Recompute quantity dynamically from live price + stored weight
       const weight = s.weight || 10;
-      const qty = Math.max(1, Math.floor((weight / 100 * INVESTMENT) / price));
+      const qty = Math.max(1, Math.floor((weight / 100 * INVEST_BASE) / price));
 
       // Use v8-based accurate day change % (getBatchDayChanges), fallback to liveInfo
       const dcPct = dc?.pct ?? liveInfo?.dayChangePercent ?? s.dayChangePercent ?? null;
@@ -493,6 +499,7 @@ router.get('/:id/stocks', async (req, res) => {
 
       return supplementStock({
         ...s,
+        ticker: normTicker,
         currentPrice: price,
         quantity: qty,
         high52Week: liveInfo?.high52Week || s.high52Week,
