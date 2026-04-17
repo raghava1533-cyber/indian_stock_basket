@@ -2105,6 +2105,74 @@ body {
   margin-bottom: 16px;
 }
 
+/* Rebalance All result banner */
+.rebalance-result-banner {
+  background: var(--color-accent-bg, #e8f5e9);
+  border: 1px solid var(--color-accent, #1D9E75);
+  border-radius: var(--border-radius-md);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.rebalance-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  color: var(--color-accent-text, var(--color-text-primary));
+}
+.rebalance-result-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  padding: 0 4px;
+}
+.rebalance-result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rebalance-result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  background: var(--color-background-primary);
+}
+.rebalance-result-name {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+.rebalance-result-status.rebalanced {
+  color: var(--color-accent, #1D9E75);
+  font-weight: 500;
+}
+.rebalance-result-status.skipped {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+.rebalance-result-status.failed {
+  color: var(--color-negative, #D85A30);
+}
+
+/* Accent button */
+.btn-accent {
+  background: var(--color-accent, #1D9E75);
+  color: #fff;
+  border: none;
+  font-weight: 500;
+}
+.btn-accent:hover {
+  opacity: 0.9;
+}
+.btn-accent:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .sc-cards-grid { grid-template-columns: 1fr; }

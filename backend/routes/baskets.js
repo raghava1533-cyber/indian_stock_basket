@@ -277,6 +277,81 @@ router.get('/live-summary', async (req, res) => {
   }
 });
 
+// ─── Rebalance ALL baskets for the logged-in user ────────────────────────────
+// Only rebalances baskets that are due (30+ days since last rebalance)
+// Results are scoped to the user — other users' baskets are not touched
+router.post('/rebalance-all', authenticateToken, async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    // Find baskets belonging to this user OR subscribed by this user
+    const allBaskets = await Basket.find({
+      $or: [
+        { createdBy: userEmail },
+        { subscribers: userEmail },
+      ]
+    });
+
+    if (allBaskets.length === 0) {
+      return res.json({ message: 'No baskets found for your account', results: [], rebalanced: 0, skipped: 0 });
+    }
+
+    const results = [];
+    let rebalanced = 0;
+    let skipped = 0;
+
+    for (const basket of allBaskets) {
+      const lastRebal = basket.lastRebalanceDate ? new Date(basket.lastRebalanceDate).getTime() : 0;
+      const daysSince = Math.floor((now - lastRebal) / (24 * 60 * 60 * 1000));
+      const isDue = (now - lastRebal) >= THIRTY_DAYS;
+
+      if (!isDue) {
+        skipped++;
+        results.push({
+          basketId: basket._id,
+          name: basket.name.replace(/ \(\d{13}\)$/, ''),
+          status: 'skipped',
+          daysSinceRebalance: daysSince,
+          nextDueIn: 30 - daysSince,
+          message: `Last rebalanced ${daysSince} day(s) ago — next due in ${30 - daysSince} day(s)`,
+        });
+        continue;
+      }
+
+      try {
+        await rebalanceBasket(basket._id.toString(), true);
+        rebalanced++;
+        results.push({
+          basketId: basket._id,
+          name: basket.name.replace(/ \(\d{13}\)$/, ''),
+          status: 'rebalanced',
+          daysSinceRebalance: daysSince,
+          message: 'Successfully rebalanced',
+        });
+      } catch (err) {
+        results.push({
+          basketId: basket._id,
+          name: basket.name.replace(/ \(\d{13}\)$/, ''),
+          status: 'failed',
+          message: err.message,
+        });
+      }
+    }
+
+    res.json({
+      message: `Rebalanced ${rebalanced} basket(s), skipped ${skipped} (not yet due)`,
+      rebalanced,
+      skipped,
+      total: allBaskets.length,
+      results,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get basket by ID
 router.get('/:id', async (req, res) => {
   try {

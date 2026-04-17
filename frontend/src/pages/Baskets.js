@@ -16,6 +16,8 @@ const THEME_META = {
 
 function Baskets({ baskets, onReload }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isRebalancing, setIsRebalancing] = useState(false);
+  const [rebalanceResult, setRebalanceResult] = useState(null);
   const [error, setError] = useState(null);
   const [localBaskets, setLocalBaskets] = useState(baskets || []);
   const [liveSummary, setLiveSummary] = useState({});
@@ -60,6 +62,26 @@ function Baskets({ baskets, onReload }) {
     }
   };
 
+  const handleRebalanceAll = async () => {
+    if (!token) {
+      alert('Please log in to rebalance your baskets');
+      return;
+    }
+    setIsRebalancing(true);
+    setRebalanceResult(null);
+    try {
+      const res = await basketAPI.rebalanceAll(token);
+      setRebalanceResult(res.data);
+      // Reload baskets to show updated data
+      await loadBasketsDirectly();
+      if (onReload) onReload();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Rebalance failed');
+    } finally {
+      setIsRebalancing(false);
+    }
+  };
+
   return (
     <div className="baskets-page">
       <div className="sc-page-header">
@@ -67,12 +89,43 @@ function Baskets({ baskets, onReload }) {
           <h1 className="sc-page-title">All Baskets</h1>
           <p className="sc-page-sub">Browse all curated and custom stock baskets</p>
         </div>
-        <button onClick={loadBasketsDirectly} disabled={isLoading} className="btn">
-          {isLoading ? 'Loading…' : 'Refresh'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {token && (
+            <button onClick={handleRebalanceAll} disabled={isRebalancing} className="btn btn-accent"
+              title="Rebalance all your baskets (every 30 days)">
+              {isRebalancing ? 'Rebalancing…' : '⟳ Rebalance All'}
+            </button>
+          )}
+          <button onClick={loadBasketsDirectly} disabled={isLoading} className="btn">
+            {isLoading ? 'Loading…' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {error && <div className="error-banner"><strong>Error:</strong> {error}</div>}
+
+      {rebalanceResult && (
+        <div className="rebalance-result-banner">
+          <div className="rebalance-result-header">
+            <strong>{rebalanceResult.message}</strong>
+            <button className="rebalance-result-close" onClick={() => setRebalanceResult(null)}>✕</button>
+          </div>
+          {rebalanceResult.results && rebalanceResult.results.length > 0 && (
+            <div className="rebalance-result-list">
+              {rebalanceResult.results.map((r, i) => (
+                <div key={i} className={`rebalance-result-item ${r.status}`}>
+                  <span className="rebalance-result-name">{r.name}</span>
+                  <span className={`rebalance-result-status ${r.status}`}>
+                    {r.status === 'rebalanced' ? '✓ Rebalanced' :
+                     r.status === 'skipped' ? `⏭ ${r.message}` :
+                     `✗ ${r.message}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="sc-cards-grid">
         {localBaskets && localBaskets.length > 0 ? (

@@ -21,7 +21,10 @@ function Dashboard({ baskets, onReload }) {
     JSON.parse(localStorage.getItem('subscribedBaskets') || '[]')
   );
   const [message, setMessage] = useState('');
+  const [isRebalancing, setIsRebalancing] = useState(false);
+  const [rebalanceResult, setRebalanceResult] = useState(null);
   const email = localStorage.getItem('userEmail') || '';
+  const token = localStorage.getItem('authToken') || '';
 
   useEffect(() => { setLoading(false); }, [baskets]);
 
@@ -75,6 +78,22 @@ function Dashboard({ baskets, onReload }) {
     }
   };
 
+  const handleRebalanceAll = async () => {
+    if (!token) { alert('Please log in to rebalance your baskets'); return; }
+    setIsRebalancing(true);
+    setRebalanceResult(null);
+    try {
+      const res = await basketAPI.rebalanceAll(token);
+      setRebalanceResult(res.data);
+      onReload();
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Rebalance failed');
+      setTimeout(() => setMessage(''), 4000);
+    } finally {
+      setIsRebalancing(false);
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading baskets...</div>;
   }
@@ -91,9 +110,38 @@ function Dashboard({ baskets, onReload }) {
           <h1 className="sc-page-title">Dashboard</h1>
           <p className="sc-page-sub">Curated stock baskets, rebalanced monthly</p>
         </div>
+        {token && (
+          <button onClick={handleRebalanceAll} disabled={isRebalancing} className="btn btn-accent"
+            title="Rebalance all your baskets (every 30 days)">
+            {isRebalancing ? 'Rebalancing…' : '⟳ Rebalance All'}
+          </button>
+        )}
       </div>
 
       {message && <div className="success">{message}</div>}
+
+      {rebalanceResult && (
+        <div className="rebalance-result-banner">
+          <div className="rebalance-result-header">
+            <strong>{rebalanceResult.message}</strong>
+            <button className="rebalance-result-close" onClick={() => setRebalanceResult(null)}>✕</button>
+          </div>
+          {rebalanceResult.results && rebalanceResult.results.length > 0 && (
+            <div className="rebalance-result-list">
+              {rebalanceResult.results.map((r, i) => (
+                <div key={i} className={`rebalance-result-item ${r.status}`}>
+                  <span className="rebalance-result-name">{r.name}</span>
+                  <span className={`rebalance-result-status ${r.status}`}>
+                    {r.status === 'rebalanced' ? '✓ Rebalanced' :
+                     r.status === 'skipped' ? `⏭ ${r.message}` :
+                     `✗ ${r.message}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="sc-cards-grid">
         {defaultBaskets.map((basket) => {

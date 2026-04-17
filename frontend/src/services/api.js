@@ -65,6 +65,10 @@ export const basketAPI = {
   subscribeToBasket: (id, email) => api.post(`/baskets/${id}/subscribe`, { email }),
   unsubscribeFromBasket: (id, email) => api.post(`/baskets/${id}/unsubscribe`, { email }),
   rebalanceBasket: (id) => api.post(`/baskets/${id}/rebalance`),
+  rebalanceAll: (token) => api.post('/baskets/rebalance-all', {}, {
+    headers: { Authorization: `Bearer ${token}` },
+    timeout: 120000, // 2 min — rebalancing all baskets takes time
+  }),
   getRebalanceSummary: (id) => api.get(`/baskets/${id}/rebalance-summary`),
   getBasketStocks: (id) => api.get(`/baskets/${id}/stocks`),
   getLiveSummary: () => api.get('/baskets/live-summary'),
