@@ -16,6 +16,7 @@ const THEME_META = {
 
 function Dashboard({ baskets, onReload }) {
   const [loading, setLoading] = useState(true);
+  const [liveSummary, setLiveSummary] = useState({});
   const [subscribedBaskets, setSubscribedBaskets] = useState(
     JSON.parse(localStorage.getItem('subscribedBaskets') || '[]')
   );
@@ -25,6 +26,12 @@ function Dashboard({ baskets, onReload }) {
   useEffect(() => {
     setLoading(false);
   }, [baskets]);
+
+  useEffect(() => {
+    basketAPI.getLiveSummary()
+      .then(res => setLiveSummary(res.data || {}))
+      .catch(() => {});
+  }, []);
 
   const handleSubscribe = async (basketId) => {
     if (!email) {
@@ -82,14 +89,10 @@ function Dashboard({ baskets, onReload }) {
           const stocks = basket.stocks || [];
           const totalValue = stocks.reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0);
 
-          // Weighted average day change %
-          const basketDayChangePct = totalValue > 0
-            ? stocks.reduce((sum, st) => {
-                const w = ((st.currentPrice || 0) * (st.quantity || 1)) / totalValue;
-                return sum + (st.dayChangePercent != null ? st.dayChangePercent * w : 0);
-              }, 0)
-            : null;
-          const hasChange = stocks.some(st => st.dayChangePercent != null);
+          // Use live summary for accurate day change; fallback to stored data
+          const rawPct = liveSummary[basket._id];
+          const basketDayChangePct = rawPct != null ? rawPct : null;
+          const hasChange = basketDayChangePct != null;
 
           const isSubscribed = subscribedBaskets.includes(basket._id);
           const createdDate = basket.createdAt

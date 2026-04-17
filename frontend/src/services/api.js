@@ -67,6 +67,7 @@ export const basketAPI = {
   rebalanceBasket: (id) => api.post(`/baskets/${id}/rebalance`),
   getRebalanceSummary: (id) => api.get(`/baskets/${id}/rebalance-summary`),
   getBasketStocks: (id) => api.get(`/baskets/${id}/stocks`),
+  getLiveSummary: () => api.get('/baskets/live-summary'),
   getBasketNews: (id) => api.get(`/baskets/${id}/news`),
   getBasketBenchmark: (id) => api.get(`/baskets/${id}/benchmark`),
   getMarketIndices: () => api.get('/market/indices'),

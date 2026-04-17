@@ -18,6 +18,7 @@ function Baskets({ baskets, onReload }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [localBaskets, setLocalBaskets] = useState(baskets || []);
+  const [liveSummary, setLiveSummary] = useState({});
 
   // Auto-load baskets when component mounts or if baskets prop is empty
   useEffect(() => {
@@ -28,6 +29,12 @@ function Baskets({ baskets, onReload }) {
       setLocalBaskets(baskets);
     }
   }, [baskets]);
+
+  useEffect(() => {
+    basketAPI.getLiveSummary()
+      .then(res => setLiveSummary(res.data || {}))
+      .catch(() => {});
+  }, []);
 
   const loadBasketsDirectly = async () => {
     setIsLoading(true);
@@ -107,13 +114,9 @@ function Baskets({ baskets, onReload }) {
             const meta = THEME_META[basket.theme] || THEME_META['Large Cap'];
             const stocks = basket.stocks || [];
             const totalValue = stocks.reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0);
-            const basketDayChangePct = totalValue > 0
-              ? stocks.reduce((sum, st) => {
-                  const w = ((st.currentPrice || 0) * (st.quantity || 1)) / totalValue;
-                  return sum + (st.dayChangePercent != null ? st.dayChangePercent * w : 0);
-                }, 0)
-              : null;
-            const hasChange = stocks.some(st => st.dayChangePercent != null);
+            const rawPct = liveSummary[basket._id];
+            const basketDayChangePct = rawPct != null ? rawPct : null;
+            const hasChange = basketDayChangePct != null;
             const createdDate = basket.createdAt
               ? new Date(basket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
               : null;

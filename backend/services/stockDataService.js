@@ -181,6 +181,36 @@ const getMultipleStocksData = async (tickers) => {
 const getStocksByCategory = () => [];
 const calculateStockScore = () => 0;
 
+/**
+ * Batch-fetch 1-day change % for many tickers in a single Yahoo Finance v7 request.
+ * Returns a map of { ticker: dayChangePercent (%) }
+ */
+const getBatchDayChanges = async (tickers) => {
+  if (!tickers || tickers.length === 0) return {};
+  try {
+    const resp = await axios.get('https://query1.finance.yahoo.com/v7/finance/quote', {
+      params: { symbols: tickers.join(',') },
+      headers: YF_HEADERS,
+      timeout: 15000,
+    });
+    const results = resp.data?.quoteResponse?.result || [];
+    const map = {};
+    for (const r of results) {
+      const prev  = r.regularMarketPreviousClose ?? null;
+      const price = r.regularMarketPrice ?? null;
+      if (prev && price && prev > 0) {
+        map[r.symbol] = ((price - prev) / prev) * 100;
+      } else {
+        map[r.symbol] = r.regularMarketChangePercent ?? null;
+      }
+    }
+    return map;
+  } catch (err) {
+    console.warn('[getBatchDayChanges] failed:', err.message);
+    return {};
+  }
+};
+
 module.exports = {
   getEnrichedStockData,
   getEnrichedUniverseData,
@@ -188,4 +218,5 @@ module.exports = {
   getMultipleStocksData,
   getStocksByCategory,
   calculateStockScore,
+  getBatchDayChanges,
 };

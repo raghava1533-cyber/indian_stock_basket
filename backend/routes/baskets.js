@@ -1,7 +1,7 @@
 const express = require('express');
 const Basket = require('../models/Basket');
 const { rebalanceBasket, getRebalanceSummary, STATIC_FALLBACK, buildReason } = require('../services/rebalanceService');
-const { getMultipleStocksData } = require('../services/stockDataService');
+const { getMultipleStocksData, getBatchDayChanges } = require('../services/stockDataService');
 
 const router = express.Router();
 
@@ -208,6 +208,33 @@ router.get('/fix-pe-eps', async (req, res) => {
   }
 });
 
+// Live day-change summary for all baskets (used by cards on Dashboard/Explore)
+router.get('/live-summary', async (req, res) => {
+  try {
+    const baskets = await Basket.find();
+    const allTickers = [...new Set(baskets.flatMap(b => b.stocks.map(s => s.ticker)))];
+    const dayChanges = await getBatchDayChanges(allTickers);
+
+    const summary = {};
+    for (const basket of baskets) {
+      const stocks = basket.stocks || [];
+      const totalValue = stocks.reduce((s, st) => s + (st.currentPrice || 0) * (st.quantity || 1), 0);
+      if (totalValue > 0) {
+        summary[basket._id] = stocks.reduce((sum, st) => {
+          const dc = dayChanges[st.ticker];
+          const w = ((st.currentPrice || 0) * (st.quantity || 1)) / totalValue;
+          return sum + (dc != null ? dc * w : 0);
+        }, 0);
+      } else {
+        summary[basket._id] = null;
+      }
+    }
+    res.json(summary);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get basket by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -303,6 +330,8 @@ router.get('/:id/stocks', async (req, res) => {
         high52Week: liveInfo?.high52Week || s.high52Week,
         low52Week: liveInfo?.low52Week || s.low52Week,
         companyName: liveInfo?.companyName || s.companyName || s.ticker,
+        dayChange: liveInfo?.dayChange ?? s.dayChange ?? null,
+        dayChangePercent: liveInfo?.dayChangePercent ?? s.dayChangePercent ?? null,
         lastUpdated: liveInfo?.lastUpdated || new Date(),
       };
     });
