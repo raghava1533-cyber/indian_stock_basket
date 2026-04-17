@@ -196,8 +196,9 @@ const getEnrichedStockData = async (ticker) => {
     // Blend: 40% news sentiment + 60% momentum
     const socialSentiment = Number(((newsSentiment * 0.4) + (momentumSentiment * 0.6)).toFixed(1));
 
-    // Fetch chart data for RSI/SMA computation (non-blocking — fallback to null)
+    // Fetch chart data for RSI/SMA computation + accurate price/dayChange from v8
     let rsi = null, sma20 = null, sma50 = null, sma200 = null;
+    let v8Price = null, v8PrevClose = null;
     try {
       const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
       const chartResp = await axios.get(chartUrl, {
@@ -205,18 +206,48 @@ const getEnrichedStockData = async (ticker) => {
         headers: YF_HEADERS,
         timeout: 8000,
       });
-      const closes = chartResp.data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
+      const chartResult = chartResp.data?.chart?.result?.[0];
+      const closes = chartResult?.indicators?.quote?.[0]?.close || [];
       rsi = computeRSI(closes);
       const smas = computeSMAs(closes);
       sma20 = smas.sma20;
       sma50 = smas.sma50;
       sma200 = smas.sma200;
+      // Extract v8 price and previousClose for accurate dayChange
+      const chartMeta = chartResult?.meta || {};
+      v8Price = chartMeta.regularMarketPrice ?? null;
+      v8PrevClose = chartMeta.chartPreviousClose ?? chartMeta.previousClose ?? null;
     } catch (_) {}
+
+    // Prefer v8 price (more accurate/real-time) over v10 when available
+    const finalPrice = v8Price || currentPrice;
+
+    // Compute dayChange: prefer v8-derived (chartPreviousClose is accurate)
+    let finalDayChange = price.regularMarketChange?.raw ?? null;
+    let finalDayChangePct = (() => {
+      const chg = price.regularMarketChange?.raw ?? null;
+      const cur = price.regularMarketPrice?.raw  ?? null;
+      if (chg != null && cur != null && (cur - chg) > 0)
+        return (chg / (cur - chg)) * 100;
+      return price.regularMarketChangePercent?.raw != null
+        ? price.regularMarketChangePercent.raw * 100
+        : null;
+    })();
+
+    // Override with v8-based dayChange if v10 didn't provide it or v8 price is fresher
+    if (v8Price != null && v8PrevClose != null && v8PrevClose > 0) {
+      const v8DayChange = v8Price - v8PrevClose;
+      const v8DayChangePct = (v8DayChange / v8PrevClose) * 100;
+      if (finalDayChange == null || v8Price !== currentPrice) {
+        finalDayChange = v8DayChange;
+        finalDayChangePct = v8DayChangePct;
+      }
+    }
 
     return {
       ticker,
       companyName:     price.longName || price.shortName || ticker,
-      currentPrice,
+      currentPrice: finalPrice,
       high52Week,
       low52Week,
       marketCap,
@@ -242,16 +273,8 @@ const getEnrichedStockData = async (ticker) => {
       sma20,
       sma50,
       sma200,
-      dayChange:        price.regularMarketChange?.raw        ?? null,
-      dayChangePercent: (() => {
-        const chg = price.regularMarketChange?.raw ?? null;
-        const cur = price.regularMarketPrice?.raw  ?? null;
-        if (chg != null && cur != null && (cur - chg) > 0)
-          return (chg / (cur - chg)) * 100;
-        return price.regularMarketChangePercent?.raw != null
-          ? price.regularMarketChangePercent.raw * 100
-          : null;
-      })(),
+      dayChange: finalDayChange,
+      dayChangePercent: finalDayChangePct,
       lastUpdated: new Date(),
     };
   } catch (v10Err) {
@@ -342,14 +365,14 @@ const getEnrichedStockData = async (ticker) => {
  * @param {number}   concurrency - parallel requests per batch (default 5)
  * @returns {Array<object|null>} same order as input tickers
  */
-const getEnrichedUniverseData = async (tickers, concurrency = 5) => {
+const getEnrichedUniverseData = async (tickers, concurrency = 3) => {
   const results = [];
   for (let i = 0; i < tickers.length; i += concurrency) {
     const batch = tickers.slice(i, i + concurrency);
     const batchResults = await Promise.all(batch.map(t => getEnrichedStockData(t)));
     results.push(...batchResults);
     if (i + concurrency < tickers.length) {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 400));
     }
   }
   return results;
@@ -376,27 +399,56 @@ const calculateStockScore = () => 0;
 const getBatchDayChanges = async (tickers) => {
   if (!tickers || tickers.length === 0) return {};
   const map = {};
-  const concurrency = 8;
+  const concurrency = 6;
+
+  const fetchOne = async (ticker) => {
+    try {
+      const resp = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`, {
+        params: { interval: '1d', range: '5d' },
+        headers: YF_HEADERS,
+        timeout: 10000,
+      });
+      const meta  = resp.data?.chart?.result?.[0]?.meta || {};
+      const price = meta.regularMarketPrice ?? null;
+      const prev  = meta.chartPreviousClose ?? meta.previousClose ?? null;
+      if (price != null && prev && prev > 0) {
+        map[ticker] = { pct: ((price - prev) / prev) * 100, price };
+      }
+    } catch (_) { /* skip */ }
+  };
 
   for (let i = 0; i < tickers.length; i += concurrency) {
     const batch = tickers.slice(i, i + concurrency);
-    await Promise.all(batch.map(async (ticker) => {
-      try {
-        const resp = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`, {
-          params: { interval: '1d', range: '5d' },
-          headers: YF_HEADERS,
-          timeout: 10000,
-        });
-        const meta  = resp.data?.chart?.result?.[0]?.meta || {};
-        const price = meta.regularMarketPrice ?? null;
-        const prev  = meta.chartPreviousClose ?? meta.previousClose ?? null;
-        if (price != null && prev && prev > 0) {
-          map[ticker] = ((price - prev) / prev) * 100;
-        }
-      } catch (_) { /* skip */ }
-    }));
+    await Promise.all(batch.map(fetchOne));
     if (i + concurrency < tickers.length) {
-      await new Promise(r => setTimeout(r, 150));
+      await new Promise(r => setTimeout(r, 200));
+    }
+  }
+
+  // Retry failed tickers once with longer timeout
+  const failed = tickers.filter(t => !map[t]);
+  if (failed.length > 0) {
+    await new Promise(r => setTimeout(r, 500));
+    for (let i = 0; i < failed.length; i += 4) {
+      const batch = failed.slice(i, i + 4);
+      await Promise.all(batch.map(async (ticker) => {
+        try {
+          const resp = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`, {
+            params: { interval: '1d', range: '5d' },
+            headers: { ...YF_HEADERS, 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
+            timeout: 15000,
+          });
+          const meta  = resp.data?.chart?.result?.[0]?.meta || {};
+          const price = meta.regularMarketPrice ?? null;
+          const prev  = meta.chartPreviousClose ?? meta.previousClose ?? null;
+          if (price != null && prev && prev > 0) {
+            map[ticker] = { pct: ((price - prev) / prev) * 100, price };
+          }
+        } catch (_) { /* skip */ }
+      }));
+      if (i + 4 < failed.length) {
+        await new Promise(r => setTimeout(r, 300));
+      }
     }
   }
   return map;

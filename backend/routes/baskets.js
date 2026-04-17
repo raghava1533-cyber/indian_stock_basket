@@ -476,17 +476,20 @@ router.get('/:id/stocks', async (req, res) => {
     const enrichedStocks = basket.stocks.map(stock => {
       const s = stock.toObject ? stock.toObject() : { ...stock };
       const liveInfo = liveData.find(d => d.ticker === s.ticker);
-      const price = liveInfo?.currentPrice || s.currentPrice;
+      const dc = dayChanges[s.ticker]; // { pct, price } or undefined
+
+      // Prefer v8 batch price (most accurate), then liveInfo, then stored
+      const price = dc?.price || liveInfo?.currentPrice || s.currentPrice;
 
       // Recompute quantity dynamically from live price + stored weight
       const weight = s.weight || 10;
       const qty = Math.max(1, Math.floor((weight / 100 * INVESTMENT) / price));
 
-      // Use v8-based accurate day change % (getBatchDayChanges)
-      const dcPct = dayChanges[s.ticker] ?? liveInfo?.dayChangePercent ?? s.dayChangePercent ?? null;
+      // Use v8-based accurate day change % (getBatchDayChanges), fallback to liveInfo
+      const dcPct = dc?.pct ?? liveInfo?.dayChangePercent ?? s.dayChangePercent ?? null;
       // Derive abs change from accurate %
       const prevPrice = dcPct != null && price ? price / (1 + dcPct / 100) : null;
-      const dcAbs = prevPrice != null ? price - prevPrice : null;
+      const dcAbs = prevPrice != null ? price - prevPrice : (liveInfo?.dayChange ?? null);
 
       return supplementStock({
         ...s,
