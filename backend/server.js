@@ -24,10 +24,15 @@ const fetchIndexQuote = async (ticker) => {
   });
   const result = resp.data?.chart?.result?.[0];
   if (!result) throw new Error(`No result for ${ticker}`);
-  const meta = result.meta || {};
-  const price   = meta.regularMarketPrice ?? 0;
-  const prev    = meta.chartPreviousClose ?? meta.previousClose ?? null;
-  const change  = prev ? price - prev : null;
+  const meta   = result.meta || {};
+  // Read actual daily closes from chart data — more reliable than meta.chartPreviousClose
+  const closes = (result.indicators?.quote?.[0]?.close || []).filter(c => c != null);
+  const price  = meta.regularMarketPrice ?? (closes.length ? closes[closes.length - 1] : 0);
+  // Previous close = second-to-last actual recorded close
+  const prev   = closes.length >= 2
+    ? closes[closes.length - 2]
+    : (meta.chartPreviousClose ?? meta.previousClose ?? null);
+  const change    = prev ? price - prev : null;
   const changePct = prev && prev > 0 ? ((price - prev) / prev) * 100 : null;
   return { price, dayChange: change, dayChangePercent: changePct };
 };

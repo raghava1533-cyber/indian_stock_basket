@@ -570,6 +570,19 @@ body {
   table-layout: auto;
 }
 
+/* Force all columns to content width; Company column gets remaining space */
+.stocks-table th,
+.stocks-table td {
+  white-space: nowrap;
+}
+.stocks-table th:nth-child(2),
+.stocks-table td:nth-child(2) {
+  white-space: normal;
+  width: 100%;
+  min-width: 140px;
+  max-width: 240px;
+}
+
 .stocks-table thead { background: var(--color-background-secondary); }
 
 .stocks-table th {
@@ -588,11 +601,6 @@ body {
   color: var(--color-text-primary);
   vertical-align: middle;
   white-space: nowrap;
-}
-
-.stocks-table td:nth-child(2) {
-  white-space: normal;
-  min-width: 140px;
 }
 
 .stocks-table tr:last-child td { border-bottom: none; }
