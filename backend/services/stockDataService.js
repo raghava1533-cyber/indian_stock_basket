@@ -49,12 +49,11 @@ const getEnrichedStockData = async (ticker) => {
       : null;
 
     // Analyst target upside → futureGrowth score 0-10
+    // Return null if no analyst target so static fallback can supply a better value
     const targetMeanPrice = finData.targetMeanPrice?.raw ?? null;
-    let futureGrowth = 5;
-    if (targetMeanPrice && currentPrice > 0) {
-      const upside = ((targetMeanPrice - currentPrice) / currentPrice) * 10;
-      futureGrowth = Math.max(0, Math.min(10, upside));
-    }
+    const futureGrowth = (targetMeanPrice && currentPrice > 0)
+      ? Math.max(0, Math.min(10, ((targetMeanPrice - currentPrice) / currentPrice) * 10))
+      : null;
 
     // 52W momentum proxy → socialSentiment score 0-10
     const range52 = high52Week - low52Week;
@@ -137,7 +136,7 @@ const getEnrichedStockData = async (ticker) => {
       peRatio,
       earningsGrowth:  null,
       revenueGrowth:   null,
-      futureGrowth:    5,
+      futureGrowth:    null,
       socialSentiment,
       dayChange,
       dayChangePercent,
