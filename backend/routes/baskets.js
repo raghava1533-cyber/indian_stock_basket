@@ -115,6 +115,47 @@ router.post('/populate', async (req, res) => {
   }
 });
 
+// Populate baskets with stocks (GET version for browser triggering)
+router.get('/populate', async (req, res) => {
+  try {
+    console.log('GET /populate - Populating baskets with stocks...');
+    const baskets = await Basket.find();
+    
+    if (baskets.length === 0) {
+      return res.status(400).json({ message: 'No baskets found. Visit /api/baskets/init first' });
+    }
+
+    const results = [];
+    for (const basket of baskets) {
+      try {
+        console.log(`Rebalancing basket: ${basket.name}`);
+        const result = await rebalanceBasket(basket._id, false);
+        results.push({
+          basketId: basket._id,
+          basketName: basket.name,
+          status: 'success',
+          stocksAdded: result?.changes?.added?.length || 0
+        });
+      } catch (error) {
+        console.error(`Error rebalancing ${basket.name}:`, error.message);
+        results.push({
+          basketId: basket._id,
+          basketName: basket.name,
+          status: 'error',
+          error: error.message
+        });
+      }
+    }
+
+    res.json({
+      message: 'Basket population completed',
+      results
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get basket by ID
 router.get('/:id', async (req, res) => {
   try {
