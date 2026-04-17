@@ -20,6 +20,30 @@ app.use(express.urlencoded({ extended: true }));
 // Routes (will be started after DB connection)
 app.use('/api/baskets', basketRoutes);
 
+// Root endpoint - API documentation
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Indian Stock Basket API',
+    version: '1.0.0',
+    status: 'Active',
+    endpoints: {
+      health: '/health',
+      baskets: {
+        getAll: 'GET /api/baskets',
+        getById: 'GET /api/baskets/:id',
+        subscribe: 'POST /api/baskets/:id/subscribe',
+        unsubscribe: 'POST /api/baskets/:id/unsubscribe',
+        rebalance: 'POST /api/baskets/:id/rebalance',
+        rebalanceSummary: 'GET /api/baskets/:id/rebalance-summary',
+        getStocks: 'GET /api/baskets/stocks?category=value'
+      },
+      documentation: 'https://github.com/raghava1533-cyber/indian_stock_basket',
+      frontend: process.env.FRONTEND_URL || 'https://indian-stock-basket.vercel.app'
+    },
+    timestamp: new Date()
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'Server is running', timestamp: new Date() });
