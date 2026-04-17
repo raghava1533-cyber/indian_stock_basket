@@ -576,36 +576,33 @@ body {
 .stocks-table th:nth-child(2),
 .stocks-table td:nth-child(2)  { width: auto; text-align: left; }              /* Company */
 .stocks-table th:nth-child(3),
-.stocks-table td:nth-child(3)  { width: 62px; text-align: right; }             /* Price */
+.stocks-table td:nth-child(3)  { width: 68px; text-align: right; }             /* Price */
 .stocks-table th:nth-child(4),
-.stocks-table td:nth-child(4)  { width: 80px; text-align: right; }             /* Day Change */
+.stocks-table td:nth-child(4)  { width: 88px; text-align: right; }             /* Day Change */
 .stocks-table th:nth-child(5),
-.stocks-table td:nth-child(5)  { width: 68px; text-align: right; }             /* 52W High */
+.stocks-table td:nth-child(5)  { width: 78px; text-align: right; }             /* 52W High */
 .stocks-table th:nth-child(6),
-.stocks-table td:nth-child(6)  { width: 60px; text-align: right; }             /* 52W Low */
+.stocks-table td:nth-child(6)  { width: 72px; text-align: right; }             /* 52W Low */
 .stocks-table th:nth-child(7),
-.stocks-table td:nth-child(7)  { width: 44px; text-align: right; }             /* PE */
+.stocks-table td:nth-child(7)  { width: 48px; text-align: right; }             /* PE */
 .stocks-table th:nth-child(8),
-.stocks-table td:nth-child(8)  { width: 52px; text-align: right; }             /* EPS% */
+.stocks-table td:nth-child(8)  { width: 56px; text-align: right; }             /* EPS% */
 .stocks-table th:nth-child(9),
-.stocks-table td:nth-child(9)  { width: 52px; text-align: right; }             /* Weight */
+.stocks-table td:nth-child(9)  { width: 60px; text-align: right; }             /* Weight */
 .stocks-table th:nth-child(10),
-.stocks-table td:nth-child(10) { width: 36px; text-align: right; }             /* Qty */
+.stocks-table td:nth-child(10) { width: 46px; text-align: right; }             /* Qty */
 .stocks-table th:nth-child(11),
-.stocks-table td:nth-child(11) { width: 66px; text-align: right; }             /* Value */
+.stocks-table td:nth-child(11) { width: 74px; text-align: right; }             /* Value */
 .stocks-table th:nth-child(12),
-.stocks-table td:nth-child(12) { width: 56px; text-align: center; }            /* Score */
+.stocks-table td:nth-child(12) { width: 58px; text-align: center; }            /* Score */
 
 .stocks-table th,
 .stocks-table td {
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .stocks-table th:nth-child(2),
 .stocks-table td:nth-child(2) {
   white-space: normal;
-  overflow: visible;
 }
 
 .stocks-table thead { background: var(--color-background-secondary); }
