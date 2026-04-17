@@ -475,17 +475,19 @@ router.get('/:id/stocks', async (req, res) => {
     const toNSESymbol = (t) => t.replace(/\.(NS|BO)$/i, '');
     const toYFTicker  = (t) => isIndian ? (t.includes('.') ? t : t + '.NS') : t;
 
-    // Yahoo ticker mapping: where Yahoo Finance uses a different symbol than NSE
+    // Yahoo ticker mapping: where Yahoo Finance uses a different symbol or exchange than NSE
+    // Values that already include a suffix (.BO/.NS) are used as-is; otherwise .NS is appended
     const YAHOO_TICKER_MAP = {
-      'DEEPAKNITRITE': 'DEEPAKNTR',
-      // add more here as discovered
+      'DEEPAKNITRITE': 'DEEPAKNTR',  // Yahoo uses DEEPAKNTR.NS
+      'MAHINDCIE': '532756.BO',       // Not on NSE Yahoo Finance; use BSE code
     };
 
     const nseSymbols   = basket.stocks.map(s => toNSESymbol(s.ticker));
     const yfTickers    = basket.stocks.map(s => {
       const nse = toNSESymbol(s.ticker);
-      const yfBase = (isIndian && YAHOO_TICKER_MAP[nse]) ? YAHOO_TICKER_MAP[nse] : nse;
-      return isIndian ? yfBase + '.NS' : s.ticker;
+      const mapped = isIndian ? (YAHOO_TICKER_MAP[nse] || null) : null;
+      if (mapped) return mapped.includes('.') ? mapped : mapped + '.NS';
+      return isIndian ? nse + '.NS' : s.ticker;
     });
 
     // For Indian baskets: NSE is primary (price + dayChange), YF is for enriched data
@@ -866,11 +868,13 @@ router.get('/:id/benchmark', async (req, res) => {
     // For Indian stocks: use .NS suffix for Yahoo Finance charts
     const toYFChart = (ticker, isUS) => {
       if (isUS) return ticker;
-      // Strip existing suffix then re-add .NS
+      // Strip existing suffix then re-add appropriate suffix
       const base = ticker.replace(/\.(NS|BO)$/i, '');
-      // Apply known Yahoo ticker remaps
-      const YAHOO_CHART_MAP = { 'DEEPAKNITRITE': 'DEEPAKNTR' };
-      return (YAHOO_CHART_MAP[base] || base) + '.NS';
+      // Apply known Yahoo ticker remaps (values with . suffix are used as-is)
+      const YAHOO_CHART_MAP = { 'DEEPAKNITRITE': 'DEEPAKNTR', 'MAHINDCIE': '532756.BO' };
+      const mapped = YAHOO_CHART_MAP[base];
+      if (mapped) return mapped.includes('.') ? mapped : mapped + '.NS';
+      return base + '.NS';
     };
 
     let basketSeries = [];

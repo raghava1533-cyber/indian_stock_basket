@@ -197,9 +197,9 @@ const getEnrichedStockData = async (ticker) => {
     // Blend: 40% news sentiment + 60% momentum
     const socialSentiment = Number(((newsSentiment * 0.4) + (momentumSentiment * 0.6)).toFixed(1));
 
-    // Fetch chart data for RSI/SMA (1y) + separate 5d fetch for accurate dayChange
+    // Fetch chart data for RSI/SMA (1y)
     let rsi = null, sma20 = null, sma50 = null, sma200 = null;
-    let v8Price = null, v8PrevClose = null;
+    let v8Price = null;
     try {
       const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
       const chartResp = await axios.get(chartUrl, {
@@ -214,9 +214,21 @@ const getEnrichedStockData = async (ticker) => {
       sma20 = smas.sma20;
       sma50 = smas.sma50;
       sma200 = smas.sma200;
-      const chartMeta = chartResult?.meta || {};
-      v8Price = chartMeta.regularMarketPrice ?? null;
-      v8PrevClose = chartMeta.chartPreviousClose ?? chartMeta.previousClose ?? null;
+      v8Price = chartResult?.meta?.regularMarketPrice ?? null;
+    } catch (_) {}
+
+    // Separate 5d fetch for accurate previous close (range=1y chartPreviousClose is
+    // adjusted for corporate actions and will show wrong day change on ex-dates)
+    let v8PrevClose = null;
+    try {
+      const resp5d = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`, {
+        params: { interval: '1d', range: '5d' },
+        headers: YF_HEADERS,
+        timeout: 8000,
+      });
+      const meta5d = resp5d.data?.chart?.result?.[0]?.meta || {};
+      v8PrevClose = meta5d.chartPreviousClose ?? null;
+      if (!v8Price) v8Price = meta5d.regularMarketPrice ?? null;
     } catch (_) {}
 
     // Use v10's reported dayChange directly (already adjusted for corporate actions)
@@ -304,7 +316,20 @@ const getEnrichedStockData = async (ticker) => {
       ? currentPrice / meta.epsTrailingTwelveMonths
       : null;
 
-    const prevClose = meta.chartPreviousClose ?? meta.previousClose ?? null;
+    // Fetch 5d chart for accurate previous close (range=1y chartPreviousClose is
+    // adjusted for corporate actions and will be wrong on ex-dates)
+    let prevClose = null;
+    try {
+      const resp5d = await axios.get(url, {
+        params: { interval: '1d', range: '5d' },
+        headers: YF_HEADERS,
+        timeout: 8000,
+      });
+      prevClose = resp5d.data?.chart?.result?.[0]?.meta?.chartPreviousClose ?? null;
+    } catch (_) {
+      // fallback: use 1y chartPreviousClose (may be wrong on ex-date days)
+      prevClose = meta.chartPreviousClose ?? meta.previousClose ?? null;
+    }
     const dayChange = prevClose ? currentPrice - prevClose : null;
     const dayChangePercent = prevClose && prevClose > 0 ? ((currentPrice - prevClose) / prevClose) * 100 : null;
 
