@@ -129,44 +129,6 @@ function Baskets({ baskets, onReload }) {
                   <span className="sc-explore-link">View →</span>
                 </div>
               </div>
-                  <div className="sc-card-body">
-                    <div className="sc-card-top">
-                      <div className="sc-icon" style={{ background: meta.bg, color: meta.color }}>
-                        {meta.letter}
-                      </div>
-                      <div className="sc-card-title-block">
-                        <div className="sc-card-name">{basket.name}</div>
-                        <div className="sc-card-by">by SmartBasket India</div>
-                      </div>
-                    </div>
-
-                    <div className="sc-card-stats">
-                      <div className="sc-stat">
-                        <div className="sc-stat-label">Min Investment</div>
-                        <div className="sc-stat-val accent">
-                          ₹{totalValue > 0 ? totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}
-                        </div>
-                      </div>
-                      <div className="sc-stat">
-                        <div className="sc-stat-label">Stocks</div>
-                        <div className="sc-stat-val">{stocks.length}</div>
-                      </div>
-                      <div className="sc-stat">
-                        <div className="sc-stat-label">Today</div>
-                        <div className={`sc-stat-val${hasChange ? (basketDayChangePct >= 0 ? ' green' : ' red') : ''}`}>
-                          {hasChange
-                            ? `${basketDayChangePct >= 0 ? '+' : ''}${basketDayChangePct.toFixed(2)}%`
-                            : '—'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="sc-card-action">
-                    <span className="sc-card-date">{createdDate ? `Since ${createdDate}` : ''}</span>
-                    <span className="sc-explore-link">View →</span>
-                  </div>
-                </div>
-              </Link>
             );
           })
         ) : (
