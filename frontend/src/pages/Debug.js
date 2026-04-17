@@ -28,6 +28,16 @@ function Debug() {
     }
   };
 
+  const populateBaskets = async () => {
+    addLog('Populating baskets with stocks...');
+    try {
+      const res = await basketAPI.populateBaskets();
+      addLog(`✓ Populate done: ${JSON.stringify(res.data)}`);
+    } catch (err) {
+      addLog(`✗ Populate failed: ${err.message}`);
+    }
+  };
+
   const testBaskets = async () => {
     addLog('Testing /api/baskets...');
     try {
