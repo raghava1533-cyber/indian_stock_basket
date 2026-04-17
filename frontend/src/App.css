@@ -1479,6 +1479,162 @@ body {
   border-color: #f5c6c6;
 }
 
+/* "Create Basket" open button in page header */
+.cb-open-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.cb-open-btn:hover { background: var(--color-accent-dark); }
+
+/* Delete button on user-created cards */
+.sc-delete-btn {
+  margin-left: auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-secondary);
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.sc-delete-btn:hover {
+  background: var(--color-negative-bg);
+  color: var(--color-negative-text);
+  border-color: #f5c6c6;
+}
+.sc-card-user { border-top: 2px solid var(--color-accent); }
+
+/* Create Basket Modal overlay */
+.cb-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.cb-modal {
+  background: var(--color-background-primary);
+  border-radius: var(--border-radius-lg);
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+  overflow: hidden;
+}
+.cb-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 0;
+}
+.cb-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.cb-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  line-height: 1;
+  padding: 4px;
+  border-radius: 4px;
+}
+.cb-modal-close:hover { background: var(--color-background-tertiary); }
+.cb-modal-body {
+  padding: 16px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cb-modal-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.cb-field { display: flex; flex-direction: column; gap: 6px; }
+.cb-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.cb-select, .cb-input {
+  padding: 9px 12px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  background: var(--color-background-primary);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.cb-select:focus, .cb-input:focus {
+  border-color: var(--color-accent);
+}
+.cb-error {
+  font-size: 13px;
+  color: var(--color-negative-text);
+  background: var(--color-negative-bg);
+  border-radius: var(--border-radius-sm);
+  padding: 8px 12px;
+}
+.cb-modal-footer {
+  display: flex;
+  gap: 10px;
+  padding: 0 24px 20px;
+  justify-content: flex-end;
+}
+.cb-cancel-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-secondary);
+  background: var(--color-background-primary);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+}
+.cb-cancel-btn:hover { background: var(--color-background-secondary); }
+.cb-create-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.cb-create-btn:hover:not(:disabled) { background: var(--color-accent-dark); }
+.cb-create-btn:disabled, .cb-cancel-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 /* ═══════════════════════════════════════════════════════════
    PORTFOLIO / INVESTMENTS LIST
    ═══════════════════════════════════════════════════════════ */

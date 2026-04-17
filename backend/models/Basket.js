@@ -4,26 +4,19 @@ const basketSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
-    enum: [
-      'Bluechip Giants',
-      'Midcap Momentum',
-      'Smallcap Leaders',
-      'Tech Innovators',
-      'Finance Leaders',
-      'Healthcare Growth',
-      'Renewable Energy',
-      'Consumer Brands',
-      'Infrastructure Surge'
-    ]
   },
   description: String,
   category: {
     type: String,
-    enum: ['Market Cap Based', 'Thematic'],
     default: 'Market Cap Based'
   },
+  categoryKey: {
+    type: String,
+    default: null,
+  },
   theme: String,
+  isUserCreated: { type: Boolean, default: false },
+  createdBy: { type: String, default: null },
   stocks: [{
     ticker: String,
     symbol: String,

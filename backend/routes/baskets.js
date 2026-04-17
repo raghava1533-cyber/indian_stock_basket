@@ -1,9 +1,24 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const Basket = require('../models/Basket');
-const { rebalanceBasket, getRebalanceSummary, STATIC_FALLBACK, buildReason } = require('../services/rebalanceService');
+const { rebalanceBasket, getRebalanceSummary, STATIC_FALLBACK, buildReason, STOCK_UNIVERSE } = require('../services/rebalanceService');
 const { getMultipleStocksData, getBatchDayChanges } = require('../services/stockDataService');
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'changeme_secret';
+
+// ─── Auth middleware (optional) ──────────────────────────────────────────────
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer '))
+    return res.status(401).json({ message: 'Not authenticated' });
+  try {
+    req.user = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ message: 'Invalid or expired token' });
+  }
+};
 
 // ─── Helper: fill null PE/EPS/futureGrowth from STATIC_FALLBACK ───────────────
 const supplementStock = (stock) => {
@@ -365,6 +380,96 @@ router.get('/:id/stocks', async (req, res) => {
     });
 
     res.json(enrichedStocks);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ─── Create custom basket (authenticated) ─────────────────────────────────────
+const SECTOR_LABELS = {
+  tech: 'Technology', finance: 'Finance', healthcare: 'Healthcare',
+  renewable: 'Renewable', consumer: 'Consumer', infrastructure: 'Infrastructure',
+  largeCap: 'Large Cap', midCap: 'Mid Cap', smallCap: 'Small Cap',
+};
+const MARKET_CAP_THRESHOLDS = { largeCap: 50000, midCap: 10000 };
+
+router.post('/create-custom', authenticateToken, async (req, res) => {
+  try {
+    const { sector, marketCap, name } = req.body;
+    if (!sector || !marketCap)
+      return res.status(400).json({ message: 'sector and marketCap are required' });
+
+    // Determine base universe key
+    let universeKey;
+    if (sector !== 'all') {
+      universeKey = sector;
+    } else if (marketCap !== 'all') {
+      universeKey = marketCap;
+    } else {
+      universeKey = 'largeCap';
+    }
+
+    // Build universe, optionally filtered by market cap
+    let universeDefs = (STOCK_UNIVERSE[universeKey] || STOCK_UNIVERSE.largeCap).slice();
+    if (sector !== 'all' && marketCap !== 'all') {
+      // Filter sector universe by market cap threshold
+      const filtered = universeDefs.filter(def => {
+        const mc = (require('../services/rebalanceService').STATIC_FALLBACK[def.ticker] || {}).marketCapCr || 0;
+        if (marketCap === 'largeCap') return mc >= MARKET_CAP_THRESHOLDS.largeCap;
+        if (marketCap === 'midCap')   return mc >= MARKET_CAP_THRESHOLDS.midCap && mc < MARKET_CAP_THRESHOLDS.largeCap;
+        if (marketCap === 'smallCap') return mc < MARKET_CAP_THRESHOLDS.midCap;
+        return true;
+      });
+      if (filtered.length >= 10) universeDefs = filtered;
+    }
+
+    // Generate name if not provided
+    const sectorLabel = SECTOR_LABELS[sector] || 'Mixed';
+    const capLabel    = SECTOR_LABELS[marketCap] || 'All Cap';
+    const baseName = name || (
+      sector !== 'all' && marketCap !== 'all' ? `${sectorLabel} ${capLabel} Basket`
+      : sector !== 'all' ? `${sectorLabel} Growth Basket`
+      : `${capLabel} Picks Basket`
+    );
+    // Append timestamp to avoid name collision
+    const uniqueName = `${baseName} (${Date.now()})`;
+    const themeLabel = sector !== 'all' ? sectorLabel : capLabel;
+
+    const basket = new Basket({
+      name:            uniqueName,
+      description:     `Custom basket: ${sectorLabel} sector, ${capLabel}`,
+      category:        'Custom',
+      categoryKey:     universeKey,
+      theme:           themeLabel,
+      isUserCreated:   true,
+      createdBy:       req.user.email,
+      stocks:          [],
+      subscribers:     [],
+      nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
+    await basket.save();
+
+    // Rebalance to populate stocks
+    await rebalanceBasket(basket._id.toString(), false);
+    const populated = await Basket.findById(basket._id);
+    res.status(201).json(populated);
+  } catch (error) {
+    console.error('[create-custom]', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ─── Delete basket (authenticated, user-created only) ──────────────────────────
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const basket = await Basket.findById(req.params.id);
+    if (!basket) return res.status(404).json({ message: 'Basket not found' });
+    if (!basket.isUserCreated)
+      return res.status(403).json({ message: 'System baskets cannot be deleted' });
+    if (basket.createdBy !== req.user.email)
+      return res.status(403).json({ message: 'Not authorized to delete this basket' });
+    await Basket.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Basket deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

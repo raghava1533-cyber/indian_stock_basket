@@ -71,6 +71,12 @@ export const basketAPI = {
   getBasketNews: (id) => api.get(`/baskets/${id}/news`),
   getBasketBenchmark: (id) => api.get(`/baskets/${id}/benchmark`),
   getMarketIndices: () => api.get('/market/indices'),
+  createCustomBasket: (data, token) => api.post('/baskets/create-custom', data, {
+    headers: { Authorization: `Bearer ${token}` }
+  }),
+  deleteBasket: (id, token) => api.delete(`/baskets/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  }),
 };
 
 export const authAPI = {
