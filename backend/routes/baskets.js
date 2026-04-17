@@ -323,7 +323,8 @@ router.post('/rebalance-all', authenticateToken, async (req, res) => {
     for (const basket of allBaskets) {
       const lastRebal = basket.lastRebalanceDate ? new Date(basket.lastRebalanceDate).getTime() : 0;
       const daysSince = Math.floor((now - lastRebal) / (24 * 60 * 60 * 1000));
-      const isDue = (now - lastRebal) >= THIRTY_DAYS;
+      // User-created baskets: allow rebalance anytime; curated baskets: 30-day cooldown
+      const isDue = basket.isUserCreated ? true : (now - lastRebal) >= THIRTY_DAYS;
 
       if (!isDue) {
         skipped++;
@@ -686,7 +687,14 @@ router.get('/:id/benchmark', async (req, res) => {
     if (!basket) return res.status(404).json({ message: 'Basket not found' });
 
     const axios = require('axios');
-    const benchmarks = [
+    const isUS = basket.country === 'US';
+    const benchmarks = isUS ? [
+      { ticker: '^GSPC',  name: 'S&P 500' },
+      { ticker: '^IXIC',  name: 'NASDAQ Composite' },
+      { ticker: '^DJI',   name: 'Dow Jones' },
+      { ticker: '^RUT',   name: 'Russell 2000' },
+      { ticker: '^NDX',   name: 'NASDAQ 100' },
+    ] : [
       { ticker: '^NSEI', name: 'Nifty 50' },
       { ticker: '^NSEBANK', name: 'Bank Nifty' },
       { ticker: '^NSMIDCP', name: 'Nifty Midcap 100' },
