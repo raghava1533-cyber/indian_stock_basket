@@ -511,6 +511,208 @@ const STOCK_UNIVERSE = {
     { ticker: 'DATAPATTNS.NS',    companyName: 'Data Patterns'           },
     { ticker: 'KAYNES.NS',        companyName: 'Kaynes Technology'       },
   ],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // USA STOCK UNIVERSE  (Yahoo Finance tickers — no suffix for US stocks)
+  // ═══════════════════════════════════════════════════════════════════════════
+  usa_largeCap: [
+    { ticker: 'AAPL',    companyName: 'Apple Inc.'                },
+    { ticker: 'MSFT',    companyName: 'Microsoft Corporation'     },
+    { ticker: 'GOOGL',   companyName: 'Alphabet Inc.'             },
+    { ticker: 'AMZN',    companyName: 'Amazon.com Inc.'           },
+    { ticker: 'NVDA',    companyName: 'NVIDIA Corporation'        },
+    { ticker: 'META',    companyName: 'Meta Platforms Inc.'       },
+    { ticker: 'TSLA',    companyName: 'Tesla Inc.'                },
+    { ticker: 'BRK-B',   companyName: 'Berkshire Hathaway B'     },
+    { ticker: 'JPM',     companyName: 'JPMorgan Chase & Co.'     },
+    { ticker: 'V',       companyName: 'Visa Inc.'                 },
+    { ticker: 'JNJ',     companyName: 'Johnson & Johnson'         },
+    { ticker: 'UNH',     companyName: 'UnitedHealth Group'        },
+    { ticker: 'WMT',     companyName: 'Walmart Inc.'              },
+    { ticker: 'XOM',     companyName: 'Exxon Mobil Corporation'   },
+    { ticker: 'MA',      companyName: 'Mastercard Inc.'           },
+    { ticker: 'PG',      companyName: 'Procter & Gamble Co.'      },
+    { ticker: 'HD',      companyName: 'Home Depot Inc.'           },
+    { ticker: 'COST',    companyName: 'Costco Wholesale'          },
+    { ticker: 'LLY',     companyName: 'Eli Lilly and Company'     },
+    { ticker: 'AVGO',    companyName: 'Broadcom Inc.'             },
+  ],
+  usa_midCap: [
+    { ticker: 'CRWD',    companyName: 'CrowdStrike Holdings'      },
+    { ticker: 'DDOG',    companyName: 'Datadog Inc.'               },
+    { ticker: 'ZS',      companyName: 'Zscaler Inc.'               },
+    { ticker: 'MELI',    companyName: 'MercadoLibre Inc.'          },
+    { ticker: 'TTD',     companyName: 'The Trade Desk'             },
+    { ticker: 'SNAP',    companyName: 'Snap Inc.'                  },
+    { ticker: 'ROKU',    companyName: 'Roku Inc.'                  },
+    { ticker: 'NET',     companyName: 'Cloudflare Inc.'            },
+    { ticker: 'BILL',    companyName: 'Bill Holdings Inc.'         },
+    { ticker: 'HUBS',    companyName: 'HubSpot Inc.'               },
+    { ticker: 'VEEV',    companyName: 'Veeva Systems Inc.'         },
+    { ticker: 'OKTA',    companyName: 'Okta Inc.'                  },
+    { ticker: 'TWLO',    companyName: 'Twilio Inc.'                },
+    { ticker: 'SPLK',    companyName: 'Splunk Inc.'                },
+    { ticker: 'ESTC',    companyName: 'Elastic NV'                 },
+    { ticker: 'MDB',     companyName: 'MongoDB Inc.'               },
+    { ticker: 'PINS',    companyName: 'Pinterest Inc.'             },
+    { ticker: 'RBLX',    companyName: 'Roblox Corporation'         },
+    { ticker: 'U',       companyName: 'Unity Software'             },
+    { ticker: 'PATH',    companyName: 'UiPath Inc.'                },
+  ],
+  usa_smallCap: [
+    { ticker: 'SMCI',    companyName: 'Super Micro Computer'       },
+    { ticker: 'AEHR',    companyName: 'Aehr Test Systems'          },
+    { ticker: 'CELH',    companyName: 'Celsius Holdings'           },
+    { ticker: 'SOUN',    companyName: 'SoundHound AI'              },
+    { ticker: 'IONQ',    companyName: 'IonQ Inc.'                  },
+    { ticker: 'UPST',    companyName: 'Upstart Holdings'           },
+    { ticker: 'ASAN',    companyName: 'Asana Inc.'                 },
+    { ticker: 'AI',      companyName: 'C3.ai Inc.'                 },
+    { ticker: 'BIGC',    companyName: 'BigCommerce Holdings'       },
+    { ticker: 'BRZE',    companyName: 'Braze Inc.'                 },
+    { ticker: 'DLO',     companyName: 'DLocal Limited'             },
+    { ticker: 'VERX',    companyName: 'Vertex Inc.'                },
+    { ticker: 'CIFR',    companyName: 'Cipher Mining'              },
+    { ticker: 'GSAT',    companyName: 'Globalstar Inc.'            },
+    { ticker: 'XPEL',    companyName: 'XPEL Inc.'                  },
+    { ticker: 'PYCR',    companyName: 'Paycor HCM'                 },
+    { ticker: 'PRCT',    companyName: 'PROCEPT BioRobotics'        },
+    { ticker: 'SGHC',    companyName: 'Super Group'                },
+    { ticker: 'CWAN',    companyName: 'Clearwater Analytics'       },
+    { ticker: 'DOCN',    companyName: 'DigitalOcean Holdings'      },
+  ],
+  usa_tech: [
+    { ticker: 'AAPL',    companyName: 'Apple Inc.'                 },
+    { ticker: 'MSFT',    companyName: 'Microsoft Corporation'      },
+    { ticker: 'GOOGL',   companyName: 'Alphabet Inc.'              },
+    { ticker: 'NVDA',    companyName: 'NVIDIA Corporation'         },
+    { ticker: 'META',    companyName: 'Meta Platforms Inc.'        },
+    { ticker: 'CRM',     companyName: 'Salesforce Inc.'            },
+    { ticker: 'ADBE',    companyName: 'Adobe Inc.'                 },
+    { ticker: 'ORCL',    companyName: 'Oracle Corporation'         },
+    { ticker: 'CSCO',    companyName: 'Cisco Systems Inc.'         },
+    { ticker: 'INTC',    companyName: 'Intel Corporation'          },
+    { ticker: 'AMD',     companyName: 'Advanced Micro Devices'     },
+    { ticker: 'AVGO',    companyName: 'Broadcom Inc.'              },
+    { ticker: 'NOW',     companyName: 'ServiceNow Inc.'            },
+    { ticker: 'PANW',    companyName: 'Palo Alto Networks'         },
+    { ticker: 'SNOW',    companyName: 'Snowflake Inc.'             },
+    { ticker: 'UBER',    companyName: 'Uber Technologies'          },
+    { ticker: 'SQ',      companyName: 'Block Inc.'                 },
+    { ticker: 'SHOP',    companyName: 'Shopify Inc.'               },
+    { ticker: 'PLTR',    companyName: 'Palantir Technologies'      },
+    { ticker: 'CRWD',    companyName: 'CrowdStrike Holdings'       },
+  ],
+  usa_finance: [
+    { ticker: 'JPM',     companyName: 'JPMorgan Chase & Co.'      },
+    { ticker: 'BAC',     companyName: 'Bank of America Corp.'     },
+    { ticker: 'WFC',     companyName: 'Wells Fargo & Company'     },
+    { ticker: 'GS',      companyName: 'Goldman Sachs Group'       },
+    { ticker: 'MS',      companyName: 'Morgan Stanley'            },
+    { ticker: 'C',       companyName: 'Citigroup Inc.'            },
+    { ticker: 'BLK',     companyName: 'BlackRock Inc.'            },
+    { ticker: 'SCHW',    companyName: 'Charles Schwab Corp.'      },
+    { ticker: 'AXP',     companyName: 'American Express Co.'      },
+    { ticker: 'V',       companyName: 'Visa Inc.'                  },
+    { ticker: 'MA',      companyName: 'Mastercard Inc.'            },
+    { ticker: 'PYPL',    companyName: 'PayPal Holdings'            },
+    { ticker: 'COF',     companyName: 'Capital One Financial'     },
+    { ticker: 'USB',     companyName: 'U.S. Bancorp'              },
+    { ticker: 'PNC',     companyName: 'PNC Financial Services'    },
+    { ticker: 'TFC',     companyName: 'Truist Financial Corp.'    },
+    { ticker: 'MMC',     companyName: 'Marsh & McLennan'          },
+    { ticker: 'AON',     companyName: 'Aon plc'                    },
+    { ticker: 'ICE',     companyName: 'Intercontinental Exchange' },
+    { ticker: 'CME',     companyName: 'CME Group Inc.'             },
+  ],
+  usa_healthcare: [
+    { ticker: 'UNH',     companyName: 'UnitedHealth Group'         },
+    { ticker: 'JNJ',     companyName: 'Johnson & Johnson'          },
+    { ticker: 'LLY',     companyName: 'Eli Lilly and Company'      },
+    { ticker: 'PFE',     companyName: 'Pfizer Inc.'                },
+    { ticker: 'ABBV',    companyName: 'AbbVie Inc.'                },
+    { ticker: 'MRK',     companyName: 'Merck & Co. Inc.'           },
+    { ticker: 'TMO',     companyName: 'Thermo Fisher Scientific'   },
+    { ticker: 'ABT',     companyName: 'Abbott Laboratories'        },
+    { ticker: 'DHR',     companyName: 'Danaher Corporation'        },
+    { ticker: 'BMY',     companyName: 'Bristol-Myers Squibb'       },
+    { ticker: 'AMGN',    companyName: 'Amgen Inc.'                 },
+    { ticker: 'GILD',    companyName: 'Gilead Sciences Inc.'       },
+    { ticker: 'ISRG',    companyName: 'Intuitive Surgical'         },
+    { ticker: 'VRTX',    companyName: 'Vertex Pharmaceuticals'     },
+    { ticker: 'REGN',    companyName: 'Regeneron Pharmaceuticals'  },
+    { ticker: 'MDT',     companyName: 'Medtronic plc'              },
+    { ticker: 'SYK',     companyName: 'Stryker Corporation'        },
+    { ticker: 'ZTS',     companyName: 'Zoetis Inc.'                },
+    { ticker: 'ELV',     companyName: 'Elevance Health Inc.'       },
+    { ticker: 'HCA',     companyName: 'HCA Healthcare Inc.'        },
+  ],
+  usa_renewable: [
+    { ticker: 'ENPH',    companyName: 'Enphase Energy Inc.'        },
+    { ticker: 'SEDG',    companyName: 'SolarEdge Technologies'     },
+    { ticker: 'FSLR',    companyName: 'First Solar Inc.'           },
+    { ticker: 'NEE',     companyName: 'NextEra Energy Inc.'        },
+    { ticker: 'PLUG',    companyName: 'Plug Power Inc.'            },
+    { ticker: 'RUN',     companyName: 'Sunrun Inc.'                },
+    { ticker: 'BE',      companyName: 'Bloom Energy Corp.'         },
+    { ticker: 'CSIQ',    companyName: 'Canadian Solar Inc.'        },
+    { ticker: 'AES',     companyName: 'AES Corporation'            },
+    { ticker: 'DQ',      companyName: 'Daqo New Energy Corp.'      },
+    { ticker: 'ARRY',    companyName: 'Array Technologies'         },
+    { ticker: 'NOVA',    companyName: 'Sunnova Energy'             },
+    { ticker: 'SPWR',    companyName: 'SunPower Corporation'       },
+    { ticker: 'MAXN',    companyName: 'Maxeon Solar Technologies'  },
+    { ticker: 'SHLS',    companyName: 'Shoals Technologies'        },
+    { ticker: 'ORA',     companyName: 'Ormat Technologies'         },
+    { ticker: 'CWEN',    companyName: 'Clearway Energy Inc.'       },
+    { ticker: 'AY',      companyName: 'Atlantica Sustainable'      },
+    { ticker: 'STEM',    companyName: 'Stem Inc.'                  },
+    { ticker: 'CLNE',    companyName: 'Clean Energy Fuels'         },
+  ],
+  usa_consumer: [
+    { ticker: 'AMZN',    companyName: 'Amazon.com Inc.'            },
+    { ticker: 'WMT',     companyName: 'Walmart Inc.'               },
+    { ticker: 'PG',      companyName: 'Procter & Gamble Co.'       },
+    { ticker: 'KO',      companyName: 'Coca-Cola Company'          },
+    { ticker: 'PEP',     companyName: 'PepsiCo Inc.'               },
+    { ticker: 'COST',    companyName: 'Costco Wholesale'           },
+    { ticker: 'NKE',     companyName: 'Nike Inc.'                  },
+    { ticker: 'MCD',     companyName: 'McDonald\'s Corporation'    },
+    { ticker: 'SBUX',    companyName: 'Starbucks Corporation'      },
+    { ticker: 'TGT',     companyName: 'Target Corporation'         },
+    { ticker: 'CL',      companyName: 'Colgate-Palmolive Co.'      },
+    { ticker: 'EL',      companyName: 'Estée Lauder Companies'     },
+    { ticker: 'KMB',     companyName: 'Kimberly-Clark Corp.'       },
+    { ticker: 'MDLZ',    companyName: 'Mondelez International'     },
+    { ticker: 'GIS',     companyName: 'General Mills Inc.'         },
+    { ticker: 'K',       companyName: 'Kellanova'                  },
+    { ticker: 'HSY',     companyName: 'Hershey Company'            },
+    { ticker: 'MNST',    companyName: 'Monster Beverage Corp.'     },
+    { ticker: 'DG',      companyName: 'Dollar General Corp.'       },
+    { ticker: 'DLTR',    companyName: 'Dollar Tree Inc.'           },
+  ],
+  usa_infrastructure: [
+    { ticker: 'CAT',     companyName: 'Caterpillar Inc.'           },
+    { ticker: 'DE',      companyName: 'Deere & Company'            },
+    { ticker: 'UNP',     companyName: 'Union Pacific Corp.'        },
+    { ticker: 'HON',     companyName: 'Honeywell International'    },
+    { ticker: 'GE',      companyName: 'GE Aerospace'               },
+    { ticker: 'RTX',     companyName: 'RTX Corporation'            },
+    { ticker: 'LMT',     companyName: 'Lockheed Martin Corp.'     },
+    { ticker: 'BA',      companyName: 'Boeing Company'             },
+    { ticker: 'MMM',     companyName: '3M Company'                 },
+    { ticker: 'EMR',     companyName: 'Emerson Electric Co.'       },
+    { ticker: 'ETN',     companyName: 'Eaton Corporation'          },
+    { ticker: 'VMC',     companyName: 'Vulcan Materials Co.'       },
+    { ticker: 'MLM',     companyName: 'Martin Marietta Materials'  },
+    { ticker: 'PWR',     companyName: 'Quanta Services Inc.'       },
+    { ticker: 'J',       companyName: 'Jacobs Solutions'           },
+    { ticker: 'AME',     companyName: 'AMETEK Inc.'                },
+    { ticker: 'WM',      companyName: 'Waste Management Inc.'      },
+    { ticker: 'NSC',     companyName: 'Norfolk Southern Corp.'     },
+    { ticker: 'CSX',     companyName: 'CSX Corporation'            },
+    { ticker: 'FAST',    companyName: 'Fastenal Company'           },
+  ],
 };
 
 // ─── Static fallback data (used when live fetch returns null) ─────────────────
@@ -906,6 +1108,180 @@ const STATIC_FALLBACK = {
   'HAPPSTMNDS.NS':     { currentPrice: 750,  high52Week: 1000, low52Week: 500,  marketCapCr:   11200, peRatio: 35.0, earningsGrowth: 22, futureGrowth: 8,  socialSentiment: 7 },
   'DATAPATTNS.NS':     { currentPrice: 2200, high52Week: 3100, low52Week: 1500, marketCapCr:   12800, peRatio: 50.0, earningsGrowth: 35, futureGrowth: 9,  socialSentiment: 8 },
   'KAYNES.NS':         { currentPrice: 4500, high52Week: 6450, low52Week: 2500, marketCapCr:   26700, peRatio: 85.0, earningsGrowth: 50, futureGrowth: 9,  socialSentiment: 9 },
+
+  // ═══ USA STATIC FALLBACK (marketCapCr → in $Billion for US stocks) ═══════
+  // Large Cap
+  'AAPL':    { currentPrice: 195,  high52Week: 199, low52Week: 124, marketCapCr: 3050000, peRatio: 31.5, earningsGrowth: 11, futureGrowth: 8, socialSentiment: 9 },
+  'MSFT':    { currentPrice: 420,  high52Week: 430, low52Week: 310, marketCapCr: 3120000, peRatio: 36.0, earningsGrowth: 15, futureGrowth: 9, socialSentiment: 9 },
+  'GOOGL':   { currentPrice: 170,  high52Week: 180, low52Week: 120, marketCapCr: 2100000, peRatio: 25.0, earningsGrowth: 20, futureGrowth: 9, socialSentiment: 8 },
+  'AMZN':    { currentPrice: 185,  high52Week: 190, low52Week: 118, marketCapCr: 1900000, peRatio: 60.0, earningsGrowth: 25, futureGrowth: 9, socialSentiment: 9 },
+  'NVDA':    { currentPrice: 880,  high52Week: 950, low52Week: 390, marketCapCr: 2200000, peRatio: 70.0, earningsGrowth: 120, futureGrowth: 10, socialSentiment: 10 },
+  'META':    { currentPrice: 500,  high52Week: 530, low52Week: 280, marketCapCr: 1280000, peRatio: 28.0, earningsGrowth: 35, futureGrowth: 8, socialSentiment: 8 },
+  'TSLA':    { currentPrice: 240,  high52Week: 300, low52Week: 150, marketCapCr:  760000, peRatio: 60.0, earningsGrowth: -10, futureGrowth: 8, socialSentiment: 9 },
+  'BRK-B':   { currentPrice: 410,  high52Week: 420, low52Week: 320, marketCapCr:  890000, peRatio: 10.0, earningsGrowth: 18, futureGrowth: 6, socialSentiment: 7 },
+  'JPM':     { currentPrice: 195,  high52Week: 200, low52Week: 135, marketCapCr:  560000, peRatio: 11.5, earningsGrowth: 12, futureGrowth: 7, socialSentiment: 8 },
+  'V':       { currentPrice: 280,  high52Week: 290, low52Week: 220, marketCapCr:  580000, peRatio: 32.0, earningsGrowth: 14, futureGrowth: 8, socialSentiment: 8 },
+  'JNJ':     { currentPrice: 155,  high52Week: 175, low52Week: 145, marketCapCr:  370000, peRatio: 18.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 7 },
+  'UNH':     { currentPrice: 520,  high52Week: 560, low52Week: 430, marketCapCr:  480000, peRatio: 22.0, earningsGrowth: 12, futureGrowth: 7, socialSentiment: 7 },
+  'WMT':     { currentPrice: 170,  high52Week: 175, low52Week: 140, marketCapCr:  460000, peRatio: 28.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 7 },
+  'XOM':     { currentPrice: 105,  high52Week: 120, low52Week: 95,  marketCapCr:  430000, peRatio: 11.0, earningsGrowth: -5, futureGrowth: 4, socialSentiment: 6 },
+  'MA':      { currentPrice: 450,  high52Week: 460, low52Week: 350, marketCapCr:  420000, peRatio: 34.0, earningsGrowth: 13, futureGrowth: 8, socialSentiment: 8 },
+  'PG':      { currentPrice: 165,  high52Week: 170, low52Week: 140, marketCapCr:  390000, peRatio: 26.0, earningsGrowth: 6, futureGrowth: 5, socialSentiment: 7 },
+  'HD':      { currentPrice: 350,  high52Week: 395, low52Week: 275, marketCapCr:  350000, peRatio: 23.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 7 },
+  'COST':    { currentPrice: 720,  high52Week: 750, low52Week: 500, marketCapCr:  320000, peRatio: 45.0, earningsGrowth: 10, futureGrowth: 7, socialSentiment: 8 },
+  'LLY':     { currentPrice: 780,  high52Week: 800, low52Week: 400, marketCapCr:  740000, peRatio: 105.0, earningsGrowth: 40, futureGrowth: 10, socialSentiment: 9 },
+  'AVGO':    { currentPrice: 1300, high52Week: 1400, low52Week: 800, marketCapCr:  600000, peRatio: 55.0, earningsGrowth: 30, futureGrowth: 9, socialSentiment: 8 },
+  // Mid Cap
+  'CRWD':    { currentPrice: 310,  high52Week: 365, low52Week: 140, marketCapCr:  75000, peRatio: 75.0, earningsGrowth: 25, futureGrowth: 9, socialSentiment: 8 },
+  'DDOG':    { currentPrice: 125,  high52Week: 130, low52Week: 80,  marketCapCr:  40000, peRatio: 280.0, earningsGrowth: 30, futureGrowth: 9, socialSentiment: 8 },
+  'ZS':      { currentPrice: 220,  high52Week: 260, low52Week: 140, marketCapCr:  32000, peRatio: 200.0, earningsGrowth: 35, futureGrowth: 9, socialSentiment: 7 },
+  'MELI':    { currentPrice: 1600, high52Week: 1750, low52Week: 1100, marketCapCr: 80000, peRatio: 60.0, earningsGrowth: 28, futureGrowth: 8, socialSentiment: 8 },
+  'TTD':     { currentPrice: 85,   high52Week: 100, low52Week: 60,  marketCapCr:  42000, peRatio: 200.0, earningsGrowth: 20, futureGrowth: 8, socialSentiment: 7 },
+  'SNAP':    { currentPrice: 15,   high52Week: 17,  low52Week: 8,   marketCapCr:  24000, peRatio: -1, earningsGrowth: -15, futureGrowth: 5, socialSentiment: 6 },
+  'ROKU':    { currentPrice: 70,   high52Week: 107, low52Week: 45,  marketCapCr:  10000, peRatio: -1, earningsGrowth: -20, futureGrowth: 6, socialSentiment: 6 },
+  'NET':     { currentPrice: 90,   high52Week: 100, low52Week: 55,  marketCapCr:  30000, peRatio: 200.0, earningsGrowth: 30, futureGrowth: 9, socialSentiment: 8 },
+  'BILL':    { currentPrice: 70,   high52Week: 130, low52Week: 45,  marketCapCr:   7500, peRatio: 80.0, earningsGrowth: 15, futureGrowth: 7, socialSentiment: 6 },
+  'HUBS':    { currentPrice: 620,  high52Week: 690, low52Week: 390, marketCapCr:  32000, peRatio: 180.0, earningsGrowth: 25, futureGrowth: 8, socialSentiment: 8 },
+  'VEEV':    { currentPrice: 210,  high52Week: 230, low52Week: 155, marketCapCr:  33000, peRatio: 55.0, earningsGrowth: 12, futureGrowth: 7, socialSentiment: 7 },
+  'OKTA':    { currentPrice: 100,  high52Week: 115, low52Week: 65,  marketCapCr:  16000, peRatio: 200.0, earningsGrowth: 20, futureGrowth: 7, socialSentiment: 7 },
+  'TWLO':    { currentPrice: 65,   high52Week: 77,  low52Week: 50,  marketCapCr:  12000, peRatio: 200.0, earningsGrowth: 10, futureGrowth: 6, socialSentiment: 6 },
+  'SPLK':    { currentPrice: 150,  high52Week: 160, low52Week: 95,  marketCapCr:  25000, peRatio: 40.0, earningsGrowth: 20, futureGrowth: 7, socialSentiment: 7 },
+  'ESTC':    { currentPrice: 110,  high52Week: 130, low52Week: 55,  marketCapCr:  11000, peRatio: 200.0, earningsGrowth: 20, futureGrowth: 8, socialSentiment: 7 },
+  'MDB':     { currentPrice: 390,  high52Week: 510, low52Week: 200, marketCapCr:  28000, peRatio: 200.0, earningsGrowth: 25, futureGrowth: 9, socialSentiment: 8 },
+  'PINS':    { currentPrice: 38,   high52Week: 40,  low52Week: 24,  marketCapCr:  26000, peRatio: 30.0, earningsGrowth: 15, futureGrowth: 7, socialSentiment: 7 },
+  'RBLX':    { currentPrice: 42,   high52Week: 45,  low52Week: 25,  marketCapCr:  25000, peRatio: -1, earningsGrowth: -10, futureGrowth: 7, socialSentiment: 7 },
+  'U':       { currentPrice: 30,   high52Week: 45,  low52Week: 20,  marketCapCr:  12000, peRatio: -1, earningsGrowth: -15, futureGrowth: 6, socialSentiment: 6 },
+  'PATH':    { currentPrice: 22,   high52Week: 27,  low52Week: 13,  marketCapCr:  12500, peRatio: 200.0, earningsGrowth: 15, futureGrowth: 7, socialSentiment: 6 },
+  // Small Cap
+  'SMCI':    { currentPrice: 700,  high52Week: 1230, low52Week: 230, marketCapCr: 40000, peRatio: 25.0, earningsGrowth: 80, futureGrowth: 9, socialSentiment: 8 },
+  'AEHR':    { currentPrice: 15,   high52Week: 50,  low52Week: 10,  marketCapCr:   430, peRatio: 25.0, earningsGrowth: 30, futureGrowth: 7, socialSentiment: 6 },
+  'CELH':    { currentPrice: 55,   high52Week: 100, low52Week: 40,  marketCapCr:  13000, peRatio: 60.0, earningsGrowth: 40, futureGrowth: 8, socialSentiment: 7 },
+  'SOUN':    { currentPrice: 7,    high52Week: 10,  low52Week: 2,   marketCapCr:   2200, peRatio: -1, earningsGrowth: -20, futureGrowth: 8, socialSentiment: 7 },
+  'IONQ':    { currentPrice: 15,   high52Week: 22,  low52Week: 8,   marketCapCr:   3200, peRatio: -1, earningsGrowth: -30, futureGrowth: 8, socialSentiment: 7 },
+  'UPST':    { currentPrice: 35,   high52Week: 73,  low52Week: 12,  marketCapCr:   3000, peRatio: -1, earningsGrowth: -25, futureGrowth: 7, socialSentiment: 6 },
+  'ASAN':    { currentPrice: 20,   high52Week: 28,  low52Week: 15,  marketCapCr:   4500, peRatio: -1, earningsGrowth: -15, futureGrowth: 6, socialSentiment: 6 },
+  'AI':      { currentPrice: 30,   high52Week: 35,  low52Week: 18,  marketCapCr:   3600, peRatio: -1, earningsGrowth: -20, futureGrowth: 7, socialSentiment: 6 },
+  'BIGC':    { currentPrice: 8,    high52Week: 12,  low52Week: 5,   marketCapCr:    600, peRatio: -1, earningsGrowth: -10, futureGrowth: 6, socialSentiment: 5 },
+  'BRZE':    { currentPrice: 50,   high52Week: 70,  low52Week: 30,  marketCapCr:   5000, peRatio: -1, earningsGrowth: -15, futureGrowth: 7, socialSentiment: 6 },
+  'DLO':     { currentPrice: 15,   high52Week: 20,  low52Week: 8,   marketCapCr:   4500, peRatio: 20.0, earningsGrowth: 25, futureGrowth: 7, socialSentiment: 6 },
+  'VERX':    { currentPrice: 30,   high52Week: 38,  low52Week: 18,  marketCapCr:   4800, peRatio: 80.0, earningsGrowth: 20, futureGrowth: 7, socialSentiment: 6 },
+  'CIFR':    { currentPrice: 5,    high52Week: 8,   low52Week: 2,   marketCapCr:   1400, peRatio: -1, earningsGrowth: -30, futureGrowth: 6, socialSentiment: 5 },
+  'GSAT':    { currentPrice: 4,    high52Week: 6,   low52Week: 1,   marketCapCr:   7000, peRatio: -1, earningsGrowth: -10, futureGrowth: 7, socialSentiment: 6 },
+  'XPEL':    { currentPrice: 50,   high52Week: 90,  low52Week: 40,  marketCapCr:   1400, peRatio: 20.0, earningsGrowth: 15, futureGrowth: 7, socialSentiment: 6 },
+  'PYCR':    { currentPrice: 22,   high52Week: 30,  low52Week: 15,  marketCapCr:   3800, peRatio: 50.0, earningsGrowth: 12, futureGrowth: 7, socialSentiment: 6 },
+  'PRCT':    { currentPrice: 55,   high52Week: 75,  low52Week: 30,  marketCapCr:   3000, peRatio: -1, earningsGrowth: -15, futureGrowth: 8, socialSentiment: 7 },
+  'SGHC':    { currentPrice: 5,    high52Week: 8,   low52Week: 3,   marketCapCr:   1200, peRatio: 15.0, earningsGrowth: 10, futureGrowth: 6, socialSentiment: 5 },
+  'CWAN':    { currentPrice: 20,   high52Week: 25,  low52Week: 13,  marketCapCr:   5000, peRatio: 80.0, earningsGrowth: 18, futureGrowth: 7, socialSentiment: 6 },
+  'DOCN':    { currentPrice: 35,   high52Week: 45,  low52Week: 25,  marketCapCr:   3300, peRatio: 30.0, earningsGrowth: 15, futureGrowth: 7, socialSentiment: 6 },
+  // Tech
+  'CRM':     { currentPrice: 270,  high52Week: 300, low52Week: 195, marketCapCr:  260000, peRatio: 55.0, earningsGrowth: 20, futureGrowth: 8, socialSentiment: 8 },
+  'ADBE':    { currentPrice: 550,  high52Week: 640, low52Week: 430, marketCapCr:  245000, peRatio: 45.0, earningsGrowth: 12, futureGrowth: 8, socialSentiment: 8 },
+  'ORCL':    { currentPrice: 130,  high52Week: 140, low52Week: 100, marketCapCr:  350000, peRatio: 35.0, earningsGrowth: 10, futureGrowth: 7, socialSentiment: 7 },
+  'CSCO':    { currentPrice: 50,   high52Week: 58,  low52Week: 44,  marketCapCr:  200000, peRatio: 15.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 6 },
+  'INTC':    { currentPrice: 42,   high52Week: 50,  low52Week: 26,  marketCapCr:  175000, peRatio: -1, earningsGrowth: -10, futureGrowth: 5, socialSentiment: 5 },
+  'AMD':     { currentPrice: 175,  high52Week: 230, low52Week: 95,  marketCapCr:  280000, peRatio: 45.0, earningsGrowth: 40, futureGrowth: 9, socialSentiment: 9 },
+  'NOW':     { currentPrice: 780,  high52Week: 815, low52Week: 500, marketCapCr:  160000, peRatio: 70.0, earningsGrowth: 25, futureGrowth: 9, socialSentiment: 8 },
+  'PANW':    { currentPrice: 310,  high52Week: 380, low52Week: 215, marketCapCr:  100000, peRatio: 55.0, earningsGrowth: 30, futureGrowth: 9, socialSentiment: 8 },
+  'SNOW':    { currentPrice: 175,  high52Week: 240, low52Week: 115, marketCapCr:  58000, peRatio: 200.0, earningsGrowth: 30, futureGrowth: 9, socialSentiment: 8 },
+  'UBER':    { currentPrice: 70,   high52Week: 82,  low52Week: 40,  marketCapCr:  145000, peRatio: 120.0, earningsGrowth: 50, futureGrowth: 8, socialSentiment: 8 },
+  'SQ':      { currentPrice: 75,   high52Week: 90,  low52Week: 40,  marketCapCr:  46000, peRatio: 80.0, earningsGrowth: 20, futureGrowth: 7, socialSentiment: 7 },
+  'SHOP':    { currentPrice: 80,   high52Week: 92,  low52Week: 45,  marketCapCr:  100000, peRatio: 75.0, earningsGrowth: 30, futureGrowth: 8, socialSentiment: 8 },
+  'PLTR':    { currentPrice: 25,   high52Week: 27,  low52Week: 13,  marketCapCr:  55000, peRatio: 200.0, earningsGrowth: 40, futureGrowth: 8, socialSentiment: 8 },
+  // Finance
+  'BAC':     { currentPrice: 34,   high52Week: 37,  low52Week: 24,  marketCapCr:  270000, peRatio: 10.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 7 },
+  'WFC':     { currentPrice: 50,   high52Week: 55,  low52Week: 38,  marketCapCr:  180000, peRatio: 11.0, earningsGrowth: 10, futureGrowth: 6, socialSentiment: 6 },
+  'GS':      { currentPrice: 420,  high52Week: 450, low52Week: 300, marketCapCr:  140000, peRatio: 14.0, earningsGrowth: 12, futureGrowth: 7, socialSentiment: 7 },
+  'MS':      { currentPrice: 90,   high52Week: 100, low52Week: 72,  marketCapCr:  145000, peRatio: 15.0, earningsGrowth: 10, futureGrowth: 7, socialSentiment: 7 },
+  'C':       { currentPrice: 55,   high52Week: 60,  low52Week: 40,  marketCapCr:  105000, peRatio: 8.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 6 },
+  'BLK':     { currentPrice: 800,  high52Week: 850, low52Week: 615, marketCapCr:  120000, peRatio: 21.0, earningsGrowth: 10, futureGrowth: 7, socialSentiment: 7 },
+  'SCHW':    { currentPrice: 70,   high52Week: 80,  low52Week: 48,  marketCapCr:  130000, peRatio: 22.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 7 },
+  'AXP':     { currentPrice: 220,  high52Week: 230, low52Week: 145, marketCapCr:  160000, peRatio: 18.0, earningsGrowth: 12, futureGrowth: 7, socialSentiment: 8 },
+  'PYPL':    { currentPrice: 65,   high52Week: 80,  low52Week: 50,  marketCapCr:  70000, peRatio: 18.0, earningsGrowth: 10, futureGrowth: 6, socialSentiment: 6 },
+  'COF':     { currentPrice: 140,  high52Week: 150, low52Week: 92,  marketCapCr:  55000, peRatio: 10.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 6 },
+  'USB':     { currentPrice: 42,   high52Week: 47,  low52Week: 30,  marketCapCr:  65000, peRatio: 11.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 6 },
+  'PNC':     { currentPrice: 155,  high52Week: 170, low52Week: 115, marketCapCr:  62000, peRatio: 12.0, earningsGrowth: 6, futureGrowth: 6, socialSentiment: 6 },
+  'TFC':     { currentPrice: 37,   high52Week: 42,  low52Week: 26,  marketCapCr:  50000, peRatio: 11.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 5 },
+  'MMC':     { currentPrice: 200,  high52Week: 210, low52Week: 175, marketCapCr:  100000, peRatio: 28.0, earningsGrowth: 10, futureGrowth: 7, socialSentiment: 7 },
+  'AON':     { currentPrice: 320,  high52Week: 340, low52Week: 275, marketCapCr:  70000, peRatio: 26.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 7 },
+  'ICE':     { currentPrice: 130,  high52Week: 140, low52Week: 100, marketCapCr:  75000, peRatio: 28.0, earningsGrowth: 10, futureGrowth: 7, socialSentiment: 7 },
+  'CME':     { currentPrice: 210,  high52Week: 220, low52Week: 180, marketCapCr:  75000, peRatio: 24.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 7 },
+  // Healthcare
+  'PFE':     { currentPrice: 28,   high52Week: 35,  low52Week: 25,  marketCapCr:  155000, peRatio: 50.0, earningsGrowth: -40, futureGrowth: 4, socialSentiment: 5 },
+  'ABBV':    { currentPrice: 175,  high52Week: 180, low52Week: 130, marketCapCr:  310000, peRatio: 40.0, earningsGrowth: 8, futureGrowth: 7, socialSentiment: 7 },
+  'MRK':     { currentPrice: 125,  high52Week: 135, low52Week: 99,  marketCapCr:  315000, peRatio: 20.0, earningsGrowth: 10, futureGrowth: 7, socialSentiment: 7 },
+  'TMO':     { currentPrice: 550,  high52Week: 600, low52Week: 430, marketCapCr:  210000, peRatio: 35.0, earningsGrowth: 8, futureGrowth: 7, socialSentiment: 7 },
+  'ABT':     { currentPrice: 110,  high52Week: 120, low52Week: 90,  marketCapCr:  190000, peRatio: 30.0, earningsGrowth: 6, futureGrowth: 6, socialSentiment: 7 },
+  'DHR':     { currentPrice: 250,  high52Week: 270, low52Week: 200, marketCapCr:  185000, peRatio: 35.0, earningsGrowth: 8, futureGrowth: 7, socialSentiment: 7 },
+  'BMY':     { currentPrice: 50,   high52Week: 65,  low52Week: 45,  marketCapCr:  100000, peRatio: 12.0, earningsGrowth: -5, futureGrowth: 4, socialSentiment: 5 },
+  'AMGN':    { currentPrice: 285,  high52Week: 310, low52Week: 215, marketCapCr:  150000, peRatio: 18.0, earningsGrowth: 6, futureGrowth: 6, socialSentiment: 7 },
+  'GILD':    { currentPrice: 80,   high52Week: 88,  low52Week: 60,  marketCapCr:  100000, peRatio: 14.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 6 },
+  'ISRG':    { currentPrice: 400,  high52Week: 410, low52Week: 270, marketCapCr:  145000, peRatio: 70.0, earningsGrowth: 20, futureGrowth: 8, socialSentiment: 8 },
+  'VRTX':    { currentPrice: 420,  high52Week: 460, low52Week: 340, marketCapCr:  108000, peRatio: 28.0, earningsGrowth: 15, futureGrowth: 8, socialSentiment: 8 },
+  'REGN':    { currentPrice: 950,  high52Week: 1050, low52Week: 700, marketCapCr: 105000, peRatio: 22.0, earningsGrowth: 12, futureGrowth: 7, socialSentiment: 7 },
+  'MDT':     { currentPrice: 82,   high52Week: 92,  low52Week: 72,  marketCapCr:  110000, peRatio: 22.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 6 },
+  'SYK':     { currentPrice: 340,  high52Week: 360, low52Week: 265, marketCapCr:  130000, peRatio: 40.0, earningsGrowth: 12, futureGrowth: 7, socialSentiment: 7 },
+  'ZTS':     { currentPrice: 185,  high52Week: 200, low52Week: 155, marketCapCr:  85000, peRatio: 35.0, earningsGrowth: 10, futureGrowth: 7, socialSentiment: 7 },
+  'ELV':     { currentPrice: 450,  high52Week: 560, low52Week: 400, marketCapCr:  105000, peRatio: 16.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 6 },
+  'HCA':     { currentPrice: 290,  high52Week: 320, low52Week: 225, marketCapCr:  75000, peRatio: 15.0, earningsGrowth: 10, futureGrowth: 7, socialSentiment: 7 },
+  // Renewable
+  'ENPH':    { currentPrice: 120,  high52Week: 240, low52Week: 75,  marketCapCr:  16000, peRatio: 40.0, earningsGrowth: -30, futureGrowth: 7, socialSentiment: 6 },
+  'SEDG':    { currentPrice: 55,   high52Week: 140, low52Week: 40,  marketCapCr:   3100, peRatio: -1, earningsGrowth: -50, futureGrowth: 5, socialSentiment: 5 },
+  'FSLR':    { currentPrice: 175,  high52Week: 230, low52Week: 130, marketCapCr:  19000, peRatio: 16.0, earningsGrowth: 40, futureGrowth: 8, socialSentiment: 7 },
+  'NEE':     { currentPrice: 65,   high52Week: 88,  low52Week: 48,  marketCapCr:  130000, peRatio: 20.0, earningsGrowth: 8, futureGrowth: 7, socialSentiment: 7 },
+  'PLUG':    { currentPrice: 4,    high52Week: 10,  low52Week: 2,   marketCapCr:   3000, peRatio: -1, earningsGrowth: -30, futureGrowth: 6, socialSentiment: 5 },
+  'RUN':     { currentPrice: 14,   high52Week: 22,  low52Week: 9,   marketCapCr:   3100, peRatio: -1, earningsGrowth: -20, futureGrowth: 6, socialSentiment: 5 },
+  'BE':      { currentPrice: 14,   high52Week: 25,  low52Week: 8,   marketCapCr:   3000, peRatio: -1, earningsGrowth: -15, futureGrowth: 6, socialSentiment: 5 },
+  'CSIQ':    { currentPrice: 20,   high52Week: 42,  low52Week: 13,  marketCapCr:   1200, peRatio: 8.0, earningsGrowth: -20, futureGrowth: 5, socialSentiment: 5 },
+  'AES':     { currentPrice: 15,   high52Week: 25,  low52Week: 13,  marketCapCr:  10000, peRatio: 12.0, earningsGrowth: -5, futureGrowth: 5, socialSentiment: 5 },
+  'DQ':      { currentPrice: 30,   high52Week: 55,  low52Week: 20,  marketCapCr:   2200, peRatio: 10.0, earningsGrowth: -25, futureGrowth: 5, socialSentiment: 5 },
+  'ARRY':    { currentPrice: 12,   high52Week: 25,  low52Week: 8,   marketCapCr:   1800, peRatio: 30.0, earningsGrowth: -20, futureGrowth: 6, socialSentiment: 5 },
+  'NOVA':    { currentPrice: 5,    high52Week: 16,  low52Week: 2,   marketCapCr:    600, peRatio: -1, earningsGrowth: -30, futureGrowth: 5, socialSentiment: 4 },
+  'SPWR':    { currentPrice: 3,    high52Week: 10,  low52Week: 1,   marketCapCr:    500, peRatio: -1, earningsGrowth: -40, futureGrowth: 4, socialSentiment: 4 },
+  'MAXN':    { currentPrice: 6,    high52Week: 20,  low52Week: 3,   marketCapCr:    200, peRatio: -1, earningsGrowth: -35, futureGrowth: 4, socialSentiment: 4 },
+  'SHLS':    { currentPrice: 12,   high52Week: 28,  low52Week: 7,   marketCapCr:   2000, peRatio: 80.0, earningsGrowth: -10, futureGrowth: 6, socialSentiment: 5 },
+  'ORA':     { currentPrice: 70,   high52Week: 95,  low52Week: 60,  marketCapCr:   4000, peRatio: 30.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 6 },
+  'CWEN':    { currentPrice: 25,   high52Week: 33,  low52Week: 20,  marketCapCr:   5000, peRatio: 25.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 5 },
+  'AY':      { currentPrice: 22,   high52Week: 28,  low52Week: 18,  marketCapCr:   2500, peRatio: 20.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 5 },
+  'STEM':    { currentPrice: 3,    high52Week: 8,   low52Week: 1,   marketCapCr:    500, peRatio: -1, earningsGrowth: -30, futureGrowth: 5, socialSentiment: 4 },
+  'CLNE':    { currentPrice: 4,    high52Week: 8,   low52Week: 3,   marketCapCr:    900, peRatio: -1, earningsGrowth: -15, futureGrowth: 5, socialSentiment: 5 },
+  // Consumer
+  'KO':      { currentPrice: 60,   high52Week: 64,  low52Week: 52,  marketCapCr:  260000, peRatio: 24.0, earningsGrowth: 6, futureGrowth: 5, socialSentiment: 7 },
+  'PEP':     { currentPrice: 170,  high52Week: 196, low52Week: 155, marketCapCr:  230000, peRatio: 25.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 7 },
+  'NKE':     { currentPrice: 100,  high52Week: 130, low52Week: 88,  marketCapCr:  150000, peRatio: 28.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 7 },
+  'MCD':     { currentPrice: 280,  high52Week: 302, low52Week: 245, marketCapCr:  200000, peRatio: 25.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 7 },
+  'SBUX':    { currentPrice: 95,   high52Week: 110, low52Week: 85,  marketCapCr:  108000, peRatio: 24.0, earningsGrowth: 7, futureGrowth: 6, socialSentiment: 7 },
+  'TGT':     { currentPrice: 140,  high52Week: 180, low52Week: 105, marketCapCr:  65000, peRatio: 15.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 6 },
+  'CL':      { currentPrice: 85,   high52Week: 90,  low52Week: 72,  marketCapCr:  70000, peRatio: 26.0, earningsGrowth: 6, futureGrowth: 5, socialSentiment: 6 },
+  'EL':      { currentPrice: 140,  high52Week: 230, low52Week: 110, marketCapCr:  48000, peRatio: 40.0, earningsGrowth: -10, futureGrowth: 5, socialSentiment: 5 },
+  'KMB':     { currentPrice: 130,  high52Week: 145, low52Week: 120, marketCapCr:  44000, peRatio: 22.0, earningsGrowth: 5, futureGrowth: 4, socialSentiment: 6 },
+  'MDLZ':    { currentPrice: 72,   high52Week: 78,  low52Week: 63,  marketCapCr:  98000, peRatio: 22.0, earningsGrowth: 7, futureGrowth: 5, socialSentiment: 6 },
+  'GIS':     { currentPrice: 70,   high52Week: 85,  low52Week: 62,  marketCapCr:  40000, peRatio: 17.0, earningsGrowth: 3, futureGrowth: 4, socialSentiment: 6 },
+  'K':       { currentPrice: 55,   high52Week: 68,  low52Week: 50,  marketCapCr:  19000, peRatio: 15.0, earningsGrowth: 3, futureGrowth: 4, socialSentiment: 5 },
+  'HSY':     { currentPrice: 190,  high52Week: 270, low52Week: 175, marketCapCr:  38000, peRatio: 22.0, earningsGrowth: 5, futureGrowth: 4, socialSentiment: 6 },
+  'MNST':    { currentPrice: 55,   high52Week: 62,  low52Week: 47,  marketCapCr:  54000, peRatio: 35.0, earningsGrowth: 10, futureGrowth: 6, socialSentiment: 7 },
+  'DG':      { currentPrice: 120,  high52Week: 170, low52Week: 100, marketCapCr:  26000, peRatio: 18.0, earningsGrowth: -5, futureGrowth: 5, socialSentiment: 5 },
+  'DLTR':    { currentPrice: 110,  high52Week: 150, low52Week: 85,  marketCapCr:  24000, peRatio: 20.0, earningsGrowth: -8, futureGrowth: 5, socialSentiment: 5 },
+  // Infrastructure
+  'CAT':     { currentPrice: 310,  high52Week: 350, low52Week: 220, marketCapCr:  155000, peRatio: 16.0, earningsGrowth: 15, futureGrowth: 7, socialSentiment: 7 },
+  'DE':      { currentPrice: 380,  high52Week: 440, low52Week: 345, marketCapCr:  112000, peRatio: 12.0, earningsGrowth: -10, futureGrowth: 5, socialSentiment: 6 },
+  'UNP':     { currentPrice: 245,  high52Week: 260, low52Week: 195, marketCapCr:  148000, peRatio: 22.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 7 },
+  'HON':     { currentPrice: 200,  high52Week: 220, low52Week: 175, marketCapCr:  132000, peRatio: 22.0, earningsGrowth: 6, futureGrowth: 6, socialSentiment: 7 },
+  'GE':      { currentPrice: 160,  high52Week: 170, low52Week: 90,  marketCapCr:  175000, peRatio: 30.0, earningsGrowth: 20, futureGrowth: 8, socialSentiment: 8 },
+  'RTX':     { currentPrice: 100,  high52Week: 105, low52Week: 70,  marketCapCr:  135000, peRatio: 35.0, earningsGrowth: 10, futureGrowth: 7, socialSentiment: 7 },
+  'LMT':     { currentPrice: 450,  high52Week: 500, low52Week: 400, marketCapCr:  110000, peRatio: 16.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 7 },
+  'BA':      { currentPrice: 210,  high52Week: 275, low52Week: 175, marketCapCr:  130000, peRatio: -1, earningsGrowth: -15, futureGrowth: 6, socialSentiment: 5 },
+  'MMM':     { currentPrice: 105,  high52Week: 115, low52Week: 85,  marketCapCr:  58000, peRatio: 12.0, earningsGrowth: -5, futureGrowth: 4, socialSentiment: 5 },
+  'EMR':     { currentPrice: 105,  high52Week: 110, low52Week: 85,  marketCapCr:  62000, peRatio: 20.0, earningsGrowth: 10, futureGrowth: 6, socialSentiment: 6 },
+  'ETN':     { currentPrice: 280,  high52Week: 310, low52Week: 175, marketCapCr:  112000, peRatio: 35.0, earningsGrowth: 18, futureGrowth: 8, socialSentiment: 8 },
+  'VMC':     { currentPrice: 250,  high52Week: 270, low52Week: 190, marketCapCr:  33000, peRatio: 35.0, earningsGrowth: 15, futureGrowth: 7, socialSentiment: 7 },
+  'MLM':     { currentPrice: 540,  high52Week: 600, low52Week: 380, marketCapCr:  33000, peRatio: 30.0, earningsGrowth: 12, futureGrowth: 7, socialSentiment: 7 },
+  'PWR':     { currentPrice: 240,  high52Week: 260, low52Week: 160, marketCapCr:  36000, peRatio: 35.0, earningsGrowth: 20, futureGrowth: 8, socialSentiment: 7 },
+  'J':       { currentPrice: 140,  high52Week: 150, low52Week: 110, marketCapCr:  17500, peRatio: 20.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 6 },
+  'AME':     { currentPrice: 170,  high52Week: 185, low52Week: 140, marketCapCr:  40000, peRatio: 32.0, earningsGrowth: 10, futureGrowth: 7, socialSentiment: 7 },
+  'WM':      { currentPrice: 190,  high52Week: 200, low52Week: 155, marketCapCr:  78000, peRatio: 30.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 7 },
+  'NSC':     { currentPrice: 245,  high52Week: 260, low52Week: 185, marketCapCr:  55000, peRatio: 20.0, earningsGrowth: 6, futureGrowth: 5, socialSentiment: 6 },
+  'CSX':     { currentPrice: 35,   high52Week: 38,  low52Week: 28,  marketCapCr:  70000, peRatio: 18.0, earningsGrowth: 5, futureGrowth: 5, socialSentiment: 6 },
+  'FAST':    { currentPrice: 68,   high52Week: 72,  low52Week: 50,  marketCapCr:  39000, peRatio: 35.0, earningsGrowth: 8, futureGrowth: 6, socialSentiment: 6 },
 };
 
 // ─── Enhanced Quality Scoring (0-100 pts total) ──────────────────────────────
@@ -1091,29 +1467,34 @@ const buildReason = (stock, rank, scores) => {
 };
 
 const getCategoryFromName = (name) => {
-  if (name.includes('Midcap'))     return 'midCap';
-  if (name.includes('Smallcap'))   return 'smallCap';
-  if (name.includes('Tech'))       return 'tech';
-  if (name.includes('Finance'))    return 'finance';
-  if (name.includes('Healthcare')) return 'healthcare';
-  if (name.includes('Renewable'))  return 'renewable';
-  if (name.includes('Consumer'))   return 'consumer';
-  if (name.includes('Infra'))      return 'infrastructure';
-  if (name.includes('Auto'))       return 'auto';
-  if (name.includes('Metal'))      return 'metals';
-  if (name.includes('Telecom'))    return 'telecom';
-  if (name.includes('PSU'))        return 'psu';
-  if (name.includes('Realty') || name.includes('Real Estate')) return 'realty';
-  if (name.includes('Chemical'))   return 'chemicals';
-  if (name.includes('Cement'))     return 'cement';
-  if (name.includes('Oil') || name.includes('Gas') || name.includes('Energy')) return 'oilgas';
-  if (name.includes('Fertil') || name.includes('Agri')) return 'fertilizer';
-  if (name.includes('Defence') || name.includes('Defense')) return 'defence';
-  if (name.includes('Media') || name.includes('Entertainment')) return 'media';
-  if (name.includes('Textile') || name.includes('Apparel')) return 'textile';
-  if (name.includes('Undervalued') || name.includes('Value')) return 'undervalued';
-  if (name.includes('Micro')) return 'microCap';
-  return 'largeCap';
+  // Check for US prefix first
+  const isUS = name.startsWith('US ');
+  const prefix = isUS ? 'usa_' : '';
+  if (name.includes('Midcap'))     return prefix + 'midCap';
+  if (name.includes('Smallcap'))   return prefix + 'smallCap';
+  if (name.includes('Tech'))       return prefix + 'tech';
+  if (name.includes('Finance'))    return prefix + 'finance';
+  if (name.includes('Healthcare')) return prefix + 'healthcare';
+  if (name.includes('Renewable'))  return prefix + 'renewable';
+  if (name.includes('Consumer'))   return prefix + 'consumer';
+  if (name.includes('Infra'))      return prefix + 'infrastructure';
+  if (!isUS) {
+    if (name.includes('Auto'))       return 'auto';
+    if (name.includes('Metal'))      return 'metals';
+    if (name.includes('Telecom'))    return 'telecom';
+    if (name.includes('PSU'))        return 'psu';
+    if (name.includes('Realty') || name.includes('Real Estate')) return 'realty';
+    if (name.includes('Chemical'))   return 'chemicals';
+    if (name.includes('Cement'))     return 'cement';
+    if (name.includes('Oil') || name.includes('Gas') || name.includes('Energy')) return 'oilgas';
+    if (name.includes('Fertil') || name.includes('Agri')) return 'fertilizer';
+    if (name.includes('Defence') || name.includes('Defense')) return 'defence';
+    if (name.includes('Media') || name.includes('Entertainment')) return 'media';
+    if (name.includes('Textile') || name.includes('Apparel')) return 'textile';
+    if (name.includes('Undervalued') || name.includes('Value')) return 'undervalued';
+    if (name.includes('Micro')) return 'microCap';
+  }
+  return prefix + 'largeCap';
 };
 
 const mergeWithFallback = (universeDefs, liveResults) => {
@@ -1188,6 +1569,8 @@ const mergeWithFallback = (universeDefs, liveResults) => {
 // ─── selectTopStocks (sync helper kept for backward compat) ───────────────────
 const selectTopStocks = (category) => {
   const universe = STOCK_UNIVERSE[category] || STOCK_UNIVERSE.largeCap;
+  const isUS = category.startsWith('usa_');
+  const investAmount = isUS ? 10000 : 100000;
   const scored = universe.map(def => {
     const fb = STATIC_FALLBACK[def.ticker] || {};
     const stock = { ...def, ...fb };
@@ -1197,7 +1580,7 @@ const selectTopStocks = (category) => {
   scored.sort((a, b) => b.score - a.score);
   const top15 = scored.slice(0, 15);
   const qualityWeights = computeQualityWeights(top15);
-  const quantities = computeQuantities(top15, qualityWeights, 100000);
+  const quantities = computeQuantities(top15, qualityWeights, investAmount);
   return top15.map((stock, idx) => ({
     ticker:        stock.ticker,
     companyName:   stock.companyName,
@@ -1247,7 +1630,9 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
     scored.sort((a, b) => b.score - a.score);
     const top15 = scored.slice(0, 15);
     const qualityWeights = computeQualityWeights(top15);
-    const quantities = computeQuantities(top15, qualityWeights, 100000);
+    const isUS = category.startsWith('usa_');
+    const investAmount = isUS ? 10000 : 100000;
+    const quantities = computeQuantities(top15, qualityWeights, investAmount);
 
     const newStocks = top15.map((stock, idx) => ({
       ticker:            stock.ticker,

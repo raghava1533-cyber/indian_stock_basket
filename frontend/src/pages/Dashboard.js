@@ -23,6 +23,7 @@ function Dashboard({ baskets, onReload }) {
   const [message, setMessage] = useState('');
   const [isRebalancing, setIsRebalancing] = useState(false);
   const [rebalanceResult, setRebalanceResult] = useState(null);
+  const [country, setCountry] = useState('IN');
   const email = localStorage.getItem('userEmail') || '';
   const token = localStorage.getItem('authToken') || '';
 
@@ -98,10 +99,14 @@ function Dashboard({ baskets, onReload }) {
     return <div className="loading">Loading baskets...</div>;
   }
 
-  // Show only default (non-user-created) baskets on Dashboard
-  const defaultBaskets = baskets.filter(b => !b.isUserCreated);
-  // Show user-created baskets separately
-  const userBaskets = baskets.filter(b => b.isUserCreated && b.createdBy === email);
+  // Show only default (non-user-created) baskets on Dashboard, filtered by country
+  const defaultBaskets = baskets.filter(b => !b.isUserCreated && (b.country || 'IN') === country);
+  // Show user-created baskets separately, filtered by country
+  const userBaskets = baskets.filter(b => b.isUserCreated && b.createdBy === email && (b.country || 'IN') === country);
+  const currencySymbol = country === 'US' ? '$' : '₹';
+  const investBase = country === 'US' ? 10000 : 100000;
+  const locale = country === 'US' ? 'en-US' : 'en-IN';
+  const byLabel = country === 'US' ? 'by SmartBasket US' : 'by SmartBasket India';
 
   return (
     <div className="dashboard">
@@ -110,12 +115,18 @@ function Dashboard({ baskets, onReload }) {
           <h1 className="sc-page-title">Dashboard</h1>
           <p className="sc-page-sub">Curated stock baskets, rebalanced monthly</p>
         </div>
-        {token && (
-          <button onClick={handleRebalanceAll} disabled={isRebalancing} className="btn btn-accent"
-            title="Rebalance all your baskets (every 30 days)">
-            {isRebalancing ? 'Rebalancing…' : '⟳ Rebalance All'}
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div className="country-toggle">
+            <button className={`country-btn${country === 'IN' ? ' active' : ''}`} onClick={() => setCountry('IN')}>🇮🇳 India</button>
+            <button className={`country-btn${country === 'US' ? ' active' : ''}`} onClick={() => setCountry('US')}>🇺🇸 USA</button>
+          </div>
+          {token && (
+            <button onClick={handleRebalanceAll} disabled={isRebalancing} className="btn btn-accent"
+              title="Rebalance all your baskets (every 30 days)">
+              {isRebalancing ? 'Rebalancing…' : '⟳ Rebalance All'}
+            </button>
+          )}
+        </div>
       </div>
 
       {message && <div className="success">{message}</div>}
@@ -150,7 +161,7 @@ function Dashboard({ baskets, onReload }) {
           const n = stocks.length || 1;
           const totalValue = stocks.reduce((s, st) => {
             const price = st.currentPrice || 1;
-            const qty = Math.max(1, Math.floor(((st.weight || (100 / n)) / 100 * 100000) / price));
+            const qty = Math.max(1, Math.floor(((st.weight || (100 / n)) / 100 * investBase) / price));
             return s + price * qty;
           }, 0);
           const rawPct = liveSummary[basket._id];
@@ -158,7 +169,7 @@ function Dashboard({ baskets, onReload }) {
           const hasChange = basketDayChangePct != null;
           const isSubscribed = subscribedBaskets.includes(basket._id);
           const createdDate = basket.createdAt
-            ? new Date(basket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            ? new Date(basket.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
             : null;
 
           return (
@@ -170,14 +181,14 @@ function Dashboard({ baskets, onReload }) {
                   </div>
                   <div className="sc-card-title-block">
                     <div className="sc-card-name">{basket.name?.replace(/ \(\d{10,}\)$/, '')}</div>
-                    <div className="sc-card-by">by SmartBasket India</div>
+                    <div className="sc-card-by">{byLabel}</div>
                   </div>
                 </div>
                 <div className="sc-card-stats">
                   <div className="sc-stat">
                     <div className="sc-stat-label">Min. Investment</div>
                     <div className="sc-stat-val accent">
-                      ₹{totalValue > 0 ? totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}
+                      {currencySymbol}{totalValue > 0 ? totalValue.toLocaleString(locale, { maximumFractionDigits: 0 }) : '—'}
                     </div>
                   </div>
                   <div className="sc-stat">
@@ -222,7 +233,7 @@ function Dashboard({ baskets, onReload }) {
               const n = stocks.length || 1;
               const totalValue = stocks.reduce((s, st) => {
                 const price = st.currentPrice || 1;
-                const qty = Math.max(1, Math.floor(((st.weight || (100 / n)) / 100 * 100000) / price));
+                const qty = Math.max(1, Math.floor(((st.weight || (100 / n)) / 100 * investBase) / price));
                 return s + price * qty;
               }, 0);
               const displayName = basket.name.replace(/ \(\d{13}\)$/, '');
@@ -244,7 +255,7 @@ function Dashboard({ baskets, onReload }) {
                     <div className="sc-card-stats">
                       <div className="sc-stat">
                         <div className="sc-stat-label">Min. Investment</div>
-                        <div className="sc-stat-val accent">₹{totalValue > 0 ? totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}</div>
+                        <div className="sc-stat-val accent">{currencySymbol}{totalValue > 0 ? totalValue.toLocaleString(locale, { maximumFractionDigits: 0 }) : '—'}</div>
                       </div>
                       <div className="sc-stat">
                         <div className="sc-stat-label">Stocks</div>

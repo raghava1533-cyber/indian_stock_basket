@@ -15,6 +15,7 @@ const basketSchema = new mongoose.Schema({
     default: null,
   },
   theme: String,
+  country: { type: String, enum: ['IN', 'US'], default: 'IN' },
   isUserCreated: { type: Boolean, default: false },
   createdBy: { type: String, default: null },
   stocks: [{

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { basketAPI } from '../services/api';
 
-const SECTORS = [
+const SECTORS_IN = [
   { value: 'all',            label: 'Select a sector…' },
   { value: 'tech',           label: 'Technology' },
   { value: 'finance',        label: 'Finance & Banking' },
@@ -22,15 +22,32 @@ const SECTORS = [
   { value: 'defence',        label: 'Defence & Aerospace' },
   { value: 'media',          label: 'Media & Entertainment' },
   { value: 'textile',        label: 'Textiles & Apparel' },
-  { value: 'undervalued',     label: 'Undervalued Stocks' },
+  { value: 'undervalued',    label: 'Undervalued Stocks' },
 ];
 
-const MARKET_CAPS = [
+const SECTORS_US = [
+  { value: 'all',            label: 'Select a sector…' },
+  { value: 'tech',           label: 'Technology' },
+  { value: 'finance',        label: 'Finance & Banking' },
+  { value: 'healthcare',     label: 'Healthcare & Pharma' },
+  { value: 'renewable',      label: 'Renewable Energy' },
+  { value: 'consumer',       label: 'Consumer Brands' },
+  { value: 'infrastructure', label: 'Infrastructure & Industrials' },
+];
+
+const MARKET_CAPS_IN = [
   { value: 'all',      label: 'Select market cap…' },
   { value: 'largeCap', label: 'Large Cap  (₹20,000 Cr+)' },
   { value: 'midCap',   label: 'Mid Cap  (₹5,000–20,000 Cr)' },
   { value: 'smallCap', label: 'Small Cap  (₹500–5,000 Cr)' },
   { value: 'microCap', label: 'Micro Cap  (below ₹500 Cr)' },
+];
+
+const MARKET_CAPS_US = [
+  { value: 'all',      label: 'Select market cap…' },
+  { value: 'largeCap', label: 'Large Cap  ($10B+)' },
+  { value: 'midCap',   label: 'Mid Cap  ($2B–$10B)' },
+  { value: 'smallCap', label: 'Small Cap  (below $2B)' },
 ];
 
 const FEATURES = [
@@ -42,12 +59,22 @@ const FEATURES = [
 
 function CreateBasket() {
   const navigate = useNavigate();
+  const [country, setCountry] = useState('IN');
   const [sector, setSector] = useState('all');
   const [marketCap, setMarketCap] = useState('all');
   const [basketName, setBasketName] = useState('');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const token = localStorage.getItem('authToken') || '';
+
+  const SECTORS = country === 'US' ? SECTORS_US : SECTORS_IN;
+  const MARKET_CAPS = country === 'US' ? MARKET_CAPS_US : MARKET_CAPS_IN;
+
+  const handleCountryChange = (c) => {
+    setCountry(c);
+    setSector('all');
+    setMarketCap('all');
+  };
 
   const handleCreate = async () => {
     if (sector === 'all' && marketCap === 'all') {
@@ -62,7 +89,7 @@ function CreateBasket() {
     setError('');
     try {
       const res = await basketAPI.createCustomBasket(
-        { sector, marketCap, name: basketName.trim() || undefined },
+        { sector, marketCap, name: basketName.trim() || undefined, country },
         token
       );
       navigate(`/basket/${res.data._id}`);
@@ -85,6 +112,14 @@ function CreateBasket() {
         {/* ── Left: form ── */}
         <div className="cb-page-form-card">
           <h3 className="cb-page-form-title">Configure Your Basket</h3>
+
+          <div className="cb-field">
+            <label className="cb-label">Country</label>
+            <div className="country-toggle" style={{ marginBottom: '4px' }}>
+              <button className={`country-btn${country === 'IN' ? ' active' : ''}`} onClick={() => handleCountryChange('IN')}>🇮🇳 India</button>
+              <button className={`country-btn${country === 'US' ? ' active' : ''}`} onClick={() => handleCountryChange('US')}>🇺🇸 USA</button>
+            </div>
+          </div>
 
           <div className="cb-field">
             <label className="cb-label">Sector</label>

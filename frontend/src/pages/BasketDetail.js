@@ -232,6 +232,13 @@ function BasketDetail({ onReload }) {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [liveRefreshing, setLiveRefreshing] = useState(false);
 
+  // Currency helpers based on basket country
+  const isUS = (basket?.country || 'IN') === 'US';
+  const cur = isUS ? '$' : '₹';
+  const loc = isUS ? 'en-US' : 'en-IN';
+  const investBase = isUS ? 10000 : 100000;
+  const capUnit = isUS ? 'B' : 'Cr';
+
   const loadBasketData = useCallback(async () => {
     try {
       setLoading(true);
@@ -439,7 +446,7 @@ function BasketDetail({ onReload }) {
           </div>
           <div className="summary-card green">
             <div className="summary-label">Minimum Investment</div>
-            <div className="summary-value">₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+            <div className="summary-value">{cur}{totalValue.toLocaleString(loc, { maximumFractionDigits: 0 })}</div>
           </div>
           <div className="summary-card">
             <div className="summary-label">Last Rebalanced</div>
@@ -468,7 +475,7 @@ function BasketDetail({ onReload }) {
               <div className="alloc-info">
                 <div className="alloc-ticker">{stock.companyName || stock.ticker?.replace('.NS', '')}</div>
                 <div className="alloc-meta">
-                  {stock.quantity || 1} shares × ₹{stock.currentPrice?.toFixed(0) || '—'} = ₹{((stock.currentPrice || 0) * (stock.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  {stock.quantity || 1} shares × {cur}{stock.currentPrice?.toFixed(0) || '—'} = {cur}{((stock.currentPrice || 0) * (stock.quantity || 1)).toLocaleString(loc, { maximumFractionDigits: 0 })}
                 </div>
               </div>
               <div className="alloc-weight">{stock.weight?.toFixed(1)}%</div>
@@ -531,21 +538,21 @@ function BasketDetail({ onReload }) {
                           )}
                         </div>
                       </td>
-                      <td>₹{price.toFixed(0)}</td>
+                      <td>{cur}{price.toFixed(0)}</td>
                       <td>
                         {stock.dayChange != null ? (
                           <span className={stock.dayChange >= 0 ? 'price-positive' : 'price-negative'} style={{ fontWeight: '500' }}>
-                            {stock.dayChange >= 0 ? '+' : ''}₹{stock.dayChange.toFixed(1)}
+                            {stock.dayChange >= 0 ? '+' : ''}{cur}{stock.dayChange.toFixed(1)}
                           </span>
                         ) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}
                       </td>
-                      <td className="price-positive">₹{h52.toFixed(0)}</td>
-                      <td className="price-negative">₹{l52.toFixed(0)}</td>
+                      <td className="price-positive">{cur}{h52.toFixed(0)}</td>
+                      <td className="price-negative">{cur}{l52.toFixed(0)}</td>
                       <td>{stock.peRatio != null ? stock.peRatio.toFixed(1) : '—'}</td>
                       <td>{stock.earningsGrowth != null ? `${stock.earningsGrowth.toFixed(1)}%` : '—'}</td>
                       <td>{stock.weight?.toFixed(1)}%</td>
                       <td>{stock.quantity || 1}</td>
-                      <td>₹{(price * (stock.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                      <td>{cur}{(price * (stock.quantity || 1)).toLocaleString(loc, { maximumFractionDigits: 0 })}</td>
                       <td>
                         <div className="score-bar">
                           <div className="score-fill" style={{ width: `${Math.min(stock.score || 0, 100)}%` }}></div>
@@ -589,7 +596,7 @@ function BasketDetail({ onReload }) {
                               )}
                               {stock.targetMeanPrice != null && stock.currentPrice > 0 && (
                                 <span className={`why-pill ${stock.targetMeanPrice > stock.currentPrice ? 'accent' : 'negative'}`}>
-                                  Target: ₹{Math.round(stock.targetMeanPrice).toLocaleString('en-IN')}
+                                  Target: {cur}{Math.round(stock.targetMeanPrice).toLocaleString(loc)}
                                   {' '}({stock.targetMeanPrice > stock.currentPrice ? '+' : ''}{((stock.targetMeanPrice - stock.currentPrice) / stock.currentPrice * 100).toFixed(1)}%)
                                 </span>
                               )}
@@ -604,7 +611,7 @@ function BasketDetail({ onReload }) {
                                 </span>
                               )}
                               {stock.marketCapCr != null && (
-                                <span className="why-pill">Mkt Cap: ₹{stock.marketCapCr.toLocaleString('en-IN')} Cr</span>
+                                <span className="why-pill">Mkt Cap: {cur}{stock.marketCapCr.toLocaleString(loc)} {capUnit}</span>
                               )}
                               {stock.score != null && (
                                 <span className="why-pill score">Score: {stock.score.toFixed(0)}/100</span>
@@ -613,9 +620,9 @@ function BasketDetail({ onReload }) {
                             {/* Analyst target detail when available */}
                             {stock.targetMeanPrice != null && (
                               <div className="why-analyst-detail">
-                                <span>🎯 Avg Target: <strong>₹{Math.round(stock.targetMeanPrice).toLocaleString('en-IN')}</strong></span>
-                                {stock.targetHighPrice != null && <span> | High: ₹{Math.round(stock.targetHighPrice).toLocaleString('en-IN')}</span>}
-                                {stock.targetLowPrice != null && <span> | Low: ₹{Math.round(stock.targetLowPrice).toLocaleString('en-IN')}</span>}
+                                <span>🎯 Avg Target: <strong>{cur}{Math.round(stock.targetMeanPrice).toLocaleString(loc)}</strong></span>
+                                {stock.targetHighPrice != null && <span> | High: {cur}{Math.round(stock.targetHighPrice).toLocaleString(loc)}</span>}
+                                {stock.targetLowPrice != null && <span> | Low: {cur}{Math.round(stock.targetLowPrice).toLocaleString(loc)}</span>}
                                 {stock.numberOfAnalysts != null && <span> | {stock.numberOfAnalysts} analyst{stock.numberOfAnalysts > 1 ? 's' : ''}</span>}
                               </div>
                             )}
@@ -635,7 +642,7 @@ function BasketDetail({ onReload }) {
                 <td colSpan="8" style={{ textAlign: 'right' }}>Total</td>
                 <td>100%</td>
                 <td>{activeStocks.reduce((s, st) => s + (st.quantity || 1), 0)}</td>
-                <td>₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                <td>{cur}{totalValue.toLocaleString(loc, { maximumFractionDigits: 0 })}</td>
                 <td></td>
               </tr>
             </tfoot>
@@ -709,8 +716,8 @@ function BasketDetail({ onReload }) {
                           <td>{i + 1}</td>
                           <td className="changes-company">{s.companyName || s.ticker?.replace('.NS', '')}</td>
                           <td>{s.quantity || 1}</td>
-                          <td>₹{s.currentPrice?.toFixed(0) || '—'}</td>
-                          <td>₹{((s.currentPrice || 0) * (s.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                          <td>{cur}{s.currentPrice?.toFixed(0) || '—'}</td>
+                          <td>{cur}{((s.currentPrice || 0) * (s.quantity || 1)).toLocaleString(loc, { maximumFractionDigits: 0 })}</td>
                           <td>{rankMatch ? `#${rankMatch[1]}` : '—'}</td>
                           <td>{peMatch ? peMatch[1] : '—'}</td>
                           <td>{epsMatch ? epsMatch[1] : '—'}</td>
@@ -747,7 +754,7 @@ function BasketDetail({ onReload }) {
                     <div key={i} className="change-item removed">
                       <div className="change-item-top">
                         <span className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</span>
-                        <span className="change-detail">Sold {s.quantity || 'all'} shares{s.salePrice ? ` at ₹${s.salePrice.toFixed(2)}` : ''}</span>
+                        <span className="change-detail">Sold {s.quantity || 'all'} shares{s.salePrice ? ` at ${cur}${s.salePrice.toFixed(2)}` : ''}</span>
                       </div>
                       <div className="change-reason">{s.reason || 'Quality score dropped'}</div>
                     </div>
@@ -787,7 +794,7 @@ function BasketDetail({ onReload }) {
               <div className="bm-basket-summary-mini">
                 <div className="bm-basket-label">This Basket</div>
                 <div className="bm-basket-name">{benchmark.basket.name?.replace(/ \(\d{10,}\)$/, '')}</div>
-                <div className="bm-basket-value">₹{benchmark.basket.totalValue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '—'}</div>
+                <div className="bm-basket-value">{cur}{benchmark.basket.totalValue?.toLocaleString(loc, { maximumFractionDigits: 0 }) || '—'}</div>
                 <div className="bm-basket-sub">{benchmark.basket.stockCount} stocks · {benchmark.basket.monthReturn >= 0 ? '+' : ''}{benchmark.basket.monthReturn || 0}% (1M)</div>
               </div>
               <div className="bm-compare-select">
@@ -837,43 +844,44 @@ function BasketDetail({ onReload }) {
               );
             })()}
 
-            {/* ₹1,00,000 Investment Projection */}
+            {/* Investment Projection */}
             {(() => {
               const bm = benchmark.benchmarks[selectedIndex];
               const basketReturn = benchmark.basket.monthReturn || 0;
               const indexReturn = bm?.monthReturn || 0;
-              const invested = 100000;
+              const invested = investBase;
               const basketFinalValue = Math.round(invested * (1 + basketReturn / 100));
               const indexFinalValue = Math.round(invested * (1 + indexReturn / 100));
               const basketProfit = basketFinalValue - invested;
               const indexProfit = indexFinalValue - invested;
               const diff = basketProfit - indexProfit;
+              const investLabel = isUS ? '$10,000' : '₹1,00,000';
 
               return (
                 <div className="bm-projection">
-                  <div className="bm-projection-title">💰 If you invested ₹1,00,000 one month ago</div>
+                  <div className="bm-projection-title">💰 If you invested {investLabel} one month ago</div>
                   <div className="bm-projection-grid">
                     <div className={`bm-projection-card${basketReturn >= indexReturn ? ' winner' : ''}`}>
                       <div className="bm-proj-label">This Basket</div>
-                      <div className="bm-proj-value">₹{basketFinalValue.toLocaleString('en-IN')}</div>
+                      <div className="bm-proj-value">{cur}{basketFinalValue.toLocaleString(loc)}</div>
                       <div className={`bm-proj-return ${basketReturn >= 0 ? 'positive' : 'negative'}`}>
-                        {basketReturn >= 0 ? '+' : ''}₹{basketProfit.toLocaleString('en-IN')} ({basketReturn >= 0 ? '+' : ''}{basketReturn}%)
+                        {basketReturn >= 0 ? '+' : ''}{cur}{basketProfit.toLocaleString(loc)} ({basketReturn >= 0 ? '+' : ''}{basketReturn}%)
                       </div>
                     </div>
                     <div className="bm-proj-vs">VS</div>
                     <div className={`bm-projection-card${indexReturn > basketReturn ? ' winner' : ''}`}>
                       <div className="bm-proj-label">{bm?.name}</div>
-                      <div className="bm-proj-value">₹{indexFinalValue.toLocaleString('en-IN')}</div>
+                      <div className="bm-proj-value">{cur}{indexFinalValue.toLocaleString(loc)}</div>
                       <div className={`bm-proj-return ${indexReturn >= 0 ? 'positive' : 'negative'}`}>
-                        {indexReturn >= 0 ? '+' : ''}₹{indexProfit.toLocaleString('en-IN')} ({indexReturn >= 0 ? '+' : ''}{indexReturn}%)
+                        {indexReturn >= 0 ? '+' : ''}{cur}{indexProfit.toLocaleString(loc)} ({indexReturn >= 0 ? '+' : ''}{indexReturn}%)
                       </div>
                     </div>
                   </div>
                   {diff !== 0 && (
                     <div className={`bm-projection-verdict ${diff > 0 ? 'positive' : 'negative'}`}>
                       {diff > 0
-                        ? `Your basket outperformed ${bm?.name} by ₹${Math.abs(diff).toLocaleString('en-IN')} (+${(basketReturn - indexReturn).toFixed(2)}%)`
-                        : `${bm?.name} outperformed your basket by ₹${Math.abs(diff).toLocaleString('en-IN')} (+${(indexReturn - basketReturn).toFixed(2)}%)`
+                        ? `Your basket outperformed ${bm?.name} by ${cur}${Math.abs(diff).toLocaleString(loc)} (+${(basketReturn - indexReturn).toFixed(2)}%)`
+                        : `${bm?.name} outperformed your basket by ${cur}${Math.abs(diff).toLocaleString(loc)} (+${(indexReturn - basketReturn).toFixed(2)}%)`
                       }
                     </div>
                   )}

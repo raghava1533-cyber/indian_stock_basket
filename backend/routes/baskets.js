@@ -58,10 +58,14 @@ const supplementStock = (stock) => {
   };
 };
 
-// Get all baskets
+// Get all baskets (optionally filter by ?country=IN or ?country=US)
 router.get('/', async (req, res) => {
   try {
-    const baskets = await Basket.find();
+    const filter = {};
+    if (req.query.country && ['IN', 'US'].includes(req.query.country)) {
+      filter.country = req.query.country;
+    }
+    const baskets = await Basket.find(filter);
     res.json(baskets);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -82,24 +86,38 @@ router.post('/', async (req, res) => {
 // Initialize default baskets with auto-rebalance (must come before /:id routes)
 router.get('/init', async (req, res) => {
   try {
-    const basketDefs = [
-      { name: 'Bluechip Giants', description: 'Top 10 large-cap companies with strong market presence', category: 'Market Cap Based', theme: 'Large Cap' },
-      { name: 'Midcap Momentum', description: 'Promising mid-cap companies with growth potential', category: 'Market Cap Based', theme: 'Mid Cap' },
-      { name: 'Smallcap Leaders', description: 'Quality small-cap companies with high growth prospects', category: 'Market Cap Based', theme: 'Small Cap' },
-      { name: 'Tech Innovators', description: 'Best tech and IT companies driving digital transformation', category: 'Thematic', theme: 'Technology' },
-      { name: 'Finance Leaders', description: 'Top financial institutions with strong ROE', category: 'Thematic', theme: 'Finance' },
-      { name: 'Healthcare Growth', description: 'Healthcare and pharma companies with strong growth', category: 'Thematic', theme: 'Healthcare' },
-      { name: 'Renewable Energy', description: 'Green energy companies leading the clean energy transition', category: 'Thematic', theme: 'Renewable' },
-      { name: 'Consumer Brands', description: 'Top FMCG and consumer brands with strong market share', category: 'Thematic', theme: 'Consumer' },
-      { name: 'Infrastructure Surge', description: 'Infrastructure companies benefiting from India growth story', category: 'Thematic', theme: 'Infrastructure' },
-    ].map(b => ({
+    const indianBaskets = [
+      { name: 'Bluechip Giants', description: 'Top 10 large-cap companies with strong market presence', category: 'Market Cap Based', theme: 'Large Cap', country: 'IN', categoryKey: 'largeCap' },
+      { name: 'Midcap Momentum', description: 'Promising mid-cap companies with growth potential', category: 'Market Cap Based', theme: 'Mid Cap', country: 'IN', categoryKey: 'midCap' },
+      { name: 'Smallcap Leaders', description: 'Quality small-cap companies with high growth prospects', category: 'Market Cap Based', theme: 'Small Cap', country: 'IN', categoryKey: 'smallCap' },
+      { name: 'Tech Innovators', description: 'Best tech and IT companies driving digital transformation', category: 'Thematic', theme: 'Technology', country: 'IN', categoryKey: 'tech' },
+      { name: 'Finance Leaders', description: 'Top financial institutions with strong ROE', category: 'Thematic', theme: 'Finance', country: 'IN', categoryKey: 'finance' },
+      { name: 'Healthcare Growth', description: 'Healthcare and pharma companies with strong growth', category: 'Thematic', theme: 'Healthcare', country: 'IN', categoryKey: 'healthcare' },
+      { name: 'Renewable Energy', description: 'Green energy companies leading the clean energy transition', category: 'Thematic', theme: 'Renewable', country: 'IN', categoryKey: 'renewable' },
+      { name: 'Consumer Brands', description: 'Top FMCG and consumer brands with strong market share', category: 'Thematic', theme: 'Consumer', country: 'IN', categoryKey: 'consumer' },
+      { name: 'Infrastructure Surge', description: 'Infrastructure companies benefiting from India growth story', category: 'Thematic', theme: 'Infrastructure', country: 'IN', categoryKey: 'infrastructure' },
+    ];
+
+    const usaBaskets = [
+      { name: 'US Bluechip Giants', description: 'Top US large-cap companies dominating global markets', category: 'Market Cap Based', theme: 'Large Cap', country: 'US', categoryKey: 'usa_largeCap' },
+      { name: 'US Midcap Momentum', description: 'High-growth US mid-cap tech and SaaS companies', category: 'Market Cap Based', theme: 'Mid Cap', country: 'US', categoryKey: 'usa_midCap' },
+      { name: 'US Smallcap Leaders', description: 'Emerging US small-cap companies with disruptive potential', category: 'Market Cap Based', theme: 'Small Cap', country: 'US', categoryKey: 'usa_smallCap' },
+      { name: 'US Tech Titans', description: 'Leading US technology and software companies', category: 'Thematic', theme: 'Technology', country: 'US', categoryKey: 'usa_tech' },
+      { name: 'US Finance Leaders', description: 'Top US banks, fintech, and financial institutions', category: 'Thematic', theme: 'Finance', country: 'US', categoryKey: 'usa_finance' },
+      { name: 'US Healthcare Growth', description: 'Top US pharma, biotech, and healthcare companies', category: 'Thematic', theme: 'Healthcare', country: 'US', categoryKey: 'usa_healthcare' },
+      { name: 'US Renewable Energy', description: 'US clean energy and solar companies', category: 'Thematic', theme: 'Renewable', country: 'US', categoryKey: 'usa_renewable' },
+      { name: 'US Consumer Brands', description: 'Top US consumer, retail, and FMCG companies', category: 'Thematic', theme: 'Consumer', country: 'US', categoryKey: 'usa_consumer' },
+      { name: 'US Infrastructure', description: 'US industrial, defense, and infrastructure companies', category: 'Thematic', theme: 'Infrastructure', country: 'US', categoryKey: 'usa_infrastructure' },
+    ];
+
+    const basketDefs = [...indianBaskets, ...usaBaskets].map(b => ({
       ...b,
       stocks: [],
       subscribers: [],
       nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     }));
 
-    await Basket.deleteMany({});
+    await Basket.deleteMany({ isUserCreated: { $ne: true } });
     const createdBaskets = await Basket.insertMany(basketDefs);
     console.log(`Created ${createdBaskets.length} baskets, starting rebalance...`);
 
@@ -505,23 +523,29 @@ const SECTOR_LABELS = {
   media: 'Media & Entertainment', textile: 'Textiles & Apparel',
   undervalued: 'Undervalued Stocks',
   largeCap: 'Large Cap', midCap: 'Mid Cap', smallCap: 'Small Cap', microCap: 'Micro Cap',
+  // USA sectors
+  usa_tech: 'Technology', usa_finance: 'Finance', usa_healthcare: 'Healthcare',
+  usa_renewable: 'Renewable', usa_consumer: 'Consumer', usa_infrastructure: 'Infrastructure',
+  usa_largeCap: 'Large Cap', usa_midCap: 'Mid Cap', usa_smallCap: 'Small Cap',
 };
 const MARKET_CAP_THRESHOLDS = { largeCap: 50000, midCap: 10000 };
 
 router.post('/create-custom', authenticateToken, async (req, res) => {
   try {
-    const { sector, marketCap, name } = req.body;
+    const { sector, marketCap, name, country } = req.body;
+    const basketCountry = country === 'US' ? 'US' : 'IN';
     if (!sector || !marketCap)
       return res.status(400).json({ message: 'sector and marketCap are required' });
 
-    // Determine base universe key
+    // Determine base universe key (prefix with usa_ for US baskets)
+    const prefix = basketCountry === 'US' ? 'usa_' : '';
     let universeKey;
     if (sector !== 'all') {
-      universeKey = sector;
+      universeKey = prefix + sector;
     } else if (marketCap !== 'all') {
-      universeKey = marketCap;
+      universeKey = prefix + marketCap;
     } else {
-      universeKey = 'largeCap';
+      universeKey = prefix + 'largeCap';
     }
 
     // Build universe, optionally filtered by market cap
@@ -556,6 +580,7 @@ router.post('/create-custom', authenticateToken, async (req, res) => {
       category:        'Custom',
       categoryKey:     universeKey,
       theme:           themeLabel,
+      country:         basketCountry,
       isUserCreated:   true,
       createdBy:       req.user.email,
       stocks:          [],

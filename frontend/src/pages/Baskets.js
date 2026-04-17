@@ -21,6 +21,7 @@ function Baskets({ baskets, onReload }) {
   const [error, setError] = useState(null);
   const [localBaskets, setLocalBaskets] = useState(baskets || []);
   const [liveSummary, setLiveSummary] = useState({});
+  const [country, setCountry] = useState('IN');
   const email = localStorage.getItem('userEmail') || '';
   const token = localStorage.getItem('authToken') || '';
 
@@ -82,6 +83,11 @@ function Baskets({ baskets, onReload }) {
     }
   };
 
+  const filteredBaskets = localBaskets.filter(b => (b.country || 'IN') === country);
+  const currencySymbol = country === 'US' ? '$' : '₹';
+  const investBase = country === 'US' ? 10000 : 100000;
+  const locale = country === 'US' ? 'en-US' : 'en-IN';
+
   return (
     <div className="baskets-page">
       <div className="sc-page-header">
@@ -89,7 +95,11 @@ function Baskets({ baskets, onReload }) {
           <h1 className="sc-page-title">All Baskets</h1>
           <p className="sc-page-sub">Browse all curated and custom stock baskets</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div className="country-toggle">
+            <button className={`country-btn${country === 'IN' ? ' active' : ''}`} onClick={() => setCountry('IN')}>🇮🇳 India</button>
+            <button className={`country-btn${country === 'US' ? ' active' : ''}`} onClick={() => setCountry('US')}>🇺🇸 USA</button>
+          </div>
           {token && (
             <button onClick={handleRebalanceAll} disabled={isRebalancing} className="btn btn-accent"
               title="Rebalance all your baskets (every 30 days)">
@@ -128,14 +138,14 @@ function Baskets({ baskets, onReload }) {
       )}
 
       <div className="sc-cards-grid">
-        {localBaskets && localBaskets.length > 0 ? (
-          localBaskets.map((basket) => {
+        {filteredBaskets && filteredBaskets.length > 0 ? (
+          filteredBaskets.map((basket) => {
             const meta = THEME_META[basket.theme] || THEME_META['Large Cap'];
             const stocks = basket.stocks || [];
             const n = stocks.length || 1;
             const totalValue = stocks.reduce((s, st) => {
               const price = st.currentPrice || 1;
-              const qty = Math.max(1, Math.floor(((st.weight || (100 / n)) / 100 * 100000) / price));
+              const qty = Math.max(1, Math.floor(((st.weight || (100 / n)) / 100 * investBase) / price));
               return s + price * qty;
             }, 0);
             const rawPct = liveSummary[basket._id];
@@ -143,9 +153,10 @@ function Baskets({ baskets, onReload }) {
             const hasChange = basketDayChangePct != null;
             const displayName = basket.name.replace(/ \(\d{13}\)$/, '');
             const createdDate = basket.createdAt
-              ? new Date(basket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+              ? new Date(basket.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
               : null;
             const isOwner = basket.isUserCreated && basket.createdBy === email;
+            const byLabel = (basket.country || 'IN') === 'US' ? 'by SmartBasket US' : 'by SmartBasket India';
 
             return (
               <div key={basket._id} className={`sc-card${basket.isUserCreated ? ' sc-card-user' : ''}`}>
@@ -156,7 +167,7 @@ function Baskets({ baskets, onReload }) {
                     </div>
                     <div className="sc-card-title-block">
                       <div className="sc-card-name">{displayName}</div>
-                      <div className="sc-card-by">{basket.isUserCreated ? 'by You' : 'by SmartBasket India'}</div>
+                      <div className="sc-card-by">{basket.isUserCreated ? 'by You' : byLabel}</div>
                     </div>
                     {isOwner && (
                       <button className="sc-delete-btn" title="Delete basket"
@@ -167,7 +178,7 @@ function Baskets({ baskets, onReload }) {
                     <div className="sc-stat">
                       <div className="sc-stat-label">Min. Investment</div>
                       <div className="sc-stat-val accent">
-                        ₹{totalValue > 0 ? totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}
+                        {currencySymbol}{totalValue > 0 ? totalValue.toLocaleString(locale, { maximumFractionDigits: 0 }) : '—'}
                       </div>
                     </div>
                     <div className="sc-stat">

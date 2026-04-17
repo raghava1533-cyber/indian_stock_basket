@@ -2173,6 +2173,34 @@ body {
   cursor: not-allowed;
 }
 
+/* Country toggle */
+.country-toggle {
+  display: inline-flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-border, #ddd);
+}
+.country-btn {
+  padding: 6px 14px;
+  border: none;
+  background: var(--color-surface, #fff);
+  color: var(--color-text-secondary, #666);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.country-btn:first-child {
+  border-right: 1px solid var(--color-border, #ddd);
+}
+.country-btn.active {
+  background: var(--color-accent, #1D9E75);
+  color: #fff;
+}
+.country-btn:hover:not(.active) {
+  background: var(--color-surface-hover, #f5f5f5);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .sc-cards-grid { grid-template-columns: 1fr; }
