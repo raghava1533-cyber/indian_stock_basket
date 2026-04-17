@@ -460,7 +460,50 @@ function BasketDetail({ onReload }) {
             <div className="summary-label">Subscribers</div>
             <div className="summary-value">{basket.subscribers?.length || 0}</div>
           </div>
+          <div className="summary-card">
+            <div className="summary-label">Launch Date</div>
+            <div className="summary-value">
+              {basket.createdDate ? new Date(basket.createdDate).toLocaleDateString() : '—'}
+            </div>
+          </div>
         </div>
+
+        {/* Overall Returns from buyPrice */}
+        {(() => {
+          const investedVal = activeStocks.reduce((sum, s) => sum + ((s.buyPrice || s.currentPrice || 0) * (s.quantity || 1)), 0);
+          const currentVal = totalValue;
+          const pnl = currentVal - investedVal;
+          const returnPct = investedVal > 0 ? ((pnl / investedVal) * 100).toFixed(2) : 0;
+          const daysSince = basket.createdDate ? Math.ceil((new Date() - new Date(basket.createdDate)) / (1000 * 60 * 60 * 24)) : 0;
+          const investLabel = isUS ? '$10,000' : '₹1,00,000';
+          return (
+            <div style={{ background: 'var(--color-bg-secondary, #f7f8fa)', borderRadius: '12px', padding: '20px', margin: '20px 0', border: '1px solid var(--color-border, #e8e8e5)' }}>
+              <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '12px' }}>📈 Overall Returns {daysSince > 0 ? `(${daysSince} days)` : ''}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Invested ({investLabel})</div>
+                  <div style={{ fontSize: '18px', fontWeight: '600' }}>{cur}{investedVal.toLocaleString(loc, { maximumFractionDigits: 0 })}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Current Value</div>
+                  <div style={{ fontSize: '18px', fontWeight: '600' }}>{cur}{currentVal.toLocaleString(loc, { maximumFractionDigits: 0 })}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>P&L</div>
+                  <div style={{ fontSize: '18px', fontWeight: '600', color: pnl >= 0 ? '#4caf50' : '#f44336' }}>
+                    {pnl >= 0 ? '+' : ''}{cur}{pnl.toLocaleString(loc, { maximumFractionDigits: 0 })}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Return %</div>
+                  <div style={{ fontSize: '18px', fontWeight: '600', color: Number(returnPct) >= 0 ? '#4caf50' : '#f44336' }}>
+                    {Number(returnPct) >= 0 ? '+' : ''}{returnPct}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Quick stock summary table */}
         <h3 style={{ marginTop: '30px', marginBottom: '15px' }}>Stock Allocation Summary</h3>
@@ -791,17 +834,56 @@ function BasketDetail({ onReload }) {
                 <div className="bm-basket-label">This Basket</div>
                 <div className="bm-basket-name">{benchmark.basket.name?.replace(/ \(\d{10,}\)$/, '')}</div>
                 <div className="bm-basket-value">{cur}{benchmark.basket.totalValue?.toLocaleString(loc, { maximumFractionDigits: 0 }) || '—'}</div>
-                <div className="bm-basket-sub">{benchmark.basket.stockCount} stocks · {benchmark.basket.monthReturn >= 0 ? '+' : ''}{benchmark.basket.monthReturn || 0}% (1M)</div>
+                <div className="bm-basket-sub">{benchmark.basket.stockCount} stocks · {benchmark.basket.returnPct >= 0 ? '+' : ''}{benchmark.basket.returnPct || 0}% since launch</div>
+                {benchmark.basket.launchDate && (
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>Launched {new Date(benchmark.basket.launchDate).toLocaleDateString()} ({benchmark.daysSinceLaunch} days ago)</div>
+                )}
               </div>
               <div className="bm-compare-select">
                 <label className="bm-select-label">Compare with</label>
                 <select className="bm-dropdown" value={selectedIndex} onChange={e => setSelectedIndex(Number(e.target.value))}>
                   {benchmark.benchmarks.map((bm, i) => (
-                    <option key={i} value={i}>{bm.name} ({bm.monthReturn >= 0 ? '+' : ''}{bm.monthReturn}%)</option>
+                    <option key={i} value={i}>{bm.name} ({bm.returnPct >= 0 ? '+' : ''}{bm.returnPct}%)</option>
                   ))}
                 </select>
               </div>
             </div>
+
+            {/* Overall Returns Card */}
+            {(() => {
+              const overallRet = benchmark.basket.overallReturn || 0;
+              const invested = investBase;
+              const currentVal = benchmark.basket.totalValue || invested;
+              const profit = currentVal - invested;
+              const investLabel = isUS ? '$10,000' : '₹1,00,000';
+              return (
+                <div className="bm-overall-returns" style={{ background: 'var(--color-bg-secondary, #f7f8fa)', borderRadius: '12px', padding: '20px', margin: '16px 0', border: '1px solid var(--color-border, #e8e8e5)' }}>
+                  <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '12px' }}>📈 Overall Basket Returns (Since Launch)</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Invested</div>
+                      <div style={{ fontSize: '18px', fontWeight: '600' }}>{cur}{invested.toLocaleString(loc)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Current Value</div>
+                      <div style={{ fontSize: '18px', fontWeight: '600' }}>{cur}{currentVal.toLocaleString(loc, { maximumFractionDigits: 0 })}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>P&L</div>
+                      <div style={{ fontSize: '18px', fontWeight: '600', color: profit >= 0 ? '#4caf50' : '#f44336' }}>
+                        {profit >= 0 ? '+' : ''}{cur}{profit.toLocaleString(loc, { maximumFractionDigits: 0 })}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Overall Return</div>
+                      <div style={{ fontSize: '18px', fontWeight: '600', color: overallRet >= 0 ? '#4caf50' : '#f44336' }}>
+                        {overallRet >= 0 ? '+' : ''}{overallRet}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Line Chart — Basket vs Index */}
             {(() => {
@@ -824,7 +906,7 @@ function BasketDetail({ onReload }) {
 
               return (
                 <div className="bm-chart-wrap">
-                  <div className="bm-chart-title">Basket vs {bm.name} — Normalized 1-Month (Base = 100)</div>
+                  <div className="bm-chart-title">Basket vs {bm.name} — Normalized Since Launch (Base = 100)</div>
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e5" />
@@ -843,8 +925,8 @@ function BasketDetail({ onReload }) {
             {/* Investment Projection */}
             {(() => {
               const bm = benchmark.benchmarks[selectedIndex];
-              const basketReturn = benchmark.basket.monthReturn || 0;
-              const indexReturn = bm?.monthReturn || 0;
+              const basketReturn = benchmark.basket.returnPct || 0;
+              const indexReturn = bm?.returnPct || 0;
               const invested = investBase;
               const basketFinalValue = Math.round(invested * (1 + basketReturn / 100));
               const indexFinalValue = Math.round(invested * (1 + indexReturn / 100));
@@ -852,10 +934,11 @@ function BasketDetail({ onReload }) {
               const indexProfit = indexFinalValue - invested;
               const diff = basketProfit - indexProfit;
               const investLabel = isUS ? '$10,000' : '₹1,00,000';
+              const launchStr = benchmark.basket.launchDate ? new Date(benchmark.basket.launchDate).toLocaleDateString() : 'launch';
 
               return (
                 <div className="bm-projection">
-                  <div className="bm-projection-title">💰 If you invested {investLabel} one month ago</div>
+                  <div className="bm-projection-title">💰 If you invested {investLabel} on {launchStr}</div>
                   <div className="bm-projection-grid">
                     <div className={`bm-projection-card${basketReturn >= indexReturn ? ' winner' : ''}`}>
                       <div className="bm-proj-label">This Basket</div>
@@ -888,7 +971,7 @@ function BasketDetail({ onReload }) {
             {/* All index return cards */}
             <div className="bm-vs-row">
               <div className="bm-divider-line" />
-              <span className="bm-vs-label">1-Month Index Returns</span>
+              <span className="bm-vs-label">Index Returns Since Launch</span>
               <div className="bm-divider-line" />
             </div>
             <div className="bm-index-grid">
@@ -896,8 +979,8 @@ function BasketDetail({ onReload }) {
                 <div key={i} className={`bm-index-card${i === selectedIndex ? ' bm-index-selected' : ''}`}
                   onClick={() => setSelectedIndex(i)} style={{ cursor: 'pointer' }}>
                   <div className="bm-index-name">{bm.name}</div>
-                  <div className={`bm-index-return ${bm.monthReturn >= 0 ? 'positive' : 'negative'}`}>
-                    {bm.monthReturn >= 0 ? '+' : ''}{bm.monthReturn}%
+                  <div className={`bm-index-return ${bm.returnPct >= 0 ? 'positive' : 'negative'}`}>
+                    {bm.returnPct >= 0 ? '+' : ''}{bm.returnPct}%
                   </div>
                   <div className="bm-index-price">
                     {bm.currentValue > 0 ? bm.currentValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}
@@ -907,7 +990,7 @@ function BasketDetail({ onReload }) {
             </div>
 
             <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '16px', textAlign: 'center' }}>
-              Index data sourced from Yahoo Finance. Chart shows normalized values (base = 100 on day 1).
+              Index data sourced from Yahoo Finance. Chart shows normalized values (base = 100) since basket launch date.
             </p>
           </div>
         ) : (

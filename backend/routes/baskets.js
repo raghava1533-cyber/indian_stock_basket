@@ -696,7 +696,7 @@ router.get('/:id/news', async (req, res) => {
   }
 });
 
-// Get benchmark comparison for basket
+// Get benchmark comparison for basket (since launch date)
 router.get('/:id/benchmark', async (req, res) => {
   try {
     const basket = await Basket.findById(req.params.id);
@@ -704,6 +704,16 @@ router.get('/:id/benchmark', async (req, res) => {
 
     const axios = require('axios');
     const isUS = basket.country === 'US';
+
+    // Calculate date range from basket creation to today
+    const launchDate = new Date(basket.createdDate || basket.createdAt || Date.now());
+    const now = new Date();
+    const daysSinceLaunch = Math.max(1, Math.ceil((now - launchDate) / (1000 * 60 * 60 * 24)));
+    // Choose interval based on age: daily for < 6 months, weekly for < 3 years, monthly otherwise
+    const interval = daysSinceLaunch <= 180 ? '1d' : daysSinceLaunch <= 1095 ? '1wk' : '1mo';
+    const period1 = Math.floor(launchDate.getTime() / 1000);
+    const period2 = Math.floor(now.getTime() / 1000);
+
     const benchmarks = isUS ? [
       { ticker: '^GSPC',  name: 'S&P 500' },
       { ticker: '^IXIC',  name: 'NASDAQ Composite' },
@@ -721,10 +731,10 @@ router.get('/:id/benchmark', async (req, res) => {
     const results = [];
     for (const bm of benchmarks) {
       try {
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(bm.ticker)}?range=1mo&interval=1d`;
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(bm.ticker)}?period1=${period1}&period2=${period2}&interval=${interval}`;
         const resp = await axios.get(url, {
           headers: { 'User-Agent': 'Mozilla/5.0' },
-          timeout: 5000
+          timeout: 8000
         });
         const result = resp.data?.chart?.result?.[0];
         const meta = result?.meta || {};
@@ -732,7 +742,7 @@ router.get('/:id/benchmark', async (req, res) => {
         const closes = result?.indicators?.quote?.[0]?.close || [];
         const firstClose = closes.find(c => c != null) || meta.chartPreviousClose || 0;
         const lastClose = meta.regularMarketPrice || 0;
-        const monthReturn = firstClose > 0 ? ((lastClose - firstClose) / firstClose * 100).toFixed(2) : 0;
+        const returnPct = firstClose > 0 ? ((lastClose - firstClose) / firstClose * 100).toFixed(2) : 0;
 
         // Build normalized time series (Day 0 = 100)
         const series = timestamps.map((ts, i) => {
@@ -748,28 +758,31 @@ router.get('/:id/benchmark', async (req, res) => {
           name: bm.name,
           ticker: bm.ticker,
           currentValue: lastClose,
-          monthReturn: Number(monthReturn),
+          returnPct: Number(returnPct),
           series,
         });
       } catch (err) {
-        results.push({ name: bm.name, ticker: bm.ticker, currentValue: 0, monthReturn: 0, series: [] });
+        results.push({ name: bm.name, ticker: bm.ticker, currentValue: 0, returnPct: 0, series: [] });
       }
     }
 
-    // Calculate basket performance
+    // Calculate basket performance since launch
     const basketStocks = basket.stocks.filter(s => s.status === 'active');
     const basketValue = basketStocks.reduce((sum, s) => sum + ((s.currentPrice || 0) * (s.quantity || 1)), 0);
 
-    // Build basket normalized series by fetching each stock's 1-month chart
+    // Overall return from buyPrice (inception return)
+    const investedValue = basketStocks.reduce((sum, s) => sum + ((s.buyPrice || s.currentPrice || 0) * (s.quantity || 1)), 0);
+    const overallReturn = investedValue > 0 ? Number(((basketValue - investedValue) / investedValue * 100).toFixed(2)) : 0;
+
+    // Build basket normalized series by fetching each stock's chart since launch
     let basketSeries = [];
-    let basketMonthReturn = 0;
+    let basketReturnPct = 0;
     try {
-      const axios = require('axios');
       const stockCharts = [];
       for (const s of basketStocks.slice(0, 15)) {
         try {
-          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.ticker)}?range=1mo&interval=1d`;
-          const resp = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 5000 });
+          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.ticker)}?period1=${period1}&period2=${period2}&interval=${interval}`;
+          const resp = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
           const result = resp.data?.chart?.result?.[0];
           const timestamps = result?.timestamp || [];
           const closes = result?.indicators?.quote?.[0]?.close || [];
@@ -796,7 +809,6 @@ router.get('/:id/benchmark', async (req, res) => {
           stockCharts.forEach(sc => {
             const firstClose = sc.closes.find(c => c != null);
             if (!firstClose) return;
-            // Find the close for this date
             const idx = sc.timestamps.findIndex(ts => new Date(ts * 1000).toISOString().split('T')[0] === date);
             if (idx === -1 || sc.closes[idx] == null) return;
             const normWeight = sc.weight / totalWeight;
@@ -809,7 +821,7 @@ router.get('/:id/benchmark', async (req, res) => {
 
         basketSeries = dailyReturns;
         if (dailyReturns.length >= 2) {
-          basketMonthReturn = Number((dailyReturns[dailyReturns.length - 1].value - 100).toFixed(2));
+          basketReturnPct = Number((dailyReturns[dailyReturns.length - 1].value - 100).toFixed(2));
         }
       }
     } catch (_) {}
@@ -818,12 +830,17 @@ router.get('/:id/benchmark', async (req, res) => {
       basket: {
         name: basket.name,
         totalValue: basketValue,
+        investedValue,
         stockCount: basketStocks.length,
         minimumInvestment: basket.minimumInvestment,
-        monthReturn: basketMonthReturn,
+        returnPct: basketReturnPct,
+        overallReturn,
         series: basketSeries,
+        launchDate: launchDate.toISOString(),
       },
-      benchmarks: results
+      benchmarks: results,
+      daysSinceLaunch,
+      interval,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
