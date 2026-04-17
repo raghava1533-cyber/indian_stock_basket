@@ -481,14 +481,9 @@ function BasketDetail({ onReload }) {
                       <td>₹{price.toFixed(0)}</td>
                       <td>
                         {stock.dayChange != null ? (
-                          <div style={{ lineHeight: 1.3 }}>
-                            <div className={stock.dayChange >= 0 ? 'price-positive' : 'price-negative'} style={{ fontWeight: '500' }}>
-                              {stock.dayChange >= 0 ? '+' : ''}₹{stock.dayChange.toFixed(1)}
-                            </div>
-                            <div style={{ fontSize: '11px', color: stock.dayChangePercent >= 0 ? 'var(--color-accent)' : 'var(--color-negative)' }}>
-                              {stock.dayChangePercent >= 0 ? '+' : ''}{stock.dayChangePercent?.toFixed(2)}%
-                            </div>
-                          </div>
+                          <span className={stock.dayChange >= 0 ? 'price-positive' : 'price-negative'} style={{ fontWeight: '500' }}>
+                            {stock.dayChange >= 0 ? '+' : ''}₹{stock.dayChange.toFixed(1)}
+                          </span>
                         ) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}
                       </td>
                       <td className="price-positive">₹{h52.toFixed(0)}</td>
