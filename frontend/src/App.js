@@ -12,7 +12,13 @@ function App() {
   const [baskets, setBaskets] = useState([]);
 
   useEffect(() => {
+    console.log('App.js mounted - checking API connectivity');
     loadBaskets();
+    
+    // Also check backend connectivity on startup
+    basketAPI.checkHealth()
+      .then(() => console.log('Backend is reachable'))
+      .catch(err => console.warn('Backend not immediately available, will retry on demand:', err.message));
   }, []);
 
   const loadBaskets = async () => {

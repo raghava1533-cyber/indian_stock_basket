@@ -12,6 +12,12 @@ const Basket = require('./models/Basket');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Request logging middleware - log ALL requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
