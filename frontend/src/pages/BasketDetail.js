@@ -8,6 +8,7 @@ function BasketDetail({ onReload }) {
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [expandedRow, setExpandedRow] = useState(null);
   const [message, setMessage] = useState('');
   const [rebalanceHistory, setRebalanceHistory] = useState([]);
   const [news, setNews] = useState([]);
@@ -276,50 +277,94 @@ function BasketDetail({ onReload }) {
                 const price = stock.currentPrice || 0;
                 const h52 = stock.high52Week || 0;
                 const l52 = stock.low52Week || 0;
+                const isExpanded = expandedRow === idx;
 
                 return (
-                  <tr key={idx}>
-                    <td style={{ fontWeight: '500', color: 'var(--color-text-secondary)', width: '28px' }}>{idx + 1}</td>
-                    <td>
-                      <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--color-text-primary)' }}>
-                        {stock.companyName || stock.ticker?.replace('.NS', '')}
-                      </div>
-                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
-                        {stock.ticker?.replace('.NS', '')}
-                        {stock.futureGrowth != null && (
-                          <span style={{ marginLeft: '6px', color: 'var(--color-accent)' }}>
-                            FG {stock.futureGrowth.toFixed(1)}/10
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td>₹{price.toFixed(0)}</td>
-                    <td>
-                      {stock.dayChange != null ? (
-                        <div style={{ lineHeight: 1.3 }}>
-                          <div className={stock.dayChange >= 0 ? 'price-positive' : 'price-negative'} style={{ fontWeight: '500' }}>
-                            {stock.dayChange >= 0 ? '+' : ''}₹{stock.dayChange.toFixed(1)}
-                          </div>
-                          <div style={{ fontSize: '11px', color: stock.dayChangePercent >= 0 ? 'var(--color-accent)' : 'var(--color-negative)' }}>
-                            {stock.dayChangePercent >= 0 ? '+' : ''}{stock.dayChangePercent?.toFixed(2)}%
-                          </div>
+                  <React.Fragment key={idx}>
+                    <tr
+                      className={`stock-row${isExpanded ? ' expanded' : ''}`}
+                      onClick={() => setExpandedRow(isExpanded ? null : idx)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td style={{ fontWeight: '500', color: 'var(--color-text-secondary)', width: '28px' }}>{idx + 1}</td>
+                      <td>
+                        <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--color-text-primary)' }}>
+                          {stock.companyName || stock.ticker?.replace('.NS', '')}
                         </div>
-                      ) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}
-                    </td>
-                    <td className="price-positive">₹{h52.toFixed(0)}</td>
-                    <td className="price-negative">₹{l52.toFixed(0)}</td>
-                    <td>{stock.peRatio != null ? stock.peRatio.toFixed(1) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}</td>
-                    <td>{stock.earningsGrowth != null ? `${stock.earningsGrowth.toFixed(1)}%` : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}</td>
-                    <td style={{ fontWeight: '500' }}>{stock.quantity || 1}</td>
-                    <td>{stock.weight?.toFixed(1)}%</td>
-                    <td style={{ fontWeight: '500' }}>₹{(price * (stock.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
-                    <td>
-                      <div className="score-bar">
-                        <div className="score-fill" style={{ width: `${Math.min(stock.score || 0, 100)}%` }}></div>
-                        <span className="score-text">{stock.score?.toFixed(0) || '—'}</span>
-                      </div>
-                    </td>
-                  </tr>
+                        <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                          {stock.ticker?.replace('.NS', '')}
+                          {stock.futureGrowth != null && (
+                            <span style={{ marginLeft: '6px', color: 'var(--color-accent)' }}>
+                              FG {stock.futureGrowth.toFixed(1)}/10
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td>₹{price.toFixed(0)}</td>
+                      <td>
+                        {stock.dayChange != null ? (
+                          <div style={{ lineHeight: 1.3 }}>
+                            <div className={stock.dayChange >= 0 ? 'price-positive' : 'price-negative'} style={{ fontWeight: '500' }}>
+                              {stock.dayChange >= 0 ? '+' : ''}₹{stock.dayChange.toFixed(1)}
+                            </div>
+                            <div style={{ fontSize: '11px', color: stock.dayChangePercent >= 0 ? 'var(--color-accent)' : 'var(--color-negative)' }}>
+                              {stock.dayChangePercent >= 0 ? '+' : ''}{stock.dayChangePercent?.toFixed(2)}%
+                            </div>
+                          </div>
+                        ) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}
+                      </td>
+                      <td className="price-positive">₹{h52.toFixed(0)}</td>
+                      <td className="price-negative">₹{l52.toFixed(0)}</td>
+                      <td>{stock.peRatio != null ? stock.peRatio.toFixed(1) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}</td>
+                      <td>{stock.earningsGrowth != null ? `${stock.earningsGrowth.toFixed(1)}%` : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}</td>
+                      <td style={{ fontWeight: '500' }}>{stock.quantity || 1}</td>
+                      <td>{stock.weight?.toFixed(1)}%</td>
+                      <td style={{ fontWeight: '500' }}>₹{(price * (stock.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                      <td>
+                        <div className="score-bar">
+                          <div className="score-fill" style={{ width: `${Math.min(stock.score || 0, 100)}%` }}></div>
+                          <span className="score-text">{stock.score?.toFixed(0) || '—'}</span>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* ── Why Picked expanded row ── */}
+                    {isExpanded && (
+                      <tr className="why-row">
+                        <td colSpan="12">
+                          <div className="why-panel">
+                            <div className="why-title">📌 Why this stock was picked</div>
+                            <div className="why-pills">
+                              {stock.peRatio != null && (
+                                <span className="why-pill">PE: {stock.peRatio.toFixed(1)}</span>
+                              )}
+                              {stock.earningsGrowth != null && (
+                                <span className="why-pill accent">EPS Growth: {stock.earningsGrowth.toFixed(1)}%</span>
+                              )}
+                              {stock.revenueGrowth != null && (
+                                <span className="why-pill">Rev Growth: {stock.revenueGrowth.toFixed(1)}%</span>
+                              )}
+                              {stock.futureGrowth != null && (
+                                <span className="why-pill accent">Future Growth: {stock.futureGrowth.toFixed(1)}/10</span>
+                              )}
+                              {stock.socialSentiment != null && (
+                                <span className="why-pill">Sentiment: {stock.socialSentiment.toFixed(1)}/10</span>
+                              )}
+                              {stock.marketCapCr != null && (
+                                <span className="why-pill">Mkt Cap: ₹{stock.marketCapCr.toLocaleString('en-IN')} Cr</span>
+                              )}
+                              {stock.score != null && (
+                                <span className="why-pill score">Score: {stock.score.toFixed(0)}/100</span>
+                              )}
+                            </div>
+                            {stock.reason && (
+                              <div className="why-reason">{stock.reason}</div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </tbody>
@@ -334,6 +379,7 @@ function BasketDetail({ onReload }) {
             </tfoot>
           </table>
         </div>
+        <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '8px', textAlign: 'right' }}>Click any row to see why this stock was picked</p>
       </div>
 
       {/* ═══ NEWS TAB ═══ */}
