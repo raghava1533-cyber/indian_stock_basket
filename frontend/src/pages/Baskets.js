@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { basketAPI } from '../services/api';
 import '../styles/BasketGrid.css';
@@ -6,6 +6,33 @@ import '../styles/BasketGrid.css';
 function Baskets({ baskets, onReload }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [localBaskets, setLocalBaskets] = useState(baskets || []);
+
+  // Auto-load baskets when component mounts or if baskets prop is empty
+  useEffect(() => {
+    if (!baskets || baskets.length === 0) {
+      console.log('Baskets page mounted - baskets empty, triggering load');
+      loadBasketsDirectly();
+    } else {
+      setLocalBaskets(baskets);
+    }
+  }, [baskets]);
+
+  const loadBasketsDirectly = async () => {
+    setIsLoading(true);
+    setError(null);
+    console.log('Loading baskets directly from API');
+    try {
+      const res = await basketAPI.getAllBaskets();
+      console.log('Baskets loaded directly:', res.data);
+      setLocalBaskets(res.data);
+    } catch (err) {
+      console.error('Direct load failed:', err);
+      setError(`Failed to load baskets: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleRefresh = async () => {
     setIsLoading(true);
@@ -21,6 +48,7 @@ function Baskets({ baskets, onReload }) {
       console.log('Loading baskets...');
       await onReload();
       console.log('Baskets loaded successfully');
+      await loadBasketsDirectly(); // Also load locally to be sure
     } catch (err) {
       console.error('Error during refresh:', err);
       const errorMsg = err.response?.data?.message || err.message || 'Failed to load baskets';
@@ -72,8 +100,8 @@ function Baskets({ baskets, onReload }) {
       )}
 
       <div className="basket-grid">
-        {baskets && baskets.length > 0 ? (
-          baskets.map((basket) => (
+        {localBaskets && localBaskets.length > 0 ? (
+          localBaskets.map((basket) => (
             <Link to={`/basket/${basket._id}`} key={basket._id} className="basket-card-link">
               <div className="basket-card">
                 <div className="basket-card-header">
