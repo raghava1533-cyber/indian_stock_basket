@@ -1,10 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/BasketGrid.css';
 
 function Baskets({ baskets, onReload }) {
-  const handleRefresh = () => {
-    onReload();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    setError(null);
+    console.log('Refresh clicked - calling onReload');
+    try {
+      await onReload();
+      console.log('onReload completed, baskets should update');
+    } catch (err) {
+      console.error('Error refreshing baskets:', err);
+      setError('Failed to load baskets. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -14,18 +28,39 @@ function Baskets({ baskets, onReload }) {
           <h1>All Stock Baskets</h1>
           <p className="subtitle">Choose from our curated collection of stock baskets</p>
         </div>
-        <button onClick={handleRefresh} style={{
-          padding: '10px 20px',
-          backgroundColor: '#1e88e5',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          fontSize: '14px'
-        }}>
-          🔄 Refresh
+        <button 
+          onClick={handleRefresh} 
+          disabled={isLoading}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: isLoading ? '#ff9800' : '#1e88e5',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            fontWeight: isLoading ? 'bold' : 'normal',
+            opacity: isLoading ? 1 : 0.9,
+            transform: isLoading ? 'scale(1.05)' : 'scale(1)',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          {isLoading ? '⏳ Loading...' : '🔄 Refresh'}
         </button>
       </div>
+
+      {error && (
+        <div style={{
+          backgroundColor: '#ffebee',
+          color: '#c62828',
+          padding: '15px',
+          borderRadius: '5px',
+          marginBottom: '20px',
+          border: '1px solid #ef5350'
+        }}>
+          <strong>Error:</strong> {error}
+        </div>
+      )}
 
       <div className="basket-grid">
         {baskets && baskets.length > 0 ? (

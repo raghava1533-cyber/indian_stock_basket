@@ -16,11 +16,14 @@ function App() {
 
   const loadBaskets = async () => {
     try {
+      console.log('Loading baskets from API...');
       const response = await basketAPI.getAllBaskets();
       console.log('Baskets loaded:', response.data);
       setBaskets(response.data);
+      return response.data;
     } catch (error) {
       console.error('Error loading baskets:', error);
+      throw error;
     }
   };
 
