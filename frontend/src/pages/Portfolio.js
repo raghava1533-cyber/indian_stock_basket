@@ -14,10 +14,11 @@ const THEME_META = {
   'Infrastructure':{ bg: '#EEF0FE', color: '#3A3FBE', letter: 'IN' },
 };
 
-function Portfolio() {
+function Portfolio({ user }) {
   const [baskets, setBaskets] = useState([]);
   const [loading, setLoading] = useState(true);
   const email = localStorage.getItem('userEmail') || '';
+  const token = localStorage.getItem('authToken') || '';
   const subscribedIds = JSON.parse(localStorage.getItem('subscribedBaskets') || '[]');
 
   useEffect(() => {
@@ -33,14 +34,37 @@ function Portfolio() {
     load();
   }, []);
 
+  if (loading) return <div className="loading">Loading portfolio...</div>;
+
+  // Show login prompt if not authenticated
+  if (!token && !email) {
+    return (
+      <div className="sc-portfolio">
+        <div className="sc-pf-header">
+          <div>
+            <div className="sc-pf-meta">Portfolio</div>
+            <div className="sc-pf-count">Track your subscribed baskets</div>
+          </div>
+        </div>
+        <div className="sc-pf-empty" style={{ marginTop: '40px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
+          <h3 style={{ marginBottom: '8px', color: 'var(--color-text-primary)' }}>Log in to view your portfolio</h3>
+          <p style={{ marginBottom: '20px' }}>Subscribe to baskets and track your investments in one place.</p>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <Link to="/login" className="btn btn-primary">Log In</Link>
+            <Link to="/signup" className="btn btn-secondary">Sign Up</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const subscribedBaskets = baskets.filter(b =>
     subscribedIds.includes(b._id) || b.subscribers?.includes(email)
   );
   const totalValue = subscribedBaskets.reduce(
     (s, b) => s + (b.stocks?.reduce((ss, st) => ss + ((st.currentPrice || 0) * (st.quantity || 1)), 0) || 0), 0
   );
-
-  if (loading) return <div className="loading">Loading portfolio...</div>;
 
   return (
     <div className="sc-portfolio">

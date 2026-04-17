@@ -19,11 +19,11 @@ function Baskets({ baskets, onReload }) {
   const [error, setError] = useState(null);
   const [localBaskets, setLocalBaskets] = useState(baskets || []);
   const [liveSummary, setLiveSummary] = useState({});
+  const email = localStorage.getItem('userEmail') || '';
+  const token = localStorage.getItem('authToken') || '';
 
-  // Auto-load baskets when component mounts or if baskets prop is empty
   useEffect(() => {
     if (!baskets || baskets.length === 0) {
-      console.log('Baskets page mounted - baskets empty, triggering load');
       loadBasketsDirectly();
     } else {
       setLocalBaskets(baskets);
@@ -39,50 +39,24 @@ function Baskets({ baskets, onReload }) {
   const loadBasketsDirectly = async () => {
     setIsLoading(true);
     setError(null);
-    console.log('Loading baskets directly from API');
     try {
       const res = await basketAPI.getAllBaskets();
-      console.log('Baskets loaded directly:', res.data);
       setLocalBaskets(res.data);
     } catch (err) {
-      console.error('Direct load failed:', err);
       setError(`Failed to load baskets: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRefresh = async () => {
-    setIsLoading(true);
-    setError(null);
-    console.log('=== REFRESH CLICKED ===');
+  const handleDelete = async (basketId) => {
+    if (!window.confirm('Delete this basket? This cannot be undone.')) return;
     try {
-      // First check if API is reachable
-      console.log('Checking API health...');
-      await basketAPI.checkHealth();
-      console.log('API health check passed');
-
-      // Then load baskets
-      console.log('Loading baskets...');
-      await onReload();
-      console.log('Baskets loaded successfully');
-      await loadBasketsDirectly(); // Also load locally to be sure
+      await basketAPI.deleteBasket(basketId, token);
+      await loadBasketsDirectly();
+      onReload();
     } catch (err) {
-      console.error('Error during refresh:', err);
-      let errorMsg = 'Failed to load baskets';
-      
-      if (err.response?.status === 404) {
-        errorMsg = `API route not found (404). Backend may be restarting. Retrying...`;
-        console.log('Got 404, will retry automatically');
-      } else if (err.response?.data?.message) {
-        errorMsg = `API Error: ${err.response.data.message}`;
-      } else if (err.message) {
-        errorMsg = `Connection Error: ${err.message}`;
-      }
-      
-      setError(errorMsg);
-    } finally {
-      setIsLoading(false);
+      alert(err.response?.data?.message || 'Failed to delete basket');
     }
   };
 
@@ -90,23 +64,15 @@ function Baskets({ baskets, onReload }) {
     <div className="baskets-page">
       <div className="sc-page-header">
         <div>
-          <h1 className="sc-page-title">Explore Baskets</h1>
-          <p className="sc-page-sub">Choose from our curated collection of stock baskets</p>
+          <h1 className="sc-page-title">All Baskets</h1>
+          <p className="sc-page-sub">Browse all curated and custom stock baskets</p>
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={isLoading}
-          className={`btn${isLoading ? ' btn-disabled' : ''}`}
-        >
+        <button onClick={loadBasketsDirectly} disabled={isLoading} className="btn">
           {isLoading ? 'Loading…' : 'Refresh'}
         </button>
       </div>
 
-      {error && (
-        <div className="error-banner">
-          <strong>Error:</strong> {error}
-        </div>
-      )}
+      {error && <div className="error-banner"><strong>Error:</strong> {error}</div>}
 
       <div className="sc-cards-grid">
         {localBaskets && localBaskets.length > 0 ? (
@@ -117,13 +83,52 @@ function Baskets({ baskets, onReload }) {
             const rawPct = liveSummary[basket._id];
             const basketDayChangePct = rawPct != null ? rawPct : null;
             const hasChange = basketDayChangePct != null;
+            const displayName = basket.name.replace(/ \(\d{13}\)$/, '');
             const createdDate = basket.createdAt
               ? new Date(basket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
               : null;
+            const isOwner = basket.isUserCreated && basket.createdBy === email;
 
             return (
-              <Link to={`/basket/${basket._id}`} key={basket._id} className="sc-card-link">
-                <div className="sc-card">
+              <div key={basket._id} className={`sc-card${basket.isUserCreated ? ' sc-card-user' : ''}`}>
+                <Link to={`/basket/${basket._id}`} className="sc-card-body">
+                  <div className="sc-card-top">
+                    <div className="sc-icon" style={{ background: meta.bg, color: meta.color }}>
+                      {meta.letter}
+                    </div>
+                    <div className="sc-card-title-block">
+                      <div className="sc-card-name">{displayName}</div>
+                      <div className="sc-card-by">{basket.isUserCreated ? 'by You' : 'by SmartBasket India'}</div>
+                    </div>
+                    {isOwner && (
+                      <button className="sc-delete-btn" title="Delete basket"
+                        onClick={e => { e.preventDefault(); handleDelete(basket._id); }}>✕</button>
+                    )}
+                  </div>
+                  <div className="sc-card-stats">
+                    <div className="sc-stat">
+                      <div className="sc-stat-label">Min. Investment</div>
+                      <div className="sc-stat-val accent">
+                        ₹{totalValue > 0 ? totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}
+                      </div>
+                    </div>
+                    <div className="sc-stat">
+                      <div className="sc-stat-label">Stocks</div>
+                      <div className="sc-stat-val">{stocks.length}</div>
+                    </div>
+                    <div className="sc-stat">
+                      <div className="sc-stat-label">Today</div>
+                      <div className={`sc-stat-val${hasChange ? (basketDayChangePct >= 0 ? ' green' : ' red') : ''}`}>
+                        {hasChange ? `${basketDayChangePct >= 0 ? '+' : ''}${basketDayChangePct.toFixed(2)}%` : '—'}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+                <div className="sc-card-action">
+                  <span className="sc-card-date">{createdDate ? `Since ${createdDate}` : ''}</span>
+                  <span className="sc-explore-link">View →</span>
+                </div>
+              </div>
                   <div className="sc-card-body">
                     <div className="sc-card-top">
                       <div className="sc-icon" style={{ background: meta.bg, color: meta.color }}>
@@ -166,7 +171,7 @@ function Baskets({ baskets, onReload }) {
           })
         ) : (
           <div className="empty-state">
-            <p>No baskets available yet. Check back soon!</p>
+            <p>No baskets available yet.</p>
           </div>
         )}
       </div>

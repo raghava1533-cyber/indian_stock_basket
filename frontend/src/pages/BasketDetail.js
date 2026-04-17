@@ -670,28 +670,42 @@ function BasketDetail({ onReload }) {
         {benchmarkLoading ? (
           <div className="loading">Loading benchmark data...</div>
         ) : benchmark ? (
-          <>
-            <div className="benchmark-hero">
-              <div className="benchmark-basket-card">
-                <h3>{benchmark.basket.name}</h3>
-                <div className="benchmark-big-value">₹{benchmark.basket.totalValue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '—'}</div>
-                <div className="benchmark-meta\">{benchmark.basket.stockCount} stocks | Total Value to Maintain Allocation</div>
-              </div>
-              <div className="benchmark-vs">VS</div>
-              <div className="benchmark-indices">
-                {benchmark.benchmarks.map((bm, i) => (
-                  <div key={i} className="benchmark-index-card">
-                    <div className="benchmark-index-name">{bm.name}</div>
-                    <div className={`benchmark-index-return ${bm.monthReturn >= 0 ? 'positive' : 'negative'}`}>
-                      {bm.monthReturn >= 0 ? '+' : ''}{bm.monthReturn}%
-                    </div>
-                    <div className="benchmark-index-value">{bm.currentValue?.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
-                    <div className="benchmark-period">1 Month Return</div>
-                  </div>
-                ))}
-              </div>
+          <div className="benchmark-wrap">
+            {/* Basket summary */}
+            <div className="bm-basket-summary">
+              <div className="bm-basket-label">This Basket</div>
+              <div className="bm-basket-name">{benchmark.basket.name}</div>
+              <div className="bm-basket-value">₹{benchmark.basket.totalValue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '—'}</div>
+              <div className="bm-basket-sub">{benchmark.basket.stockCount} stocks · Min. Investment</div>
             </div>
-          </>
+
+            {/* vs divider */}
+            <div className="bm-vs-row">
+              <div className="bm-divider-line" />
+              <span className="bm-vs-label">vs Index Benchmarks (1-Month Return)</span>
+              <div className="bm-divider-line" />
+            </div>
+
+            {/* Index cards */}
+            <div className="bm-index-grid">
+              {benchmark.benchmarks.map((bm, i) => (
+                <div key={i} className="bm-index-card">
+                  <div className="bm-index-name">{bm.name}</div>
+                  <div className={`bm-index-return ${bm.monthReturn >= 0 ? 'positive' : 'negative'}`}>
+                    {bm.monthReturn >= 0 ? '+' : ''}{bm.monthReturn}%
+                  </div>
+                  <div className="bm-index-price">
+                    {bm.currentValue > 0 ? bm.currentValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}
+                  </div>
+                  <div className="bm-index-period">1 Month Return</div>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '16px', textAlign: 'center' }}>
+              Index returns sourced from Yahoo Finance. Basket value is the total cost at current market prices.
+            </p>
+          </div>
         ) : (
           <p style={{ color: '#666', textAlign: 'center', padding: '40px' }}>Benchmark data not available</p>
         )}

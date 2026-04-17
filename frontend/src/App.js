@@ -8,6 +8,7 @@ import Debug from './pages/Debug';
 import Status from './pages/Status';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import CreateBasket from './pages/CreateBasket';
 import Disclaimer from './components/Disclaimer';
 import { basketAPI } from './services/api';
 import './App.css';
@@ -75,9 +76,10 @@ function App() {
               SmartBasket India
             </h1>
             <nav className="nav">
-              <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} end>Baskets</NavLink>
-              <NavLink to="/baskets" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Explore</NavLink>
-              {user && <NavLink to="/portfolio" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Portfolio</NavLink>}
+              <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} end>Dashboard</NavLink>
+              <NavLink to="/baskets" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>All Baskets</NavLink>
+              <NavLink to="/create-basket" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>+ Create Basket</NavLink>
+              <NavLink to="/portfolio" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Portfolio</NavLink>
             </nav>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {indices && (
@@ -122,7 +124,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard baskets={baskets} onReload={loadBaskets} />} />
             <Route path="/baskets" element={<Baskets baskets={baskets} onReload={loadBaskets} />} />
-            <Route path="/portfolio" element={user ? <Portfolio user={user} /> : <Navigate to="/login" replace />} />
+            <Route path="/create-basket" element={<CreateBasket />} />
+            <Route path="/portfolio" element={<Portfolio user={user} />} />
             <Route path="/basket/:id" element={<BasketDetail onReload={loadBaskets} />} />
             <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
             <Route path="/signup" element={user ? <Navigate to="/" replace /> : <Signup onLogin={handleLogin} />} />
