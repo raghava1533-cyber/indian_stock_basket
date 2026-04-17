@@ -92,11 +92,24 @@ router.get('/init', async (req, res) => {
     // Delete existing baskets and insert new ones
     await Basket.deleteMany({});
     const createdBaskets = await Basket.insertMany(baskets);
-    
+
+    // Trigger rebalance for each basket to populate stocks immediately
+    // Pass false so it is treated as an automatic (non-manual) rebalance
+    for (const basket of createdBaskets) {
+      try {
+        await rebalanceBasket(basket._id.toString(), false);
+      } catch (err) {
+        console.error(`Rebalance failed for ${basket.name}:`, err.message);
+      }
+    }
+
+    // Re-fetch updated baskets so stocks are included in the response
+    const updatedBaskets = await Basket.find();
+
     res.json({
-      message: 'Baskets initialized successfully',
-      count: createdBaskets.length,
-      baskets: createdBaskets
+      message: 'Baskets initialized and rebalanced successfully',
+      count: updatedBaskets.length,
+      baskets: updatedBaskets
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

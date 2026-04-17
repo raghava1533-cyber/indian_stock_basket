@@ -3,7 +3,7 @@ const axios = require('axios');
 // Indian stock tickers - NSE format
 const INDIAN_STOCKS = {
   largeCap: [
-    'RELIANCE.NS', 'TCS.NS', 'INFOSY.NS', 'HINDUNILVR.NS', 'ICICIBANK.NS',
+    'RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HINDUNILVR.NS', 'ICICIBANK.NS',
     'HDFC.NS', 'WIPRO.NS', 'ITC.NS', 'MARUTI.NS', 'SBIN.NS',
     'BAJAJFINSV.NS', 'TITAN.NS', 'ASIANPAINT.NS', 'NESTLEIND.NS', 'SUNPHARMA.NS'
   ],
@@ -17,7 +17,7 @@ const INDIAN_STOCKS = {
     'RADICO.NS', 'SUVINSURG.NS', 'DIVISLAB.NS', 'CGCONSTRUCT.NS', 'EDELWEISS.NS'
   ],
   tech: [
-    'TCS.NS', 'INFOSY.NS', 'WIPRO.NS', 'HCLTECH.NS', 'LTTS.NS',
+    'TCS.NS', 'INFY.NS', 'WIPRO.NS', 'HCLTECH.NS', 'LTTS.NS',
     'TECHM.NS', 'PERSISTENT.NS', 'MINDTREE.NS', 'MPHASIS.NS', 'COFORGE.NS'
   ],
   finance: [
@@ -49,7 +49,9 @@ const getStockData = async (ticker) => {
       high52Week: Math.max(...history.high.filter(h => h !== null)),
       low52Week: Math.min(...history.low.filter(h => h !== null)),
       marketCap: quote.marketCap,
-      peRatio: quote.epsTrailingTwelveMonths ? quote.regularMarketPrice / quote.epsTrailingTwelveMonths : null,
+      peRatio: (quote.epsTrailingTwelveMonths && quote.epsTrailingTwelveMonths !== 0)
+        ? quote.regularMarketPrice / quote.epsTrailingTwelveMonths
+        : null,
       currency: quote.currency,
       lastUpdated: new Date()
     };

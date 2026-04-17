@@ -6,19 +6,26 @@ const emailService = require('./emailService');
 
 // Quality filtering criteria
 const isQualityStock = async (stockData) => {
-  // Criteria:
-  // 1. Market Cap > 10,000 Cr (for largecap)
-  // 2. PE Ratio < 30 (reasonable valuation)
-  // 3. Price > 52-week low (above support)
-  // 4. Volume indicates good liquidity
+  if (!stockData || !stockData.currentPrice) return false;
 
-  if (!stockData.marketCap || !stockData.peRatio) return false;
+  // Only apply marketCap filter if data is available
+  if (stockData.marketCap) {
+    const marketCapInCr = stockData.marketCap / 10000000;
+    if (marketCapInCr < 500) return false;
+  }
 
-  const marketCapInCr = stockData.marketCap / 10000000;
-  const priceAboveSupport = stockData.currentPrice > stockData.low52Week * 1.1;
-  const reasonableValuation = stockData.peRatio < 40 && stockData.peRatio > 0;
+  // Only apply PE filter if data is available
+  if (stockData.peRatio && stockData.peRatio > 0) {
+    if (stockData.peRatio > 60) return false; // only reject extremely overvalued
+  }
 
-  return marketCapInCr > 1000 && priceAboveSupport && reasonableValuation;
+  // Price must be above 52-week low (with 5% buffer)
+  if (stockData.high52Week && stockData.low52Week) {
+    const priceAboveSupport = stockData.currentPrice > stockData.low52Week * 1.05;
+    if (!priceAboveSupport) return false;
+  }
+
+  return true;
 };
 
 // Select top 10 stocks for a basket
@@ -37,8 +44,19 @@ const selectTopStocks = async (category, basketType) => {
     }
   }
 
+  // Fallback: if no quality stocks found, use all stocks with valid price so the
+  // basket is never left empty due to overly strict filtering or incomplete data.
+  let stocksToUse = qualityStocks;
+  if (qualityStocks.length === 0) {
+    const fallbackStocks = stocksData.filter(s => s && s.currentPrice);
+    console.warn(
+      `No quality stocks found for ${category}, using ${fallbackStocks.length} top scored stocks as fallback`
+    );
+    stocksToUse = fallbackStocks.map(s => ({ ...s, score: calculateStockScore(s) }));
+  }
+
   // Sort by score and select top 10
-  const topStocks = qualityStocks
+  const topStocks = stocksToUse
     .sort((a, b) => b.score - a.score)
     .slice(0, 10)
     .map((stock, index) => ({
