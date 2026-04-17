@@ -976,6 +976,83 @@ body {
 .bm-index-price  { font-size: 12px; color: var(--color-text-primary); }
 .bm-index-period { font-size: 11px; color: var(--color-text-secondary); margin-top: 3px; }
 
+/* ── Benchmark Projection ── */
+.bm-projection {
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+  margin: 20px 0;
+}
+.bm-projection-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 16px;
+  text-align: center;
+}
+.bm-projection-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.bm-projection-card {
+  flex: 1;
+  max-width: 260px;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 18px;
+  text-align: center;
+}
+.bm-projection-card.winner {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+.bm-proj-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+}
+.bm-proj-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+.bm-proj-return {
+  font-size: 14px;
+  font-weight: 500;
+}
+.bm-proj-return.positive { color: var(--color-accent); }
+.bm-proj-return.negative { color: var(--color-negative); }
+.bm-proj-vs {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.bm-projection-verdict {
+  text-align: center;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: var(--border-radius-md);
+}
+.bm-projection-verdict.positive {
+  background: var(--color-accent-bg);
+  color: var(--color-accent-text);
+}
+.bm-projection-verdict.negative {
+  background: var(--color-negative-bg);
+  color: var(--color-negative-text);
+}
+
 /* ═══ CreateBasket Page ═══ */
 .create-basket-page { max-width: 960px; margin: 0 auto; }
 .cb-page-layout {

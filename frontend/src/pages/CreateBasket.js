@@ -22,6 +22,7 @@ const SECTORS = [
   { value: 'defence',        label: 'Defence & Aerospace' },
   { value: 'media',          label: 'Media & Entertainment' },
   { value: 'textile',        label: 'Textiles & Apparel' },
+  { value: 'undervalued',     label: 'Undervalued Stocks' },
 ];
 
 const MARKET_CAPS = [
@@ -29,6 +30,7 @@ const MARKET_CAPS = [
   { value: 'largeCap', label: 'Large Cap  (₹20,000 Cr+)' },
   { value: 'midCap',   label: 'Mid Cap  (₹5,000–20,000 Cr)' },
   { value: 'smallCap', label: 'Small Cap  (₹500–5,000 Cr)' },
+  { value: 'microCap', label: 'Micro Cap  (below ₹500 Cr)' },
 ];
 
 const FEATURES = [

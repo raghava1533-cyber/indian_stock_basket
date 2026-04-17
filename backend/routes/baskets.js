@@ -394,7 +394,8 @@ const SECTOR_LABELS = {
   chemicals: 'Chemicals', cement: 'Cement & Building', oilgas: 'Oil & Gas',
   fertilizer: 'Fertilizers & Agri', defence: 'Defence & Aerospace',
   media: 'Media & Entertainment', textile: 'Textiles & Apparel',
-  largeCap: 'Large Cap', midCap: 'Mid Cap', smallCap: 'Small Cap',
+  undervalued: 'Undervalued Stocks',
+  largeCap: 'Large Cap', midCap: 'Mid Cap', smallCap: 'Small Cap', microCap: 'Micro Cap',
 };
 const MARKET_CAP_THRESHOLDS = { largeCap: 50000, midCap: 10000 };
 
@@ -601,12 +602,68 @@ router.get('/:id/benchmark', async (req, res) => {
     const basketStocks = basket.stocks.filter(s => s.status === 'active');
     const basketValue = basketStocks.reduce((sum, s) => sum + ((s.currentPrice || 0) * (s.quantity || 1)), 0);
 
+    // Build basket normalized series by fetching each stock's 1-month chart
+    let basketSeries = [];
+    let basketMonthReturn = 0;
+    try {
+      const axios = require('axios');
+      const stockCharts = [];
+      for (const s of basketStocks.slice(0, 15)) {
+        try {
+          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.ticker)}?range=1mo&interval=1d`;
+          const resp = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 5000 });
+          const result = resp.data?.chart?.result?.[0];
+          const timestamps = result?.timestamp || [];
+          const closes = result?.indicators?.quote?.[0]?.close || [];
+          stockCharts.push({ ticker: s.ticker, weight: s.weight || (100 / basketStocks.length), timestamps, closes });
+        } catch (_) {}
+      }
+
+      if (stockCharts.length > 0) {
+        // Get all unique dates
+        const allDates = new Map();
+        stockCharts.forEach(sc => {
+          sc.timestamps.forEach((ts, i) => {
+            const dateStr = new Date(ts * 1000).toISOString().split('T')[0];
+            if (!allDates.has(dateStr)) allDates.set(dateStr, []);
+          });
+        });
+        const sortedDates = [...allDates.keys()].sort();
+
+        // For each stock, compute normalized return at each date
+        const totalWeight = stockCharts.reduce((s, sc) => s + sc.weight, 0);
+        const dailyReturns = sortedDates.map(date => {
+          let weightedReturn = 0;
+          let usedWeight = 0;
+          stockCharts.forEach(sc => {
+            const firstClose = sc.closes.find(c => c != null);
+            if (!firstClose) return;
+            // Find the close for this date
+            const idx = sc.timestamps.findIndex(ts => new Date(ts * 1000).toISOString().split('T')[0] === date);
+            if (idx === -1 || sc.closes[idx] == null) return;
+            const normWeight = sc.weight / totalWeight;
+            weightedReturn += normWeight * ((sc.closes[idx] / firstClose) * 100);
+            usedWeight += normWeight;
+          });
+          if (usedWeight > 0) weightedReturn = weightedReturn / usedWeight;
+          return { date, value: Number(weightedReturn.toFixed(2)) };
+        }).filter(d => d.value > 0);
+
+        basketSeries = dailyReturns;
+        if (dailyReturns.length >= 2) {
+          basketMonthReturn = Number((dailyReturns[dailyReturns.length - 1].value - 100).toFixed(2));
+        }
+      }
+    } catch (_) {}
+
     res.json({
       basket: {
         name: basket.name,
         totalValue: basketValue,
         stockCount: basketStocks.length,
         minimumInvestment: basket.minimumInvestment,
+        monthReturn: basketMonthReturn,
+        series: basketSeries,
       },
       benchmarks: results
     });

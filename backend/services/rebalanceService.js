@@ -467,6 +467,50 @@ const STOCK_UNIVERSE = {
     { ticker: 'MANYAVAR.NS',      companyName: 'Vedant Fashions'         },
     { ticker: 'NYKAA.NS',         companyName: 'FSN E-Commerce'          },
   ],
+  undervalued: [
+    { ticker: 'IDFC.NS',          companyName: 'IDFC Limited'            },
+    { ticker: 'IDFCFIRSTB.NS',    companyName: 'IDFC First Bank'         },
+    { ticker: 'FEDERALBNK.NS',    companyName: 'The Federal Bank'        },
+    { ticker: 'SAIL.NS',          companyName: 'Steel Authority of India'},
+    { ticker: 'NHPC.NS',          companyName: 'NHPC Limited'            },
+    { ticker: 'IRFC.NS',          companyName: 'Indian Railway Finance'  },
+    { ticker: 'SJVN.NS',          companyName: 'SJVN Limited'            },
+    { ticker: 'HUDCO.NS',         companyName: 'HUDCO'                   },
+    { ticker: 'RECLTD.NS',        companyName: 'REC Limited'             },
+    { ticker: 'PFC.NS',           companyName: 'Power Finance Corp'      },
+    { ticker: 'NATIONALUM.NS',    companyName: 'National Aluminium'      },
+    { ticker: 'NMDC.NS',          companyName: 'NMDC Limited'            },
+    { ticker: 'GAIL.NS',          companyName: 'GAIL (India)'            },
+    { ticker: 'OIL.NS',           companyName: 'Oil India'               },
+    { ticker: 'BANKBARODA.NS',    companyName: 'Bank of Baroda'          },
+    { ticker: 'CANBK.NS',         companyName: 'Canara Bank'             },
+    { ticker: 'IOB.NS',           companyName: 'Indian Overseas Bank'    },
+    { ticker: 'CENTRALBK.NS',     companyName: 'Central Bank of India'   },
+    { ticker: 'UNIONBANK.NS',     companyName: 'Union Bank of India'     },
+    { ticker: 'MAHABANK.NS',      companyName: 'Bank of Maharashtra'     },
+  ],
+  microCap: [
+    { ticker: 'NETWORK18.NS',     companyName: 'Network18 Media'         },
+    { ticker: 'ORIENTCEM.NS',     companyName: 'Orient Cement'           },
+    { ticker: 'GANESHHOUC.NS',    companyName: 'Ganesh Housing'          },
+    { ticker: 'BLISSGVS.NS',      companyName: 'Bliss GVS Pharma'       },
+    { ticker: 'JAMNAAUTO.NS',     companyName: 'Jamna Auto Industries'   },
+    { ticker: 'TIINDIA.NS',       companyName: 'Tube Investments'        },
+    { ticker: 'GPIL.NS',          companyName: 'Godawari Power'          },
+    { ticker: 'FINCABLES.NS',     companyName: 'Finolex Cables'          },
+    { ticker: 'ARVINDFASN.NS',    companyName: 'Arvind Fashions'         },
+    { ticker: 'WONDERLA.NS',      companyName: 'Wonderla Holidays'       },
+    { ticker: 'RELIGARE.NS',      companyName: 'Religare Enterprises'    },
+    { ticker: 'MANAPPURAM.NS',    companyName: 'Manappuram Finance'      },
+    { ticker: 'PCBL.NS',          companyName: 'PCBL Limited'            },
+    { ticker: 'GULFOILLUB.NS',    companyName: 'Gulf Oil Lubricants'     },
+    { ticker: 'TEAMLEASE.NS',     companyName: 'TeamLease Services'      },
+    { ticker: 'SAPPHIRE.NS',      companyName: 'Sapphire Foods'          },
+    { ticker: 'STLTECH.NS',       companyName: 'Sterlite Technologies'   },
+    { ticker: 'HAPPSTMNDS.NS',    companyName: 'Happiest Minds'          },
+    { ticker: 'DATAPATTNS.NS',    companyName: 'Data Patterns'           },
+    { ticker: 'KAYNES.NS',        companyName: 'Kaynes Technology'       },
+  ],
 };
 
 // ─── Static fallback data (used when live fetch returns null) ─────────────────
@@ -823,6 +867,45 @@ const STATIC_FALLBACK = {
   'TCNSCLOTH.NS':     { currentPrice: 500,  high52Week: 700,  low52Week: 350,  marketCapCr:    3400, peRatio: 25.0, earningsGrowth: 15, futureGrowth: 7,  socialSentiment: 5 },
   'BSLLTD.NS':        { currentPrice: 120,  high52Week: 180,  low52Week: 80,   marketCapCr:     500, peRatio: 10.0, earningsGrowth: 10, futureGrowth: 5,  socialSentiment: 4 },
   'SIYARAM.NS':       { currentPrice: 500,  high52Week: 700,  low52Week: 350,  marketCapCr:    2400, peRatio: 12.0, earningsGrowth: 15, futureGrowth: 6,  socialSentiment: 5 },
+
+  // undervalued sector
+  'IDFC.NS':           { currentPrice: 120,  high52Week: 165,  low52Week: 85,   marketCapCr:   19200, peRatio: 8.0,  earningsGrowth: 20, futureGrowth: 7,  socialSentiment: 6 },
+  'NHPC.NS':           { currentPrice: 85,   high52Week: 118,  low52Week: 55,   marketCapCr:   85400, peRatio: 14.0, earningsGrowth: 12, futureGrowth: 7,  socialSentiment: 7 },
+  'IRFC.NS':           { currentPrice: 160,  high52Week: 230,  low52Week: 72,   marketCapCr:  209000, peRatio: 28.0, earningsGrowth: 18, futureGrowth: 8,  socialSentiment: 8 },
+  'SJVN.NS':           { currentPrice: 110,  high52Week: 170,  low52Week: 72,   marketCapCr:   43000, peRatio: 35.0, earningsGrowth: 15, futureGrowth: 8,  socialSentiment: 7 },
+  'HUDCO.NS':          { currentPrice: 230,  high52Week: 353,  low52Week: 110,  marketCapCr:   46000, peRatio: 12.0, earningsGrowth: 25, futureGrowth: 8,  socialSentiment: 7 },
+  'RECLTD.NS':         { currentPrice: 510,  high52Week: 654,  low52Week: 350,  marketCapCr:  134000, peRatio: 8.5,  earningsGrowth: 22, futureGrowth: 8,  socialSentiment: 7 },
+  'PFC.NS':            { currentPrice: 430,  high52Week: 580,  low52Week: 270,  marketCapCr:  142000, peRatio: 7.0,  earningsGrowth: 25, futureGrowth: 8,  socialSentiment: 7 },
+  'NATIONALUM.NS':     { currentPrice: 170,  high52Week: 262,  low52Week: 105,  marketCapCr:   31200, peRatio: 8.0,  earningsGrowth: 30, futureGrowth: 7,  socialSentiment: 6 },
+  'NMDC.NS':           { currentPrice: 230,  high52Week: 310,  low52Week: 165,  marketCapCr:   67400, peRatio: 9.0,  earningsGrowth: 20, futureGrowth: 7,  socialSentiment: 6 },
+  'OIL.NS':            { currentPrice: 480,  high52Week: 640,  low52Week: 350,  marketCapCr:   78000, peRatio: 10.0, earningsGrowth: 15, futureGrowth: 7,  socialSentiment: 6 },
+  'BANKBARODA.NS':     { currentPrice: 250,  high52Week: 299,  low52Week: 195,  marketCapCr:  129000, peRatio: 7.0,  earningsGrowth: 20, futureGrowth: 7,  socialSentiment: 7 },
+  'CANBK.NS':          { currentPrice: 105,  high52Week: 128,  low52Week: 82,   marketCapCr:   95400, peRatio: 6.0,  earningsGrowth: 22, futureGrowth: 7,  socialSentiment: 6 },
+  'IOB.NS':            { currentPrice: 55,   high52Week: 75,   low52Week: 38,   marketCapCr:  104000, peRatio: 18.0, earningsGrowth: 35, futureGrowth: 7,  socialSentiment: 6 },
+  'CENTRALBK.NS':      { currentPrice: 55,   high52Week: 76,   low52Week: 37,   marketCapCr:   47600, peRatio: 20.0, earningsGrowth: 28, futureGrowth: 6,  socialSentiment: 5 },
+  'UNIONBANK.NS':      { currentPrice: 120,  high52Week: 165,  low52Week: 100,  marketCapCr:   92000, peRatio: 6.5,  earningsGrowth: 20, futureGrowth: 7,  socialSentiment: 6 },
+  'MAHABANK.NS':       { currentPrice: 55,   high52Week: 73,   low52Week: 38,   marketCapCr:   39200, peRatio: 8.0,  earningsGrowth: 25, futureGrowth: 7,  socialSentiment: 6 },
+
+  // microCap sector
+  'NETWORK18.NS':      { currentPrice: 80,   high52Week: 120,  low52Week: 50,   marketCapCr:    8400, peRatio: 0,    earningsGrowth: 0,  futureGrowth: 5,  socialSentiment: 5 },
+  'ORIENTCEM.NS':      { currentPrice: 200,  high52Week: 280,  low52Week: 130,  marketCapCr:    4100, peRatio: 30.0, earningsGrowth: 12, futureGrowth: 7,  socialSentiment: 5 },
+  'GANESHHOUC.NS':     { currentPrice: 700,  high52Week: 1050, low52Week: 350,  marketCapCr:    4800, peRatio: 15.0, earningsGrowth: 40, futureGrowth: 8,  socialSentiment: 7 },
+  'BLISSGVS.NS':       { currentPrice: 120,  high52Week: 180,  low52Week: 80,   marketCapCr:    1200, peRatio: 12.0, earningsGrowth: 15, futureGrowth: 6,  socialSentiment: 5 },
+  'JAMNAAUTO.NS':      { currentPrice: 120,  high52Week: 180,  low52Week: 80,   marketCapCr:    4800, peRatio: 22.0, earningsGrowth: 20, futureGrowth: 7,  socialSentiment: 6 },
+  'TIINDIA.NS':        { currentPrice: 4200, high52Week: 4900, low52Week: 3100, marketCapCr:   81400, peRatio: 55.0, earningsGrowth: 25, futureGrowth: 9,  socialSentiment: 8 },
+  'GPIL.NS':           { currentPrice: 1100, high52Week: 1500, low52Week: 700,  marketCapCr:    7200, peRatio: 8.0,  earningsGrowth: 30, futureGrowth: 7,  socialSentiment: 6 },
+  'FINCABLES.NS':      { currentPrice: 1100, high52Week: 1500, low52Week: 800,  marketCapCr:   16800, peRatio: 28.0, earningsGrowth: 15, futureGrowth: 7,  socialSentiment: 6 },
+  'ARVINDFASN.NS':     { currentPrice: 450,  high52Week: 650,  low52Week: 300,  marketCapCr:    4500, peRatio: 0,    earningsGrowth: 0,  futureGrowth: 6,  socialSentiment: 5 },
+  'WONDERLA.NS':       { currentPrice: 700,  high52Week: 950,  low52Week: 450,  marketCapCr:    3950, peRatio: 35.0, earningsGrowth: 25, futureGrowth: 8,  socialSentiment: 7 },
+  'RELIGARE.NS':       { currentPrice: 280,  high52Week: 400,  low52Week: 180,  marketCapCr:    4600, peRatio: 25.0, earningsGrowth: 20, futureGrowth: 7,  socialSentiment: 6 },
+  'PCBL.NS':           { currentPrice: 350,  high52Week: 500,  low52Week: 200,  marketCapCr:   13200, peRatio: 20.0, earningsGrowth: 25, futureGrowth: 8,  socialSentiment: 7 },
+  'GULFOILLUB.NS':     { currentPrice: 1050, high52Week: 1350, low52Week: 750,  marketCapCr:    5200, peRatio: 25.0, earningsGrowth: 15, futureGrowth: 7,  socialSentiment: 6 },
+  'TEAMLEASE.NS':      { currentPrice: 3000, high52Week: 3800, low52Week: 2200, marketCapCr:    5100, peRatio: 40.0, earningsGrowth: 20, futureGrowth: 7,  socialSentiment: 6 },
+  'SAPPHIRE.NS':       { currentPrice: 1500, high52Week: 1800, low52Week: 1100, marketCapCr:    9600, peRatio: 60.0, earningsGrowth: 30, futureGrowth: 8,  socialSentiment: 7 },
+  'STLTECH.NS':        { currentPrice: 150,  high52Week: 220,  low52Week: 100,  marketCapCr:    5900, peRatio: 15.0, earningsGrowth: 20, futureGrowth: 7,  socialSentiment: 6 },
+  'HAPPSTMNDS.NS':     { currentPrice: 750,  high52Week: 1000, low52Week: 500,  marketCapCr:   11200, peRatio: 35.0, earningsGrowth: 22, futureGrowth: 8,  socialSentiment: 7 },
+  'DATAPATTNS.NS':     { currentPrice: 2200, high52Week: 3100, low52Week: 1500, marketCapCr:   12800, peRatio: 50.0, earningsGrowth: 35, futureGrowth: 9,  socialSentiment: 8 },
+  'KAYNES.NS':         { currentPrice: 4500, high52Week: 6450, low52Week: 2500, marketCapCr:   26700, peRatio: 85.0, earningsGrowth: 50, futureGrowth: 9,  socialSentiment: 9 },
 };
 
 // ─── Quality scoring (0-100 pts total) ────────────────────────────────────────
@@ -947,6 +1030,8 @@ const getCategoryFromName = (name) => {
   if (name.includes('Defence') || name.includes('Defense')) return 'defence';
   if (name.includes('Media') || name.includes('Entertainment')) return 'media';
   if (name.includes('Textile') || name.includes('Apparel')) return 'textile';
+  if (name.includes('Undervalued') || name.includes('Value')) return 'undervalued';
+  if (name.includes('Micro')) return 'microCap';
   return 'largeCap';
 };
 

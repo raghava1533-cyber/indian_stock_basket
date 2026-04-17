@@ -121,7 +121,7 @@ function Dashboard({ baskets, onReload }) {
                     {meta.letter}
                   </div>
                   <div className="sc-card-title-block">
-                    <div className="sc-card-name">{basket.name}</div>
+                    <div className="sc-card-name">{basket.name?.replace(/ \(\d{10,}\)$/, '')}</div>
                     <div className="sc-card-by">by SmartBasket India</div>
                   </div>
                 </div>

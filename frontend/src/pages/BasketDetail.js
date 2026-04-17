@@ -385,7 +385,7 @@ function BasketDetail({ onReload }) {
 
       <div className="basket-detail-header">
         <div>
-          <h1 className="basket-detail-title">{basket.name}</h1>
+          <h1 className="basket-detail-title">{basket.name?.replace(/ \(\d{10,}\)$/, '')}</h1>
           <p style={{ color: '#888', marginTop: '5px', fontSize: '15px' }}>{basket.description}</p>
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
             <span className="detail-badge">{basket.category}</span>
@@ -596,11 +596,11 @@ function BasketDetail({ onReload }) {
             </tbody>
             <tfoot>
               <tr style={{ fontWeight: '500', background: 'var(--color-background-secondary)', fontSize: '12px' }}>
-                <td colSpan="8">Total</td>
-                <td>{activeStocks.reduce((s, st) => s + (st.quantity || 1), 0)}</td>
+                <td colSpan="8" style={{ textAlign: 'right' }}>Total</td>
                 <td>100%</td>
+                <td>{activeStocks.reduce((s, st) => s + (st.quantity || 1), 0)}</td>
                 <td>₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
-                <td style={{ color: 'var(--color-text-secondary)' }}>To Maintain Allocation</td>
+                <td></td>
               </tr>
             </tfoot>
           </table>
@@ -750,9 +750,9 @@ function BasketDetail({ onReload }) {
             <div className="bm-top-row">
               <div className="bm-basket-summary-mini">
                 <div className="bm-basket-label">This Basket</div>
-                <div className="bm-basket-name">{benchmark.basket.name?.replace(/ \(\d{13}\)$/, '')}</div>
+                <div className="bm-basket-name">{benchmark.basket.name?.replace(/ \(\d{10,}\)$/, '')}</div>
                 <div className="bm-basket-value">₹{benchmark.basket.totalValue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '—'}</div>
-                <div className="bm-basket-sub">{benchmark.basket.stockCount} stocks</div>
+                <div className="bm-basket-sub">{benchmark.basket.stockCount} stocks · {benchmark.basket.monthReturn >= 0 ? '+' : ''}{benchmark.basket.monthReturn || 0}% (1M)</div>
               </div>
               <div className="bm-compare-select">
                 <label className="bm-select-label">Compare with</label>
@@ -764,25 +764,83 @@ function BasketDetail({ onReload }) {
               </div>
             </div>
 
-            {/* Line Chart */}
+            {/* Line Chart — Basket vs Index */}
             {(() => {
               const bm = benchmark.benchmarks[selectedIndex];
-              const series = bm?.series || [];
-              if (series.length === 0) return <p style={{ textAlign: 'center', color: '#666', padding: '30px' }}>No chart data available for {bm?.name}</p>;
-              const chartData = series.map(pt => ({ date: pt.date.slice(5), [bm.name]: pt.value }));
+              const indexSeries = bm?.series || [];
+              const basketSeries = benchmark.basket.series || [];
+              if (indexSeries.length === 0 && basketSeries.length === 0)
+                return <p style={{ textAlign: 'center', color: '#666', padding: '30px' }}>No chart data available</p>;
+
+              // Merge basket and index data by date
+              const dateMap = new Map();
+              basketSeries.forEach(pt => { dateMap.set(pt.date, { date: pt.date.slice(5), Basket: pt.value }); });
+              indexSeries.forEach(pt => {
+                const existing = dateMap.get(pt.date) || { date: pt.date.slice(5) };
+                existing[bm.name] = pt.value;
+                existing.date = pt.date.slice(5);
+                dateMap.set(pt.date, existing);
+              });
+              const chartData = [...dateMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, v]) => v);
+
               return (
                 <div className="bm-chart-wrap">
-                  <div className="bm-chart-title">{bm.name} — Normalized 1-Month (Base = 100)</div>
-                  <ResponsiveContainer width="100%" height={280}>
+                  <div className="bm-chart-title">Basket vs {bm.name} — Normalized 1-Month (Base = 100)</div>
+                  <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e5" />
                       <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#999" />
                       <YAxis tick={{ fontSize: 11 }} stroke="#999" domain={['auto', 'auto']} />
                       <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Line type="monotone" dataKey={bm.name} stroke="var(--color-accent)" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="Basket" stroke="var(--color-accent)" strokeWidth={2.5} dot={false} />
+                      <Line type="monotone" dataKey={bm.name} stroke="#7B61FF" strokeWidth={2} dot={false} strokeDasharray="5 3" />
                     </LineChart>
                   </ResponsiveContainer>
+                </div>
+              );
+            })()}
+
+            {/* ₹1,00,000 Investment Projection */}
+            {(() => {
+              const bm = benchmark.benchmarks[selectedIndex];
+              const basketReturn = benchmark.basket.monthReturn || 0;
+              const indexReturn = bm?.monthReturn || 0;
+              const invested = 100000;
+              const basketFinalValue = Math.round(invested * (1 + basketReturn / 100));
+              const indexFinalValue = Math.round(invested * (1 + indexReturn / 100));
+              const basketProfit = basketFinalValue - invested;
+              const indexProfit = indexFinalValue - invested;
+              const diff = basketProfit - indexProfit;
+
+              return (
+                <div className="bm-projection">
+                  <div className="bm-projection-title">💰 If you invested ₹1,00,000 one month ago</div>
+                  <div className="bm-projection-grid">
+                    <div className={`bm-projection-card${basketReturn >= indexReturn ? ' winner' : ''}`}>
+                      <div className="bm-proj-label">This Basket</div>
+                      <div className="bm-proj-value">₹{basketFinalValue.toLocaleString('en-IN')}</div>
+                      <div className={`bm-proj-return ${basketReturn >= 0 ? 'positive' : 'negative'}`}>
+                        {basketReturn >= 0 ? '+' : ''}₹{basketProfit.toLocaleString('en-IN')} ({basketReturn >= 0 ? '+' : ''}{basketReturn}%)
+                      </div>
+                    </div>
+                    <div className="bm-proj-vs">VS</div>
+                    <div className={`bm-projection-card${indexReturn > basketReturn ? ' winner' : ''}`}>
+                      <div className="bm-proj-label">{bm?.name}</div>
+                      <div className="bm-proj-value">₹{indexFinalValue.toLocaleString('en-IN')}</div>
+                      <div className={`bm-proj-return ${indexReturn >= 0 ? 'positive' : 'negative'}`}>
+                        {indexReturn >= 0 ? '+' : ''}₹{indexProfit.toLocaleString('en-IN')} ({indexReturn >= 0 ? '+' : ''}{indexReturn}%)
+                      </div>
+                    </div>
+                  </div>
+                  {diff !== 0 && (
+                    <div className={`bm-projection-verdict ${diff > 0 ? 'positive' : 'negative'}`}>
+                      {diff > 0
+                        ? `Your basket outperformed ${bm?.name} by ₹${Math.abs(diff).toLocaleString('en-IN')} (+${(basketReturn - indexReturn).toFixed(2)}%)`
+                        : `${bm?.name} outperformed your basket by ₹${Math.abs(diff).toLocaleString('en-IN')} (+${(indexReturn - basketReturn).toFixed(2)}%)`
+                      }
+                    </div>
+                  )}
                 </div>
               );
             })()}
@@ -861,7 +919,7 @@ function BasketDetail({ onReload }) {
       {/* ═══ ABOUT TAB ═══ */}
       <div className={`tab-content ${activeTab === 'about' ? 'active' : ''}`}>
         <div className="about-section">
-          <h3>About {basket.name}</h3>
+          <h3>About {basket.name?.replace(/ \(\d{10,}\)$/, '')}</h3>
           <p className="about-desc">{basket.description}</p>
 
           <div className="about-grid">
