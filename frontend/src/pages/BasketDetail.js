@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { basketAPI } from '../services/api';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts';
 
 // ── BrokerConnect component ───────────────────────────────────────────────────
 function BrokerConnect({ stocks, totalValue }) {
@@ -172,6 +173,7 @@ function BasketDetail({ onReload }) {
   const [rebalanceHistory, setRebalanceHistory] = useState([]);
   const [news, setNews] = useState([]);
   const [benchmark, setBenchmark] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [newsLoading, setNewsLoading] = useState(false);
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -599,8 +601,8 @@ function BasketDetail({ onReload }) {
               <span>{latestHistory.reason || 'Auto rebalance'}</span>
             </div>
 
-            {/* Show current holdings if history is incomplete */}
-            {addedStocks.length < 5 && activeStocks.length > 0 && (
+            {/* Show current holdings */}
+            {activeStocks.length > 0 && (
               <div className="changes-section">
                 <h3 className="changes-title added">📊 Current Holdings ({activeStocks.length})</h3>
                 <div className="changes-list">
@@ -669,27 +671,59 @@ function BasketDetail({ onReload }) {
       <div className={`tab-content ${activeTab === 'benchmark' ? 'active' : ''}`}>
         {benchmarkLoading ? (
           <div className="loading">Loading benchmark data...</div>
-        ) : benchmark ? (
+        ) : benchmark && benchmark.benchmarks?.length > 0 ? (
           <div className="benchmark-wrap">
-            {/* Basket summary */}
-            <div className="bm-basket-summary">
-              <div className="bm-basket-label">This Basket</div>
-              <div className="bm-basket-name">{benchmark.basket.name}</div>
-              <div className="bm-basket-value">₹{benchmark.basket.totalValue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '—'}</div>
-              <div className="bm-basket-sub">{benchmark.basket.stockCount} stocks · Min. Investment</div>
+            {/* Dropdown + Summary Row */}
+            <div className="bm-top-row">
+              <div className="bm-basket-summary-mini">
+                <div className="bm-basket-label">This Basket</div>
+                <div className="bm-basket-name">{benchmark.basket.name?.replace(/ \(\d{13}\)$/, '')}</div>
+                <div className="bm-basket-value">₹{benchmark.basket.totalValue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '—'}</div>
+                <div className="bm-basket-sub">{benchmark.basket.stockCount} stocks</div>
+              </div>
+              <div className="bm-compare-select">
+                <label className="bm-select-label">Compare with</label>
+                <select className="bm-dropdown" value={selectedIndex} onChange={e => setSelectedIndex(Number(e.target.value))}>
+                  {benchmark.benchmarks.map((bm, i) => (
+                    <option key={i} value={i}>{bm.name} ({bm.monthReturn >= 0 ? '+' : ''}{bm.monthReturn}%)</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* vs divider */}
+            {/* Line Chart */}
+            {(() => {
+              const bm = benchmark.benchmarks[selectedIndex];
+              const series = bm?.series || [];
+              if (series.length === 0) return <p style={{ textAlign: 'center', color: '#666', padding: '30px' }}>No chart data available for {bm?.name}</p>;
+              const chartData = series.map(pt => ({ date: pt.date.slice(5), [bm.name]: pt.value }));
+              return (
+                <div className="bm-chart-wrap">
+                  <div className="bm-chart-title">{bm.name} — Normalized 1-Month (Base = 100)</div>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e5" />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#999" />
+                      <YAxis tick={{ fontSize: 11 }} stroke="#999" domain={['auto', 'auto']} />
+                      <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                      <Line type="monotone" dataKey={bm.name} stroke="var(--color-accent)" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              );
+            })()}
+
+            {/* All index return cards */}
             <div className="bm-vs-row">
               <div className="bm-divider-line" />
-              <span className="bm-vs-label">vs Index Benchmarks (1-Month Return)</span>
+              <span className="bm-vs-label">1-Month Index Returns</span>
               <div className="bm-divider-line" />
             </div>
-
-            {/* Index cards */}
             <div className="bm-index-grid">
               {benchmark.benchmarks.map((bm, i) => (
-                <div key={i} className="bm-index-card">
+                <div key={i} className={`bm-index-card${i === selectedIndex ? ' bm-index-selected' : ''}`}
+                  onClick={() => setSelectedIndex(i)} style={{ cursor: 'pointer' }}>
                   <div className="bm-index-name">{bm.name}</div>
                   <div className={`bm-index-return ${bm.monthReturn >= 0 ? 'positive' : 'negative'}`}>
                     {bm.monthReturn >= 0 ? '+' : ''}{bm.monthReturn}%
@@ -697,13 +731,12 @@ function BasketDetail({ onReload }) {
                   <div className="bm-index-price">
                     {bm.currentValue > 0 ? bm.currentValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}
                   </div>
-                  <div className="bm-index-period">1 Month Return</div>
                 </div>
               ))}
             </div>
 
             <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '16px', textAlign: 'center' }}>
-              Index returns sourced from Yahoo Finance. Basket value is the total cost at current market prices.
+              Index data sourced from Yahoo Finance. Chart shows normalized values (base = 100 on day 1).
             </p>
           </div>
         ) : (

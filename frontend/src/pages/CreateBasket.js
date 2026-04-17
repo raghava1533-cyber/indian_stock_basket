@@ -10,6 +10,11 @@ const SECTORS = [
   { value: 'renewable',      label: 'Renewable Energy' },
   { value: 'consumer',       label: 'Consumer Brands' },
   { value: 'infrastructure', label: 'Infrastructure' },
+  { value: 'auto',           label: 'Automobile' },
+  { value: 'metals',         label: 'Metals & Mining' },
+  { value: 'telecom',        label: 'Telecom' },
+  { value: 'psu',            label: 'PSU (Public Sector)' },
+  { value: 'realty',         label: 'Real Estate' },
 ];
 
 const MARKET_CAPS = [

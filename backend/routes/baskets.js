@@ -389,6 +389,8 @@ router.get('/:id/stocks', async (req, res) => {
 const SECTOR_LABELS = {
   tech: 'Technology', finance: 'Finance', healthcare: 'Healthcare',
   renewable: 'Renewable', consumer: 'Consumer', infrastructure: 'Infrastructure',
+  auto: 'Automobile', metals: 'Metals & Mining', telecom: 'Telecom',
+  psu: 'PSU', realty: 'Real Estate',
   largeCap: 'Large Cap', midCap: 'Mid Cap', smallCap: 'Small Cap',
 };
 const MARKET_CAP_THRESHOLDS = { largeCap: 50000, midCap: 10000 };
@@ -550,6 +552,8 @@ router.get('/:id/benchmark', async (req, res) => {
       { ticker: '^NSEI', name: 'Nifty 50' },
       { ticker: '^NSEBANK', name: 'Bank Nifty' },
       { ticker: '^NSMIDCP', name: 'Nifty Midcap 100' },
+      { ticker: '^CNXSMALLCAP', name: 'Nifty Smallcap 100' },
+      { ticker: '^CNXIT', name: 'Nifty IT' },
     ];
 
     const results = [];
@@ -560,20 +564,33 @@ router.get('/:id/benchmark', async (req, res) => {
           headers: { 'User-Agent': 'Mozilla/5.0' },
           timeout: 5000
         });
-        const meta = resp.data?.chart?.result?.[0]?.meta || {};
-        const closes = resp.data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
+        const result = resp.data?.chart?.result?.[0];
+        const meta = result?.meta || {};
+        const timestamps = result?.timestamp || [];
+        const closes = result?.indicators?.quote?.[0]?.close || [];
         const firstClose = closes.find(c => c != null) || meta.chartPreviousClose || 0;
         const lastClose = meta.regularMarketPrice || 0;
         const monthReturn = firstClose > 0 ? ((lastClose - firstClose) / firstClose * 100).toFixed(2) : 0;
+
+        // Build normalized time series (Day 0 = 100)
+        const series = timestamps.map((ts, i) => {
+          const c = closes[i];
+          if (c == null || firstClose <= 0) return null;
+          return {
+            date: new Date(ts * 1000).toISOString().split('T')[0],
+            value: Number(((c / firstClose) * 100).toFixed(2)),
+          };
+        }).filter(Boolean);
 
         results.push({
           name: bm.name,
           ticker: bm.ticker,
           currentValue: lastClose,
           monthReturn: Number(monthReturn),
+          series,
         });
       } catch (err) {
-        results.push({ name: bm.name, ticker: bm.ticker, currentValue: 0, monthReturn: 0 });
+        results.push({ name: bm.name, ticker: bm.ticker, currentValue: 0, monthReturn: 0, series: [] });
       }
     }
 
