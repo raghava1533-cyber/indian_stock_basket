@@ -5,6 +5,7 @@ import Baskets from './pages/Baskets';
 import Portfolio from './pages/Portfolio';
 import BasketDetail from './pages/BasketDetail';
 import Debug from './pages/Debug';
+import Status from './pages/Status';
 import { basketAPI } from './services/api';
 import './App.css';
 
@@ -55,6 +56,7 @@ function App() {
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/basket/:id" element={<BasketDetail onReload={loadBaskets} />} />
             <Route path="/debug" element={<Debug />} />
+            <Route path="/status" element={<Status />} />
           </Routes>
         </main>
 
