@@ -197,7 +197,7 @@ const getEnrichedStockData = async (ticker) => {
     // Blend: 40% news sentiment + 60% momentum
     const socialSentiment = Number(((newsSentiment * 0.4) + (momentumSentiment * 0.6)).toFixed(1));
 
-    // Fetch chart data for RSI/SMA computation + accurate price/dayChange from v8
+    // Fetch chart data for RSI/SMA (1y) + separate 5d fetch for accurate dayChange
     let rsi = null, sma20 = null, sma50 = null, sma200 = null;
     let v8Price = null, v8PrevClose = null;
     try {
@@ -214,18 +214,16 @@ const getEnrichedStockData = async (ticker) => {
       sma20 = smas.sma20;
       sma50 = smas.sma50;
       sma200 = smas.sma200;
-      // Extract v8 price and previousClose for accurate dayChange
       const chartMeta = chartResult?.meta || {};
       v8Price = chartMeta.regularMarketPrice ?? null;
       v8PrevClose = chartMeta.chartPreviousClose ?? chartMeta.previousClose ?? null;
     } catch (_) {}
 
-    // Prefer v8 price (more accurate/real-time) over v10 when available
+    // Use v10's reported dayChange directly (already adjusted for corporate actions)
+    // Only fall back to v8-derived if v10 didn't provide one
     const finalPrice = v8Price || currentPrice;
-
-    // Compute dayChange: prefer v8-derived (chartPreviousClose is accurate)
-    let finalDayChange = price.regularMarketChange?.raw ?? null;
-    let finalDayChangePct = (() => {
+    const v10Change    = price.regularMarketChange?.raw ?? null;
+    const v10ChangePct = (() => {
       const chg = price.regularMarketChange?.raw ?? null;
       const cur = price.regularMarketPrice?.raw  ?? null;
       if (chg != null && cur != null && (cur - chg) > 0)
@@ -235,15 +233,13 @@ const getEnrichedStockData = async (ticker) => {
         : null;
     })();
 
-    // Override with v8-based dayChange if v10 didn't provide it or v8 price is fresher
-    if (v8Price != null && v8PrevClose != null && v8PrevClose > 0) {
-      const v8DayChange = v8Price - v8PrevClose;
-      const v8DayChangePct = (v8DayChange / v8PrevClose) * 100;
-      if (finalDayChange == null || v8Price !== currentPrice) {
-        finalDayChange = v8DayChange;
-        finalDayChangePct = v8DayChangePct;
-      }
-    }
+    // v8-derived change as fallback only (may be stale on corporate action days)
+    const v8Change    = (v8Price != null && v8PrevClose != null && v8PrevClose > 0) ? v8Price - v8PrevClose : null;
+    const v8ChangePct = (v8Change != null && v8PrevClose > 0) ? (v8Change / v8PrevClose) * 100 : null;
+
+    // Prefer v10 change (authoritative); use v8 only if v10 is null
+    const finalDayChange    = v10Change    ?? v8Change;
+    const finalDayChangePct = v10ChangePct ?? v8ChangePct;
 
     return {
       ticker,

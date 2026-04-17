@@ -512,14 +512,15 @@ router.get('/:id/stocks', async (req, res) => {
       const liveInfo = liveData.find(d => d.ticker === yfTicker);
       const yfDc     = yfDayChanges[yfTicker];  // Yahoo day change (US only)
 
-      // Price: NSE > Yahoo Finance > stored
+      // Price: NSE (most real-time) > Yahoo Finance > stored
       const price = nseQ?.price ?? liveInfo?.currentPrice ?? s.currentPrice ?? 0;
 
-      // Day change: NSE > Yahoo Finance > stored
-      const dcAbs = nseQ?.change ?? (yfDc != null
-        ? price - price / (1 + yfDc.pct / 100)
-        : (liveInfo?.dayChange ?? null));
-      const dcPct = nseQ?.changePct ?? yfDc?.pct ?? liveInfo?.dayChangePercent ?? null;
+      // Day change: Yahoo Finance FIRST (handles corporate actions correctly),
+      // then NSE fallback (for stocks where Yahoo has no data like MAHINDCIE, CENTURYTEX)
+      // then Yahoo batch (US only), then stored
+      const dcAbs = liveInfo?.dayChange ?? nseQ?.change ??
+        (yfDc != null ? price - price / (1 + yfDc.pct / 100) : null);
+      const dcPct = liveInfo?.dayChangePercent ?? nseQ?.changePct ?? yfDc?.pct ?? null;
 
       // 52W range: NSE > Yahoo Finance > stored
       const high52 = nseQ?.high52Week ?? liveInfo?.high52Week ?? s.high52Week;
