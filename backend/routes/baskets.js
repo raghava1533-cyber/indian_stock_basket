@@ -123,4 +123,78 @@ router.get('/:id/stocks', async (req, res) => {
   }
 });
 
+// Initialize default baskets (admin endpoint)
+router.post('/init', async (req, res) => {
+  try {
+    const baskets = [
+      {
+        name: 'Bluechip Giants',
+        description: 'Top 10 large-cap companies with strong market presence',
+        category: 'Market Cap Based',
+        theme: 'Large Cap',
+        stocks: [],
+        subscribers: [],
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      },
+      {
+        name: 'Midcap Momentum',
+        description: 'Promising mid-cap companies with growth potential',
+        category: 'Market Cap Based',
+        theme: 'Mid Cap',
+        stocks: [],
+        subscribers: [],
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      },
+      {
+        name: 'Smallcap Leaders',
+        description: 'Quality small-cap companies with high growth prospects',
+        category: 'Market Cap Based',
+        theme: 'Small Cap',
+        stocks: [],
+        subscribers: [],
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      },
+      {
+        name: 'Tech Innovators',
+        description: 'Best tech and IT companies driving digital transformation',
+        category: 'Thematic',
+        theme: 'Technology',
+        stocks: [],
+        subscribers: [],
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      },
+      {
+        name: 'Finance Leaders',
+        description: 'Top financial institutions with strong ROE',
+        category: 'Thematic',
+        theme: 'Finance',
+        stocks: [],
+        subscribers: [],
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      },
+      {
+        name: 'Healthcare Growth',
+        description: 'Healthcare and pharma companies with strong growth',
+        category: 'Thematic',
+        theme: 'Healthcare',
+        stocks: [],
+        subscribers: [],
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      }
+    ];
+
+    // Delete existing baskets and insert new ones
+    await Basket.deleteMany({});
+    const createdBaskets = await Basket.insertMany(baskets);
+    
+    res.json({
+      message: 'Baskets initialized successfully',
+      count: createdBaskets.length,
+      baskets: createdBaskets
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;
