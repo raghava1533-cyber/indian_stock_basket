@@ -534,25 +534,32 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .stocks-table thead { background: var(--color-background-secondary); }
 
 .stocks-table th {
-  padding: 10px 12px;
+  padding: 8px 10px;
   text-align: left;
   color: var(--color-text-secondary);
   font-weight: 400;
   font-size: 11px;
   border-bottom: 0.5px solid var(--color-border-tertiary);
+  white-space: nowrap;
 }
 
 .stocks-table td {
-  padding: 11px 12px;
+  padding: 10px 10px;
   border-bottom: 0.5px solid var(--color-border-tertiary);
   color: var(--color-text-primary);
   vertical-align: middle;
+  white-space: nowrap;
+}
+
+.stocks-table td:nth-child(2) {
+  white-space: normal;
+  min-width: 140px;
 }
 
 .stocks-table tr:last-child td { border-bottom: none; }
@@ -574,7 +581,7 @@ body {
 /* ═══ Score Bar ═══ */
 .score-bar {
   position: relative;
-  width: 56px;
+  width: 52px;
   height: 18px;
   background: var(--color-border-tertiary);
   border-radius: var(--border-radius-sm);

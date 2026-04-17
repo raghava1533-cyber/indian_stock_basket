@@ -259,16 +259,15 @@ function BasketDetail({ onReload }) {
               <tr>
                 <th>#</th>
                 <th>Company</th>
-                <th>Ticker</th>
                 <th>Price</th>
                 <th>52W High</th>
                 <th>52W Low</th>
-                <th>PE Ratio</th>
+                <th>PE</th>
+                <th>EPS%</th>
                 <th>Qty</th>
                 <th>Weight</th>
                 <th>Value</th>
                 <th>Score</th>
-                <th>Why Picked</th>
               </tr>
             </thead>
             <tbody>
@@ -279,36 +278,45 @@ function BasketDetail({ onReload }) {
 
                 return (
                   <tr key={idx}>
-                    <td style={{ fontWeight: 'bold', color: '#667eea' }}>{idx + 1}</td>
+                    <td style={{ fontWeight: '500', color: 'var(--color-text-secondary)', width: '28px' }}>{idx + 1}</td>
                     <td>
-                      <div style={{ fontWeight: '600' }}>{stock.companyName || stock.ticker?.replace('.NS', '')}</div>
+                      <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--color-text-primary)' }}>
+                        {stock.companyName || stock.ticker?.replace('.NS', '')}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                        {stock.ticker?.replace('.NS', '')}
+                        {stock.futureGrowth != null && (
+                          <span style={{ marginLeft: '6px', color: 'var(--color-accent)' }}>
+                            FG {stock.futureGrowth.toFixed(1)}/10
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className="stock-ticker">{stock.ticker?.replace('.NS', '')}</td>
-                    <td>₹{price.toFixed(2)}</td>
-                    <td style={{ color: '#4caf50' }}>₹{h52.toFixed(0)}</td>
-                    <td style={{ color: '#f44336' }}>₹{l52.toFixed(0)}</td>
-                    <td>{stock.peRatio?.toFixed(1) || 'N/A'}</td>
-                    <td style={{ fontWeight: 'bold', fontSize: '16px' }}>{stock.quantity || 1}</td>
+                    <td>₹{price.toFixed(0)}</td>
+                    <td className="price-positive">₹{h52.toFixed(0)}</td>
+                    <td className="price-negative">₹{l52.toFixed(0)}</td>
+                    <td>{stock.peRatio != null ? stock.peRatio.toFixed(1) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}</td>
+                    <td>{stock.earningsGrowth != null ? `${stock.earningsGrowth.toFixed(1)}%` : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}</td>
+                    <td style={{ fontWeight: '500' }}>{stock.quantity || 1}</td>
                     <td>{stock.weight?.toFixed(1)}%</td>
-                    <td style={{ fontWeight: '600' }}>₹{(price * (stock.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                    <td style={{ fontWeight: '500' }}>₹{(price * (stock.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
                     <td>
                       <div className="score-bar">
                         <div className="score-fill" style={{ width: `${Math.min(stock.score || 0, 100)}%` }}></div>
                         <span className="score-text">{stock.score?.toFixed(0) || '—'}</span>
                       </div>
                     </td>
-                    <td style={{ fontSize: '12px', color: '#666', maxWidth: '250px' }}>{stock.reason}</td>
                   </tr>
                 );
               })}
             </tbody>
             <tfoot>
-              <tr style={{ fontWeight: 'bold', background: '#f0f0f0' }}>
+              <tr style={{ fontWeight: '500', background: 'var(--color-background-secondary)', fontSize: '12px' }}>
                 <td colSpan="7">Total</td>
                 <td>{activeStocks.reduce((s, st) => s + (st.quantity || 1), 0)}</td>
                 <td>100%</td>
                 <td>₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
-                <td colSpan="2">Min Investment: ₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                <td style={{ color: 'var(--color-text-secondary)' }}>Min ₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
               </tr>
             </tfoot>
           </table>
