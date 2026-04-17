@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { basketAPI } from '../services/api';
 
@@ -11,11 +11,7 @@ function BasketDetail({ onReload }) {
   const [message, setMessage] = useState('');
   const [rebalanceHistory, setRebalanceHistory] = useState([]);
 
-  useEffect(() => {
-    loadBasketData();
-  }, [id]);
-
-  const loadBasketData = async () => {
+  const loadBasketData = useCallback(async () => {
     try {
       setLoading(true);
       const basketRes = await basketAPI.getBasketById(id);
@@ -32,7 +28,11 @@ function BasketDetail({ onReload }) {
       console.error('Error loading basket:', error);
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadBasketData();
+  }, [loadBasketData]);
 
   const handleRebalance = async () => {
     if (!window.confirm('Are you sure you want to trigger a manual rebalance?')) return;

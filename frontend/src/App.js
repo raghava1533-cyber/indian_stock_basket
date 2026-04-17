@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import BasketDetail from './pages/BasketDetail';
+import { basketAPI } from './services/api';
 import './App.css';
 
 function App() {
   const [baskets, setBaskets] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadBaskets();
@@ -14,13 +14,10 @@ function App() {
 
   const loadBaskets = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/baskets');
-      const data = await response.json();
-      setBaskets(data);
-      setLoading(false);
+      const response = await basketAPI.getAllBaskets();
+      setBaskets(response.data);
     } catch (error) {
       console.error('Error loading baskets:', error);
-      setLoading(false);
     }
   };
 
