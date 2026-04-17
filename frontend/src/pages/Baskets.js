@@ -79,7 +79,12 @@ function Baskets({ baskets, onReload }) {
           localBaskets.map((basket) => {
             const meta = THEME_META[basket.theme] || THEME_META['Large Cap'];
             const stocks = basket.stocks || [];
-            const totalValue = stocks.reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0);
+            const n = stocks.length || 1;
+            const totalValue = stocks.reduce((s, st) => {
+              const price = st.currentPrice || 1;
+              const qty = Math.max(1, Math.floor(((st.weight || (100 / n)) / 100 * 100000) / price));
+              return s + price * qty;
+            }, 0);
             const rawPct = liveSummary[basket._id];
             const basketDayChangePct = rawPct != null ? rawPct : null;
             const hasChange = basketDayChangePct != null;

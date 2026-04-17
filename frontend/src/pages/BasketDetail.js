@@ -409,7 +409,7 @@ function BasketDetail({ onReload }) {
         {/* Quick stock summary table */}
         <h3 style={{ marginTop: '30px', marginBottom: '15px' }}>Stock Allocation Summary</h3>
         <div className="stock-allocation-grid">
-          {activeStocks.slice(0, 10).map((stock, idx) => (
+          {activeStocks.map((stock, idx) => (
             <div key={idx} className="alloc-card">
               <div className="alloc-rank">#{idx + 1}</div>
               <div className="alloc-info">
