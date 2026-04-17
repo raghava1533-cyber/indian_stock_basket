@@ -45,9 +45,13 @@ const basketSchema = new mongoose.Schema({
     low52Week: Number,
     marketCap: String,
     peRatio: Number,
-    earningsGrowth: String,
-    socialSentiment: String,
+    earningsGrowth: Number,
+    socialSentiment: Number,
     score: Number,
+    qualityScores: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
   }],
   createdDate: {
     type: Date,
