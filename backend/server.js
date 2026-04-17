@@ -302,6 +302,36 @@ const migrateReplaceUnfetchableStocks = async () => {
       newCompanyName: 'Kalpataru Projects International',
       newPrice: 1232,
     },
+    {
+      oldTicker: 'BIRLASOFT.NS',
+      newTicker: 'BSOFT.NS',
+      newCompanyName: 'Birlasoft Limited',
+      newPrice: 391,
+    },
+    {
+      oldTicker: 'ZENSAR.NS',
+      newTicker: 'ZENSARTECH.NS',
+      newCompanyName: 'Zensar Technologies Limited',
+      newPrice: 603,
+    },
+    {
+      oldTicker: 'ZOMATO.NS',
+      newTicker: 'ETERNAL.NS',
+      newCompanyName: 'Eternal Limited (Zomato)',
+      newPrice: 253,
+    },
+    {
+      oldTicker: 'GMRINFRA.NS',
+      newTicker: 'GMRAIRPORT.NS',
+      newCompanyName: 'GMR Airports Limited',
+      newPrice: 97,
+    },
+    {
+      oldTicker: 'TATAMOTORS.NS',
+      newTicker: 'OLECTRA.NS',
+      newCompanyName: 'Olectra Greentech Limited',
+      newPrice: 1225,
+    },
   ];
 
   for (const rep of REPLACEMENTS) {
