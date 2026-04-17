@@ -1,23 +1,24 @@
 .baskets-page {
-  padding: 20px;
+  padding: 20px 0;
 }
 
 .baskets-page h1 {
-  font-size: 2rem;
-  margin-bottom: 5px;
-  color: #333;
+  font-size: 18px;
+  margin-bottom: 4px;
+  color: var(--color-text-primary);
+  font-weight: 500;
 }
 
 .subtitle {
-  color: #666;
-  font-size: 1.05rem;
-  margin-bottom: 30px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  margin-bottom: 20px;
 }
 
 .basket-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  gap: 12px;
   max-width: 1400px;
 }
 
@@ -27,103 +28,102 @@
 }
 
 .basket-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
+  background: var(--color-background-primary);
+  border-radius: var(--border-radius-lg);
+  padding: 16px;
+  border: 0.5px solid var(--color-border-tertiary);
+  transition: border-color 0.2s;
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .basket-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  border-color: var(--color-border-secondary);
 }
 
 .basket-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .basket-card-header h3 {
   margin: 0;
-  font-size: 1.3rem;
-  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
 }
 
 .badge {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .badge-large-cap {
-  background-color: #e3f2fd;
-  color: #1565c0;
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
 }
 
 .badge-mid-cap {
-  background-color: #f3e5f5;
-  color: #6a1b9a;
+  background: var(--color-purple-bg);
+  color: var(--color-purple-text);
 }
 
 .badge-small-cap {
-  background-color: #fff3e0;
-  color: #e65100;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .badge-technology {
-  background-color: #e0f2f1;
-  color: #00695c;
+  background: var(--color-accent-bg);
+  color: var(--color-accent-text);
 }
 
 .badge-finance {
-  background-color: #fce4ec;
-  color: #c2185b;
+  background: var(--color-negative-bg);
+  color: var(--color-negative-text);
 }
 
 .badge-healthcare {
-  background-color: #f1f8e9;
-  color: #558b2f;
+  background: var(--color-accent-bg);
+  color: var(--color-accent-text);
 }
 
 .badge-renewable {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background: var(--color-accent-bg);
+  color: var(--color-accent-text);
 }
 
 .badge-consumer {
-  background-color: #fef3e2;
-  color: #bf360c;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .badge-infrastructure {
-  background-color: #ede7f6;
-  color: #4527a0;
+  background: var(--color-purple-bg);
+  color: var(--color-purple-text);
 }
 
 .basket-description {
-  color: #666;
-  font-size: 0.95rem;
-  margin: 12px 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  margin: 10px 0;
   flex-grow: 1;
+  line-height: 1.5;
 }
 
 .basket-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  margin: 15px 0;
-  padding: 12px 0;
-  border-top: 1px solid #eee;
-  border-bottom: 1px solid #eee;
+  margin: 12px 0;
+  padding: 10px 0;
+  border-top: 0.5px solid var(--color-border-tertiary);
+  border-bottom: 0.5px solid var(--color-border-tertiary);
 }
 
 .stat {
@@ -132,50 +132,48 @@
 
 .stat-label {
   display: block;
-  font-size: 0.7rem;
-  color: #999;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 3px;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  margin-bottom: 2px;
 }
 
 .stat-value {
   display: block;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
 }
 
 .btn {
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  border-radius: var(--border-radius-md);
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s;
+  font-family: var(--font-sans);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-accent);
   color: white;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: var(--color-accent-dark);
 }
 
 .empty-state {
   grid-column: 1 / -1;
   text-align: center;
   padding: 60px 20px;
-  color: #999;
-  background: #f9f9f9;
-  border-radius: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-lg);
 }
 
 .empty-state p {
-  font-size: 1.1rem;
+  font-size: 13px;
   margin: 0;
 }

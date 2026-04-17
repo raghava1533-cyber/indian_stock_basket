@@ -40,12 +40,18 @@ function App() {
       <div className="app">
         <header className="header">
           <div className="header-content">
-            <h1 className="logo">📈 Indian Stock Basket</h1>
+            <h1 className="logo">
+              <span className="logo-dot"></span>
+              SmartBasket India
+            </h1>
             <nav className="nav">
-              <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Dashboard</NavLink>
-              <NavLink to="/baskets" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Baskets</NavLink>
+              <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} end>Baskets</NavLink>
+              <NavLink to="/baskets" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Explore</NavLink>
               <NavLink to="/portfolio" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Portfolio</NavLink>
             </nav>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="live-badge"><span className="live-dot"></span> Live NSE/BSE</span>
+            </div>
           </div>
         </header>
 
