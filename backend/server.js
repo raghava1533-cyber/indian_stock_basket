@@ -275,6 +275,48 @@ const scheduleRebalancing = () => {
   console.log('Rebalance scheduler initialized (9:30 AM daily check)');
 };
 
+// Migrate: replace stocks that have no reliable data source with working alternatives
+const migrateReplaceUnfetchableStocks = async () => {
+  const REPLACEMENTS = [
+    {
+      oldTicker: 'CENTURYTEX.NS',
+      newTicker: 'TATACONSUM.NS',
+      newCompanyName: 'Tata Consumer Products',
+      newPrice: 1113,
+    },
+  ];
+
+  for (const rep of REPLACEMENTS) {
+    try {
+      const baskets = await Basket.find({ 'stocks.ticker': rep.oldTicker });
+      for (const basket of baskets) {
+        let modified = false;
+        for (const stock of basket.stocks) {
+          if (stock.ticker === rep.oldTicker) {
+            const investValue = (stock.buyPrice || rep.newPrice) * (stock.quantity || 1);
+            const newQty = Math.max(1, Math.floor(investValue / rep.newPrice));
+            stock.ticker      = rep.newTicker;
+            stock.companyName = rep.newCompanyName;
+            stock.buyPrice    = rep.newPrice;
+            stock.currentPrice = rep.newPrice;
+            stock.quantity    = newQty;
+            stock.addedDate   = new Date();
+            modified = true;
+          }
+        }
+        if (modified) {
+          basket.markModified('stocks');
+          await basket.save();
+          console.log(`[migration] Replaced ${rep.oldTicker} → ${rep.newTicker} in basket: ${basket.name}`);
+        }
+      }
+      if (!baskets.length) console.log(`[migration] ${rep.oldTicker} not found in any basket — skipping`);
+    } catch (err) {
+      console.warn(`[migration] Failed replacing ${rep.oldTicker}:`, err.message);
+    }
+  }
+};
+
 // Start server
 const startServer = async () => {
   try {
@@ -284,6 +326,9 @@ const startServer = async () => {
 
     console.log('Initializing baskets...');
     await initializeBaskets();
+
+    console.log('Running stock replacement migration...');
+    await migrateReplaceUnfetchableStocks();
     
     console.log('Populating baskets with stocks...');
     await populateBaskets();
