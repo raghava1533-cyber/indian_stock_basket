@@ -5,7 +5,6 @@ import { basketAPI } from '../services/api';
 // ── BrokerConnect component ───────────────────────────────────────────────────
 function BrokerConnect({ stocks, totalValue }) {
   const [modal, setModal] = useState(null); // null | 'zerodha' | 'groww'
-  const [zerodhaKey, setZerodhaKey] = useState(localStorage.getItem('zerodhaApiKey') || '');
   const [zerodhaConnected, setZerodhaConnected] = useState(!!localStorage.getItem('zerodhaApiKey'));
   const [growwConnected, setGrowwConnected] = useState(!!localStorage.getItem('growwConnected'));
   const [growwEmail, setGrowwEmail] = useState(localStorage.getItem('growwEmail') || '');
@@ -15,7 +14,6 @@ function BrokerConnect({ stocks, totalValue }) {
     const key = keyInput.trim();
     if (!key) { alert('Please enter your Zerodha API Key'); return; }
     localStorage.setItem('zerodhaApiKey', key);
-    setZerodhaKey(key);
     setZerodhaConnected(true);
     setModal(null);
     // Redirect to Kite Connect OAuth

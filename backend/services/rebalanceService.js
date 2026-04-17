@@ -331,7 +331,8 @@ const STATIC_FALLBACK = {
   'KALPATPOWR.NS':    { currentPrice: 900,  high52Week: 1180, low52Week: 650,  marketCapCr:   15100, peRatio: 20.0, earningsGrowth: 25, futureGrowth: 8,  socialSentiment: 7 },
   'GPIL.NS':          { currentPrice: 800,  high52Week: 1100, low52Week: 550,  marketCapCr:   12500, peRatio: 10.0, earningsGrowth: 20, futureGrowth: 8,  socialSentiment: 7 },
   'GREENPANEL.NS':    { currentPrice: 280,  high52Week: 440,  low52Week: 200,  marketCapCr:    6800, peRatio: 18.0, earningsGrowth: 15, futureGrowth: 7,  socialSentiment: 6 },
-  'ORIENTGREEN.NS':   { currentPrice: 25,   high52Week: 38,   low52Week: 16,   marketCapCr:    2800, peRatio: 35.0, earningsGrowth: 50, futureGrowth: 8,  socialSentiment: 6 },\n  'JSWENERGY.NS':     { currentPrice: 680,  high52Week: 820,  low52Week: 480,  marketCapCr:  111000, peRatio: 30.0, earningsGrowth: 25, futureGrowth: 9,  socialSentiment: 8 },
+  'ORIENTGREEN.NS':   { currentPrice: 25,   high52Week: 38,   low52Week: 16,   marketCapCr:    2800, peRatio: 35.0, earningsGrowth: 50, futureGrowth: 8,  socialSentiment: 6 },
+  'JSWENERGY.NS':     { currentPrice: 680,  high52Week: 820,  low52Week: 480,  marketCapCr:  111000, peRatio: 30.0, earningsGrowth: 25, futureGrowth: 9,  socialSentiment: 8 },
   // consumer additions
   'JYOTHYLAB.NS':     { currentPrice: 600,  high52Week: 730,  low52Week: 420,  marketCapCr:   22100, peRatio: 38.0, earningsGrowth: 20, futureGrowth: 8,  socialSentiment: 7 },
   'VBL.NS':           { currentPrice: 530,  high52Week: 680,  low52Week: 395,  marketCapCr:  143000, peRatio: 55.0, earningsGrowth: 28, futureGrowth: 9,  socialSentiment: 8 },
