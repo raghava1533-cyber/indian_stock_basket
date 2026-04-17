@@ -3,10 +3,29 @@ import { Link } from 'react-router-dom';
 import '../styles/BasketGrid.css';
 
 function Baskets({ baskets, onReload }) {
+  const handleRefresh = () => {
+    onReload();
+  };
+
   return (
     <div className="baskets-page">
-      <h1>All Stock Baskets</h1>
-      <p className="subtitle">Choose from our curated collection of stock baskets</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1>All Stock Baskets</h1>
+          <p className="subtitle">Choose from our curated collection of stock baskets</p>
+        </div>
+        <button onClick={handleRefresh} style={{
+          padding: '10px 20px',
+          backgroundColor: '#1e88e5',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer',
+          fontSize: '14px'
+        }}>
+          🔄 Refresh
+        </button>
+      </div>
 
       <div className="basket-grid">
         {baskets && baskets.length > 0 ? (
