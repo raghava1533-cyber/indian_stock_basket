@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { basketAPI } from '../services/api';
-import '../styles/BasketGrid.css';
+
+const THEME_META = {
+  'Large Cap':     { bg: '#E8F0FE', color: '#1A5FC8', letter: 'LC' },
+  'Mid Cap':       { bg: '#F3E8FD', color: '#7B2FBE', letter: 'MC' },
+  'Small Cap':     { bg: '#FEF0E8', color: '#C2550A', letter: 'SC' },
+  'Technology':    { bg: '#E8F8F5', color: '#0E7A62', letter: 'TE' },
+  'Finance':       { bg: '#FDE8EE', color: '#B0184E', letter: 'FI' },
+  'Healthcare':    { bg: '#EAF7EC', color: '#1A7A30', letter: 'HC' },
+  'Renewable':     { bg: '#EAF7EC', color: '#1A7A30', letter: 'RE' },
+  'Consumer':      { bg: '#FEF6E8', color: '#B06B0A', letter: 'CB' },
+  'Infrastructure':{ bg: '#EEF0FE', color: '#3A3FBE', letter: 'IN' },
+};
 
 function Baskets({ baskets, onReload }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -109,52 +120,47 @@ function Baskets({ baskets, onReload }) {
         </div>
       )}
 
-      <div className="basket-grid">
+      <div className="sc-cards-grid">
         {localBaskets && localBaskets.length > 0 ? (
           localBaskets.map((basket) => {
-            const stockCount = basket.stocks?.length || 0;
-            const totalQty = basket.stocks?.reduce((s, st) => s + (st.quantity || 1), 0) || 0;
+            const meta = THEME_META[basket.theme] || THEME_META['Large Cap'];
             const totalValue = basket.stocks?.reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0) || 0;
+            const createdDate = basket.createdAt
+              ? new Date(basket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+              : null;
 
             return (
-              <Link to={`/basket/${basket._id}`} key={basket._id} className="basket-card-link">
-                <div className="basket-card">
-                  <div className="basket-card-header">
-                    <h3>{basket.name}</h3>
-                    <span className={`badge badge-${basket.theme?.toLowerCase().replace(/\s+/g, '-')}`}>
-                      {basket.theme}
-                    </span>
-                  </div>
-                  <p className="basket-description">{basket.description}</p>
-                  <div className="basket-stats">
-                    <div className="stat">
-                      <span className="stat-label">Stocks</span>
-                      <span className="stat-value">{stockCount}/10</span>
+              <Link to={`/basket/${basket._id}`} key={basket._id} className="sc-card-link">
+                <div className="sc-card">
+                  <div className="sc-card-body">
+                    <div className="sc-card-top">
+                      <div className="sc-icon" style={{ background: meta.bg, color: meta.color }}>
+                        {meta.letter}
+                      </div>
+                      <div className="sc-card-title-block">
+                        <div className="sc-card-name">{basket.name}</div>
+                        <div className="sc-card-by">by SmartBasket India</div>
+                      </div>
                     </div>
-                    <div className="stat">
-                      <span className="stat-label">Total Shares</span>
-                      <span className="stat-value">{totalQty}</span>
-                    </div>
-                    <div className="stat">
-                      <span className="stat-label">Min Investment</span>
-                      <span className="stat-value">₹{(basket.minimumInvestment || totalValue).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                    </div>
-                    <div className="stat">
-                      <span className="stat-label">Subscribers</span>
-                      <span className="stat-value">{basket.subscribers?.length || 0}</span>
-                    </div>
-                    <div className="stat">
-                      <span className="stat-label">Category</span>
-                      <span className="stat-value">{basket.category}</span>
-                    </div>
-                    <div className="stat">
-                      <span className="stat-label">Next Rebalance</span>
-                      <span className="stat-value">{basket.nextRebalanceDate ? new Date(basket.nextRebalanceDate).toLocaleDateString() : 'TBD'}</span>
+
+                    <div className="sc-card-stats">
+                      <div className="sc-stat">
+                        <div className="sc-stat-label">Min Investment</div>
+                        <div className="sc-stat-val green">₹{totalValue > 0 ? totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}</div>
+                      </div>
+                      <div className="sc-stat">
+                        <div className="sc-stat-label">Stocks</div>
+                        <div className="sc-stat-val">{basket.stocks?.length || 0}</div>
+                      </div>
+                      <div className="sc-stat">
+                        <div className="sc-stat-label">Subscribers</div>
+                        <div className="sc-stat-val">{basket.subscribers?.length || 0}</div>
+                      </div>
                     </div>
                   </div>
-                  <button className="btn btn-primary" onClick={(e) => e.preventDefault()}>
-                    View Details →
-                  </button>
+                  <div className="sc-card-footer">
+                    {createdDate ? `Created ${createdDate}` : `Theme: ${basket.theme}`}
+                  </div>
                 </div>
               </Link>
             );

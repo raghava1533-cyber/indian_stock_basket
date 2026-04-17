@@ -1216,3 +1216,395 @@ body {
   font-weight: 500;
   margin-top: 4px;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   SMALLCASE-STYLE CARDS  (Dashboard & Baskets pages)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Page header for discover page */
+.sc-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sc-page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.sc-page-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 4px 0 0;
+}
+
+.sc-email-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sc-email-input {
+  padding: 7px 12px;
+  border: 0.5px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  width: 220px;
+}
+
+.sc-email-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* Cards grid */
+.sc-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+/* Individual card */
+.sc-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+}
+
+.sc-card:hover {
+  border-color: var(--color-border-secondary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Link wrapper */
+.sc-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.sc-card-body {
+  padding: 16px;
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+/* Top: icon + name/curator */
+.sc-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sc-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.sc-card-title-block {
+  min-width: 0;
+}
+
+.sc-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-card-by {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 1px;
+}
+
+/* Stats row */
+.sc-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sc-stat {
+  flex: 1;
+}
+
+.sc-stat-label {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+
+.sc-stat-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.sc-stat-val.green { color: var(--color-accent); }
+.sc-stat-val.red   { color: var(--color-negative); }
+
+/* Subscribe button (in dashboard cards) */
+.sc-subscribe-btn {
+  padding: 6px 14px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sc-subscribe-btn:hover {
+  background: var(--color-accent-bg);
+}
+
+.sc-subscribe-btn.subscribed {
+  background: var(--color-accent-bg);
+  color: var(--color-accent-text);
+  border-color: #9FE1CB;
+}
+
+/* Card footer */
+.sc-card-footer {
+  padding: 8px 16px;
+  border-top: 0.5px solid var(--color-border-tertiary);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  background: var(--color-background-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PORTFOLIO / INVESTMENTS LIST
+   ═══════════════════════════════════════════════════════════ */
+
+.sc-portfolio {
+  max-width: 900px;
+}
+
+/* Header */
+.sc-pf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sc-pf-meta {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.sc-pf-count {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 3px;
+}
+
+.sc-pf-totals {
+  display: flex;
+  gap: 32px;
+}
+
+.sc-pf-total-block {
+  text-align: right;
+}
+
+.sc-pf-total-label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.sc-pf-total-val {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-top: 2px;
+}
+
+.sc-pf-total-val.green { color: var(--color-accent); }
+
+/* Empty state */
+.sc-pf-empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--color-text-secondary);
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-lg);
+}
+
+/* Investment rows list */
+.sc-pf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.sc-pf-row-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.sc-pf-row {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.sc-pf-row:hover {
+  border-color: var(--color-border-secondary);
+}
+
+/* Main row (icon / name / badge / value / stocks) */
+.sc-pf-row-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.sc-pf-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.sc-pf-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sc-pf-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-subscribed-badge {
+  display: inline-block;
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-accent-text);
+  background: var(--color-accent-bg);
+  padding: 2px 7px;
+  border-radius: var(--border-radius-sm);
+}
+
+.sc-pf-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.sc-pf-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.sc-pf-stocks {
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.sc-pf-stocks.green { color: var(--color-accent); }
+
+/* Sub-row */
+.sc-pf-row-sub {
+  background: var(--color-background-secondary);
+  padding: 8px 16px;
+  border-top: 0.5px solid var(--color-border-tertiary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sc-pf-sub-text {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.sc-pf-sub-action {
+  font-size: 12px;
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+/* Holdings section */
+.sc-pf-holdings {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+}
+
+.sc-pf-holdings-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 14px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .sc-cards-grid { grid-template-columns: 1fr; }
+  .sc-pf-header { flex-direction: column; }
+  .sc-pf-totals { justify-content: flex-start; gap: 20px; }
+  .sc-pf-total-block { text-align: left; }
+  .sc-email-input { width: 160px; }
+  .sc-card-stats { flex-wrap: wrap; gap: 10px; }
+}
