@@ -908,7 +908,6 @@ function BasketDetail({ onReload }) {
               const unrealizedPnL = benchmark.basket.unrealizedPnL || 0;
               const realizedPnL = benchmark.basket.realizedPnL || 0;
               const totalPnL = benchmark.basket.totalPnL || 0;
-              const investLabel = isUS ? '$10,000' : '₹1,00,000';
               const tfLabel = benchmark.timeframe === 'max' ? 'Since Launch' : benchmark.timeframe?.toUpperCase();
               return (
                 <div className="bm-overall-returns" style={{ background: 'var(--color-bg-secondary, #f7f8fa)', borderRadius: '12px', padding: '20px', margin: '16px 0', border: '1px solid var(--color-border, #e8e8e5)' }}>
