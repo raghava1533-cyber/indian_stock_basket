@@ -9,11 +9,29 @@ const api = axios.create({
   timeout: 10000
 });
 
+// Retry logic for transient failures
+const retryRequest = async (requestFn, maxRetries = 3, delayMs = 1000) => {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      console.log(`Attempt ${i + 1}/${maxRetries} to fetch data`);
+      return await requestFn();
+    } catch (err) {
+      lastError = err;
+      if (i < maxRetries - 1) {
+        console.log(`Request failed, retrying in ${delayMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+  throw lastError;
+};
+
 // Basket API endpoints
 export const basketAPI = {
   checkHealth: () => {
     console.log('Calling GET /health');
-    return api.get('/health').then(res => {
+    return retryRequest(() => api.get('/health')).then(res => {
       console.log('GET /health response:', res.data);
       return res;
     }).catch(err => {
@@ -23,7 +41,7 @@ export const basketAPI = {
   },
   getAllBaskets: () => {
     console.log('Calling GET /baskets');
-    return api.get('/baskets').then(res => {
+    return retryRequest(() => api.get('/baskets')).then(res => {
       console.log('GET /baskets response:', res.data);
       return res;
     }).catch(err => {

@@ -51,8 +51,18 @@ function Baskets({ baskets, onReload }) {
       await loadBasketsDirectly(); // Also load locally to be sure
     } catch (err) {
       console.error('Error during refresh:', err);
-      const errorMsg = err.response?.data?.message || err.message || 'Failed to load baskets';
-      setError(`Failed to load baskets: ${errorMsg}`);
+      let errorMsg = 'Failed to load baskets';
+      
+      if (err.response?.status === 404) {
+        errorMsg = `API route not found (404). Backend may be restarting. Retrying...`;
+        console.log('Got 404, will retry automatically');
+      } else if (err.response?.data?.message) {
+        errorMsg = `API Error: ${err.response.data.message}`;
+      } else if (err.message) {
+        errorMsg = `Connection Error: ${err.message}`;
+      }
+      
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
