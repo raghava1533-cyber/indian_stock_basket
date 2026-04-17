@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Basket = require('../models/Basket');
 const { rebalanceBasket, getRebalanceSummary, STATIC_FALLBACK, buildReason, STOCK_UNIVERSE } = require('../services/rebalanceService');
 const { getMultipleStocksData, getBatchDayChanges } = require('../services/stockDataService');
+const { getBatchNSEQuotes } = require('../services/nseService');
 const emailService = require('../services/emailService');
 
 const router = express.Router();
@@ -467,42 +468,74 @@ router.get('/:id/stocks', async (req, res) => {
     }
 
     const isIndian = basket.country !== 'US';
-    const normalizeTicker = (t) => isIndian && !t.includes('.') ? t + '.NS' : t;
-
-    const normalizedTickers = basket.stocks.map(s => normalizeTicker(s.ticker));
-    // Run sequentially to avoid Yahoo Finance rate limiting
-    const liveData = await getMultipleStocksData(normalizedTickers);
-    const dayChanges = await getBatchDayChanges(normalizedTickers);
-
-    const INVESTMENT = basket.country === 'US' ? 10000 * 83 : 100000; // normalise to INR-equivalent
     const INVEST_BASE = basket.country === 'US' ? 10000 : 100000;
 
-    const enrichedStocks = basket.stocks.map(stock => {
+    // NSE symbols = base ticker without any suffix (e.g. MAHINDCIE, DEEPAKNITRITE)
+    // Yahoo Finance Indian symbols = NSE symbol + .NS
+    const toNSESymbol = (t) => t.replace(/\.(NS|BO)$/i, '');
+    const toYFTicker  = (t) => isIndian ? (t.includes('.') ? t : t + '.NS') : t;
+
+    // Yahoo ticker mapping: where Yahoo Finance uses a different symbol than NSE
+    const YAHOO_TICKER_MAP = {
+      'DEEPAKNITRITE': 'DEEPAKNTR',
+      // add more here as discovered
+    };
+
+    const nseSymbols   = basket.stocks.map(s => toNSESymbol(s.ticker));
+    const yfTickers    = basket.stocks.map(s => {
+      const nse = toNSESymbol(s.ticker);
+      const yfBase = (isIndian && YAHOO_TICKER_MAP[nse]) ? YAHOO_TICKER_MAP[nse] : nse;
+      return isIndian ? yfBase + '.NS' : s.ticker;
+    });
+
+    // For Indian baskets: NSE is primary (price + dayChange), YF is for enriched data
+    // For US baskets: Yahoo Finance only
+    let nseQuotes = {};
+    if (isIndian) {
+      nseQuotes = await getBatchNSEQuotes(nseSymbols);
+    }
+
+    // Fetch enriched data (PE, 52W, analyst targets, RSI etc.) from Yahoo Finance
+    const liveData = await getMultipleStocksData(yfTickers);
+
+    // For US baskets, also fetch day changes from Yahoo
+    let yfDayChanges = {};
+    if (!isIndian) {
+      yfDayChanges = await getBatchDayChanges(yfTickers);
+    }
+
+    const enrichedStocks = basket.stocks.map((stock, idx) => {
       const s = stock.toObject ? stock.toObject() : { ...stock };
-      const normTicker = normalizeTicker(s.ticker);
-      const liveInfo = liveData.find(d => d.ticker === normTicker);
-      const dc = dayChanges[normTicker]; // { pct, price } or undefined
+      const nseSym   = nseSymbols[idx];
+      const yfTicker = yfTickers[idx];
+      const nseQ     = nseQuotes[nseSym];       // NSE live quote (Indian only)
+      const liveInfo = liveData.find(d => d.ticker === yfTicker);
+      const yfDc     = yfDayChanges[yfTicker];  // Yahoo day change (US only)
 
-      // Use v7 batch price (most accurate), then liveInfo (v8-derived), then stored
-      const price = dc?.price || liveInfo?.currentPrice || s.currentPrice;
+      // Price: NSE > Yahoo Finance > stored
+      const price = nseQ?.price ?? liveInfo?.currentPrice ?? s.currentPrice ?? 0;
 
-      // Recompute quantity dynamically from live price + stored weight
+      // Day change: NSE > Yahoo Finance > stored
+      const dcAbs = nseQ?.change ?? (yfDc != null
+        ? price - price / (1 + yfDc.pct / 100)
+        : (liveInfo?.dayChange ?? null));
+      const dcPct = nseQ?.changePct ?? yfDc?.pct ?? liveInfo?.dayChangePercent ?? null;
+
+      // 52W range: NSE > Yahoo Finance > stored
+      const high52 = nseQ?.high52Week ?? liveInfo?.high52Week ?? s.high52Week;
+      const low52  = nseQ?.low52Week  ?? liveInfo?.low52Week  ?? s.low52Week;
+
+      // Quantity from weight
       const weight = s.weight || 10;
       const qty = Math.max(1, Math.floor((weight / 100 * INVEST_BASE) / price));
 
-      // dayChange priority: v7 batch → liveInfo (v8 chart) → stored
-      const dcPct = dc?.pct ?? liveInfo?.dayChangePercent ?? s.dayChangePercent ?? null;
-      const dcAbs = dcPct != null && price
-        ? price - price / (1 + dcPct / 100)
-        : (liveInfo?.dayChange ?? null);
-
       return supplementStock({
         ...s,
-        ticker: normTicker,
+        ticker: isIndian ? nseSym + '.NS' : s.ticker,
         currentPrice: price,
         quantity: qty,
-        high52Week: liveInfo?.high52Week || s.high52Week,
-        low52Week: liveInfo?.low52Week || s.low52Week,
+        high52Week: high52,
+        low52Week: low52,
         companyName: liveInfo?.companyName || s.companyName || s.ticker,
         peRatio: liveInfo?.peRatio ?? s.peRatio ?? null,
         earningsGrowth: liveInfo?.earningsGrowth ?? s.earningsGrowth ?? null,
@@ -523,7 +556,7 @@ router.get('/:id/stocks', async (req, res) => {
         sma200: liveInfo?.sma200 ?? s.sma200 ?? null,
         dayChange: dcAbs,
         dayChangePercent: dcPct,
-        lastUpdated: liveInfo?.lastUpdated || new Date(),
+        lastUpdated: new Date(),
       });
     });
 
@@ -829,18 +862,29 @@ router.get('/:id/benchmark', async (req, res) => {
     const overallReturn = totalInvested > 0 ? Number(((totalPnL / totalInvested) * 100).toFixed(2)) : 0;
 
     // Build basket normalized series by fetching each active stock's chart
+    // For Indian stocks: use .NS suffix for Yahoo Finance charts
+    const toYFChart = (ticker, isUS) => {
+      if (isUS) return ticker;
+      // Strip existing suffix then re-add .NS
+      const base = ticker.replace(/\.(NS|BO)$/i, '');
+      // Apply known Yahoo ticker remaps
+      const YAHOO_CHART_MAP = { 'DEEPAKNITRITE': 'DEEPAKNTR' };
+      return (YAHOO_CHART_MAP[base] || base) + '.NS';
+    };
+
     let basketSeries = [];
     let basketReturnPct = 0;
     try {
       const stockCharts = [];
       for (const s of activeStocks.slice(0, 15)) {
         try {
-          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.ticker)}?period1=${period1}&period2=${period2}&interval=${interval}`;
+          const yfTicker = toYFChart(s.ticker, isUS);
+          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yfTicker)}?period1=${period1}&period2=${period2}&interval=${interval}`;
           const resp = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
           const result = resp.data?.chart?.result?.[0];
           const timestamps = result?.timestamp || [];
           const closes = result?.indicators?.quote?.[0]?.close || [];
-          stockCharts.push({ ticker: s.ticker, weight: s.weight || (100 / activeStocks.length), timestamps, closes });
+          stockCharts.push({ ticker: yfTicker, weight: s.weight || (100 / activeStocks.length), timestamps, closes });
         } catch (_) {}
       }
 
