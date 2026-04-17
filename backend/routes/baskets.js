@@ -470,10 +470,9 @@ router.get('/:id/stocks', async (req, res) => {
     const normalizeTicker = (t) => isIndian && !t.includes('.') ? t + '.NS' : t;
 
     const normalizedTickers = basket.stocks.map(s => normalizeTicker(s.ticker));
-    const [liveData, dayChanges] = await Promise.all([
-      getMultipleStocksData(normalizedTickers),
-      getBatchDayChanges(normalizedTickers),
-    ]);
+    // Run sequentially to avoid Yahoo Finance rate limiting
+    const liveData = await getMultipleStocksData(normalizedTickers);
+    const dayChanges = await getBatchDayChanges(normalizedTickers);
 
     const INVESTMENT = basket.country === 'US' ? 10000 * 83 : 100000; // normalise to INR-equivalent
     const INVEST_BASE = basket.country === 'US' ? 10000 : 100000;
@@ -484,18 +483,18 @@ router.get('/:id/stocks', async (req, res) => {
       const liveInfo = liveData.find(d => d.ticker === normTicker);
       const dc = dayChanges[normTicker]; // { pct, price } or undefined
 
-      // Prefer v8 batch price (most accurate), then liveInfo, then stored
+      // Use v7 batch price (most accurate), then liveInfo (v8-derived), then stored
       const price = dc?.price || liveInfo?.currentPrice || s.currentPrice;
 
       // Recompute quantity dynamically from live price + stored weight
       const weight = s.weight || 10;
       const qty = Math.max(1, Math.floor((weight / 100 * INVEST_BASE) / price));
 
-      // Use v8-based accurate day change % (getBatchDayChanges), fallback to liveInfo
+      // dayChange priority: v7 batch → liveInfo (v8 chart) → stored
       const dcPct = dc?.pct ?? liveInfo?.dayChangePercent ?? s.dayChangePercent ?? null;
-      // Derive abs change from accurate %
-      const prevPrice = dcPct != null && price ? price / (1 + dcPct / 100) : null;
-      const dcAbs = prevPrice != null ? price - prevPrice : (liveInfo?.dayChange ?? null);
+      const dcAbs = dcPct != null && price
+        ? price - price / (1 + dcPct / 100)
+        : (liveInfo?.dayChange ?? null);
 
       return supplementStock({
         ...s,

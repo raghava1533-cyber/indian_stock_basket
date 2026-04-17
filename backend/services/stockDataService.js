@@ -1,8 +1,9 @@
 const axios = require('axios');
 
 const YF_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-  'Accept': 'application/json',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-US,en;q=0.9',
 };
 
 // ── Sentiment word lists for news headline analysis ───────────────────────────
@@ -390,67 +391,71 @@ const getStocksByCategory = () => [];
 const calculateStockScore = () => 0;
 
 /**
- * Batch-fetch accurate 1-day change % for many tickers using Yahoo v8 chart.
- * v8 meta.chartPreviousClose is the unadjusted previous session close that
- * matches what Google Finance / NSE website shows.
- * Runs 8 tickers in parallel per batch.
- * Returns a map of { ticker: dayChangePercent (%) } — null means unavailable.
+ * Batch-fetch accurate price + 1-day change for many tickers.
+ * Primary: Yahoo Finance v7/quote batch endpoint (1 request for all tickers).
+ * Fallback: per-ticker v8 chart for any that the batch misses.
+ * Returns map of { ticker: { pct, price } }
  */
 const getBatchDayChanges = async (tickers) => {
   if (!tickers || tickers.length === 0) return {};
   const map = {};
-  const concurrency = 6;
 
-  const fetchOne = async (ticker) => {
+  // ── Primary: v7/finance/quote batch (single request) ────────────────────────
+  const CHUNK = 25;
+  for (let i = 0; i < tickers.length; i += CHUNK) {
+    const chunk = tickers.slice(i, i + CHUNK);
     try {
-      const resp = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`, {
-        params: { interval: '1d', range: '5d' },
+      const resp = await axios.get('https://query2.finance.yahoo.com/v7/finance/quote', {
+        params: { symbols: chunk.join(','), fields: 'regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketPreviousClose' },
         headers: YF_HEADERS,
-        timeout: 10000,
+        timeout: 15000,
       });
-      const meta  = resp.data?.chart?.result?.[0]?.meta || {};
-      const price = meta.regularMarketPrice ?? null;
-      const prev  = meta.chartPreviousClose ?? meta.previousClose ?? null;
-      if (price != null && prev && prev > 0) {
-        map[ticker] = { pct: ((price - prev) / prev) * 100, price };
+      const quotes = resp.data?.quoteResponse?.result || [];
+      for (const q of quotes) {
+        const price = q.regularMarketPrice ?? null;
+        const prev  = q.regularMarketPreviousClose ?? null;
+        const change = q.regularMarketChange ?? null;
+        if (price == null) continue;
+        if (prev != null && prev > 0) {
+          map[q.symbol] = { pct: ((price - prev) / prev) * 100, price };
+        } else if (change != null) {
+          const prevCalc = price - change;
+          if (prevCalc > 0) map[q.symbol] = { pct: (change / prevCalc) * 100, price };
+        }
       }
-    } catch (_) { /* skip */ }
-  };
-
-  for (let i = 0; i < tickers.length; i += concurrency) {
-    const batch = tickers.slice(i, i + concurrency);
-    await Promise.all(batch.map(fetchOne));
-    if (i + concurrency < tickers.length) {
-      await new Promise(r => setTimeout(r, 200));
-    }
+    } catch (_) {}
+    if (i + CHUNK < tickers.length) await new Promise(r => setTimeout(r, 300));
   }
 
-  // Retry failed tickers once with longer timeout
+  // ── Fallback: per-ticker v8 chart for any that batch missed ─────────────────
   const failed = tickers.filter(t => !map[t]);
   if (failed.length > 0) {
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 400));
     for (let i = 0; i < failed.length; i += 4) {
       const batch = failed.slice(i, i + 4);
       await Promise.all(batch.map(async (ticker) => {
         try {
           const resp = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`, {
             params: { interval: '1d', range: '5d' },
-            headers: { ...YF_HEADERS, 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
-            timeout: 15000,
+            headers: YF_HEADERS,
+            timeout: 12000,
           });
-          const meta  = resp.data?.chart?.result?.[0]?.meta || {};
-          const price = meta.regularMarketPrice ?? null;
-          const prev  = meta.chartPreviousClose ?? meta.previousClose ?? null;
+          const chartResult = resp.data?.chart?.result?.[0];
+          const meta   = chartResult?.meta || {};
+          const closes = (chartResult?.indicators?.quote?.[0]?.close || []).filter(c => c != null);
+          const price  = meta.regularMarketPrice ?? null;
+          // chartPreviousClose is most accurate; fall back to last close in history
+          const prev   = meta.chartPreviousClose ?? meta.previousClose ??
+                         (closes.length >= 2 ? closes[closes.length - 1] : null);
           if (price != null && prev && prev > 0) {
             map[ticker] = { pct: ((price - prev) / prev) * 100, price };
           }
-        } catch (_) { /* skip */ }
+        } catch (_) {}
       }));
-      if (i + 4 < failed.length) {
-        await new Promise(r => setTimeout(r, 300));
-      }
+      if (i + 4 < failed.length) await new Promise(r => setTimeout(r, 300));
     }
   }
+
   return map;
 };
 
