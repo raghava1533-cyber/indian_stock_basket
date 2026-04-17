@@ -5,7 +5,17 @@ const basketSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    enum: ['Bluechip Giants', 'Midcap Momentum', 'Smallcap Leaders', 'Tech Innovators', 'Finance Leaders', 'Renewable Energy', 'Healthcare Growth', 'Consumer Brands', 'Manufacturing Surge', 'Infrastructure Play']
+    enum: [
+      'Bluechip Giants',
+      'Midcap Momentum',
+      'Smallcap Leaders',
+      'Tech Innovators',
+      'Finance Leaders',
+      'Healthcare Growth',
+      'Renewable Energy',
+      'Consumer Brands',
+      'Infrastructure Surge'
+    ]
   },
   description: String,
   category: {
@@ -13,15 +23,16 @@ const basketSchema = new mongoose.Schema({
     enum: ['Market Cap Based', 'Thematic'],
     default: 'Market Cap Based'
   },
-  theme: String, // e.g., "Large Cap", "Tech", "Finance", etc.
+  theme: String,
   stocks: [{
     ticker: String,
     symbol: String,
+    companyName: String,
     quantity: Number,
     buyPrice: Number,
     currentPrice: Number,
-    weight: Number, // percentage
-    reason: String, // Why this stock was picked
+    weight: Number,
+    reason: String,
     addedDate: Date,
     removedDate: Date,
     status: {
@@ -29,13 +40,18 @@ const basketSchema = new mongoose.Schema({
       enum: ['active', 'removed', 'partial'],
       default: 'active'
     },
-    partialQuantity: Number, // For partial sell
+    partialQuantity: Number,
     high52Week: Number,
     low52Week: Number,
     marketCap: String,
     peRatio: Number,
-    earningsGrowth: String,
-    socialSentiment: String, // Based on social media monitoring
+    earningsGrowth: Number,
+    socialSentiment: Number,
+    score: Number,
+    qualityScores: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
   }],
   createdDate: {
     type: Date,
@@ -45,12 +61,12 @@ const basketSchema = new mongoose.Schema({
   nextRebalanceDate: Date,
   totalValue: Number,
   benchmark: {
-    name: String, // e.g., "Nifty 50"
+    name: String,
     value: Number,
-    performance: Number // %
+    performance: Number
   },
-  minimumInvestment: Number, // To maintain equal weight
-  subscribers: [String], // Email addresses of subscribers
+  minimumInvestment: Number,
+  subscribers: [String],
   rebalanceHistory: [{
     date: Date,
     changes: String,

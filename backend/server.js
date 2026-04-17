@@ -123,11 +123,47 @@ const initializeBaskets = async () => {
           stocks: [],
           subscribers: [],
           nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        },
+        {
+          name: 'Renewable Energy',
+          description: 'Green energy companies leading the clean energy transition',
+          category: 'Thematic',
+          theme: 'Renewable',
+          stocks: [],
+          subscribers: [],
+          nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        },
+        {
+          name: 'Consumer Brands',
+          description: 'Top FMCG and consumer brands with strong market share',
+          category: 'Thematic',
+          theme: 'Consumer',
+          stocks: [],
+          subscribers: [],
+          nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        },
+        {
+          name: 'Infrastructure Surge',
+          description: 'Infrastructure companies benefiting from India growth story',
+          category: 'Thematic',
+          theme: 'Infrastructure',
+          stocks: [],
+          subscribers: [],
+          nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         }
       ];
 
-      await Basket.insertMany(baskets);
-      console.log('Baskets initialized successfully');
+      const createdBaskets = await Basket.insertMany(baskets);
+      console.log(`Baskets initialized (${createdBaskets.length}), populating stocks...`);
+      for (const basket of createdBaskets) {
+        try {
+          await rebalanceBasket(basket._id.toString(), false);
+          console.log(`Stocked basket: ${basket.name}`);
+        } catch (err) {
+          console.error(`Failed to rebalance ${basket.name}:`, err.message);
+        }
+      }
+      console.log('All baskets initialized and stocked');
     }
   } catch (error) {
     console.error('Error initializing baskets:', error);
