@@ -214,20 +214,26 @@ router.get('/live-summary', async (req, res) => {
     const baskets = await Basket.find();
     const allTickers = [...new Set(baskets.flatMap(b => b.stocks.map(s => s.ticker)))];
     const dayChanges = await getBatchDayChanges(allTickers);
+    const hasData = Object.keys(dayChanges).length > 0;
 
     const summary = {};
     for (const basket of baskets) {
+      if (!hasData) { summary[basket._id] = null; continue; }
       const stocks = basket.stocks || [];
       const totalValue = stocks.reduce((s, st) => s + (st.currentPrice || 0) * (st.quantity || 1), 0);
-      if (totalValue > 0) {
-        summary[basket._id] = stocks.reduce((sum, st) => {
-          const dc = dayChanges[st.ticker];
+      if (totalValue <= 0) { summary[basket._id] = null; continue; }
+
+      let weightedSum = 0;
+      let coveredWeight = 0;
+      for (const st of stocks) {
+        const dc = dayChanges[st.ticker];
+        if (dc != null) {
           const w = ((st.currentPrice || 0) * (st.quantity || 1)) / totalValue;
-          return sum + (dc != null ? dc * w : 0);
-        }, 0);
-      } else {
-        summary[basket._id] = null;
+          weightedSum += dc * w;
+          coveredWeight += w;
+        }
       }
+      summary[basket._id] = coveredWeight > 0 ? weightedSum : null;
     }
     res.json(summary);
   } catch (error) {
@@ -319,21 +325,36 @@ router.get('/:id/stocks', async (req, res) => {
     }
 
     const tickers = basket.stocks.map(s => s.ticker);
-    const liveData = await getMultipleStocksData(tickers);
+    const [liveData, dayChanges] = await Promise.all([
+      getMultipleStocksData(tickers),
+      getBatchDayChanges(tickers),
+    ]);
 
     const enrichedStocks = basket.stocks.map(stock => {
       const s = stock.toObject ? stock.toObject() : { ...stock };
       const liveInfo = liveData.find(d => d.ticker === s.ticker);
-      return {
+      const price = liveInfo?.currentPrice || s.currentPrice;
+
+      // Use v8-based accurate day change % (getBatchDayChanges)
+      const dcPct = dayChanges[s.ticker] ?? liveInfo?.dayChangePercent ?? s.dayChangePercent ?? null;
+      // Derive abs change from accurate %
+      const prevPrice = dcPct != null && price ? price / (1 + dcPct / 100) : null;
+      const dcAbs = prevPrice != null ? price - prevPrice : null;
+
+      return supplementStock({
         ...s,
-        currentPrice: liveInfo?.currentPrice || s.currentPrice,
+        currentPrice: price,
         high52Week: liveInfo?.high52Week || s.high52Week,
         low52Week: liveInfo?.low52Week || s.low52Week,
         companyName: liveInfo?.companyName || s.companyName || s.ticker,
-        dayChange: liveInfo?.dayChange ?? s.dayChange ?? null,
-        dayChangePercent: liveInfo?.dayChangePercent ?? s.dayChangePercent ?? null,
+        peRatio: liveInfo?.peRatio ?? s.peRatio ?? null,
+        earningsGrowth: liveInfo?.earningsGrowth ?? s.earningsGrowth ?? null,
+        futureGrowth: liveInfo?.futureGrowth ?? s.futureGrowth ?? null,
+        socialSentiment: liveInfo?.socialSentiment ?? s.socialSentiment ?? null,
+        dayChange: dcAbs,
+        dayChangePercent: dcPct,
         lastUpdated: liveInfo?.lastUpdated || new Date(),
-      };
+      });
     });
 
     res.json(enrichedStocks);

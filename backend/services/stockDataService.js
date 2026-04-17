@@ -182,33 +182,61 @@ const getStocksByCategory = () => [];
 const calculateStockScore = () => 0;
 
 /**
- * Batch-fetch 1-day change % for many tickers in a single Yahoo Finance v7 request.
- * Returns a map of { ticker: dayChangePercent (%) }
+ * Batch-fetch accurate 1-day change % for many tickers.
+ * Primary: Yahoo v7 batch quote (single request).
+ * Fallback: Yahoo v8 chart per-ticker using chartPreviousClose (5 at a time).
+ * Returns a map of { ticker: dayChangePercent (%) } — null means unavailable.
  */
 const getBatchDayChanges = async (tickers) => {
   if (!tickers || tickers.length === 0) return {};
+  const map = {};
+
+  // ── Try v7 batch first (one request) ──────────────────────────────────────
   try {
     const resp = await axios.get('https://query1.finance.yahoo.com/v7/finance/quote', {
       params: { symbols: tickers.join(',') },
       headers: YF_HEADERS,
-      timeout: 15000,
+      timeout: 12000,
     });
     const results = resp.data?.quoteResponse?.result || [];
-    const map = {};
     for (const r of results) {
       const prev  = r.regularMarketPreviousClose ?? null;
       const price = r.regularMarketPrice ?? null;
       if (prev && price && prev > 0) {
         map[r.symbol] = ((price - prev) / prev) * 100;
-      } else {
-        map[r.symbol] = r.regularMarketChangePercent ?? null;
+      } else if (r.regularMarketChangePercent != null) {
+        map[r.symbol] = r.regularMarketChangePercent;
       }
     }
-    return map;
+    if (Object.keys(map).length > 0) return map;
   } catch (err) {
-    console.warn('[getBatchDayChanges] failed:', err.message);
-    return {};
+    console.warn('[getBatchDayChanges] v7 failed:', err.message);
   }
+
+  // ── Fallback: v8 chart per ticker using chartPreviousClose ────────────────
+  const concurrency = 5;
+  for (let i = 0; i < tickers.length; i += concurrency) {
+    const batch = tickers.slice(i, i + concurrency);
+    await Promise.all(batch.map(async (ticker) => {
+      try {
+        const resp = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`, {
+          params: { interval: '1d', range: '5d' },
+          headers: YF_HEADERS,
+          timeout: 10000,
+        });
+        const meta = resp.data?.chart?.result?.[0]?.meta || {};
+        const price = meta.regularMarketPrice ?? null;
+        const prev  = meta.chartPreviousClose ?? meta.previousClose ?? null;
+        if (price && prev && prev > 0) {
+          map[ticker] = ((price - prev) / prev) * 100;
+        }
+      } catch (_) { /* skip */ }
+    }));
+    if (i + concurrency < tickers.length) {
+      await new Promise(r => setTimeout(r, 200));
+    }
+  }
+  return map;
 };
 
 module.exports = {
