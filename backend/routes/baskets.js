@@ -391,6 +391,9 @@ const SECTOR_LABELS = {
   renewable: 'Renewable', consumer: 'Consumer', infrastructure: 'Infrastructure',
   auto: 'Automobile', metals: 'Metals & Mining', telecom: 'Telecom',
   psu: 'PSU', realty: 'Real Estate',
+  chemicals: 'Chemicals', cement: 'Cement & Building', oilgas: 'Oil & Gas',
+  fertilizer: 'Fertilizers & Agri', defence: 'Defence & Aerospace',
+  media: 'Media & Entertainment', textile: 'Textiles & Apparel',
   largeCap: 'Large Cap', midCap: 'Mid Cap', smallCap: 'Small Cap',
 };
 const MARKET_CAP_THRESHOLDS = { largeCap: 50000, midCap: 10000 };

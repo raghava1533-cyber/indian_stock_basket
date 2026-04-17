@@ -15,6 +15,13 @@ const SECTORS = [
   { value: 'telecom',        label: 'Telecom' },
   { value: 'psu',            label: 'PSU (Public Sector)' },
   { value: 'realty',         label: 'Real Estate' },
+  { value: 'chemicals',      label: 'Chemicals' },
+  { value: 'cement',         label: 'Cement & Building Materials' },
+  { value: 'oilgas',         label: 'Oil & Gas' },
+  { value: 'fertilizer',     label: 'Fertilizers & Agrochemicals' },
+  { value: 'defence',        label: 'Defence & Aerospace' },
+  { value: 'media',          label: 'Media & Entertainment' },
+  { value: 'textile',        label: 'Textiles & Apparel' },
 ];
 
 const MARKET_CAPS = [
