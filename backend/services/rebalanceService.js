@@ -4,30 +4,42 @@ const RebalanceHistory = require('../models/RebalanceHistory');
 const { getStocksByCategory, calculateStockScore, getMultipleStocksData } = require('./stockDataService');
 const emailService = require('./emailService');
 
-// Quality filtering criteria
+// Quality filtering criteria (relaxed to handle missing data)
 const isQualityStock = async (stockData) => {
-  // Criteria:
-  // 1. Market Cap > 10,000 Cr (for largecap)
-  // 2. PE Ratio < 30 (reasonable valuation)
-  // 3. Price > 52-week low (above support)
-  // 4. Volume indicates good liquidity
+  if (!stockData || !stockData.currentPrice) return false;
 
-  if (!stockData.marketCap || !stockData.peRatio) return false;
+  // Apply marketCap filter only if data is available
+  if (stockData.marketCap) {
+    const marketCapInCr = stockData.marketCap / 10000000;
+    if (marketCapInCr < 500) return false; // min 500 Cr
+  }
 
-  const marketCapInCr = stockData.marketCap / 10000000;
-  const priceAboveSupport = stockData.currentPrice > stockData.low52Week * 1.1;
-  const reasonableValuation = stockData.peRatio < 40 && stockData.peRatio > 0;
+  // Apply PE filter only if data is available — only reject extremely overvalued
+  if (stockData.peRatio && stockData.peRatio > 0) {
+    if (stockData.peRatio > 100) return false;
+  }
 
-  return marketCapInCr > 1000 && priceAboveSupport && reasonableValuation;
+  // Price above 52-week low (5% buffer) — only if 52w data is available
+  if (stockData.high52Week && stockData.low52Week && stockData.low52Week > 0) {
+    const priceAboveSupport = stockData.currentPrice > stockData.low52Week * 1.05;
+    if (!priceAboveSupport) return false;
+  }
+
+  return true;
 };
 
 // Select top 10 stocks for a basket
 const selectTopStocks = async (category, basketType) => {
   const tickers = getStocksByCategory(category);
-  
+
   // Fetch data for all stocks
   const stocksData = await getMultipleStocksData(tickers);
-  
+
+  if (stocksData.length === 0) {
+    console.warn(`No stock data fetched for category: ${category}`);
+    return [];
+  }
+
   // Filter quality stocks
   const qualityStocks = [];
   for (const stock of stocksData) {
@@ -37,14 +49,23 @@ const selectTopStocks = async (category, basketType) => {
     }
   }
 
+  // Fallback: if quality filter removes everything, use all fetched stocks
+  let stocksToUse = qualityStocks;
+  if (qualityStocks.length === 0) {
+    console.warn(`No quality stocks found for ${category}, using top scored stocks as fallback`);
+    stocksToUse = stocksData
+      .filter(s => s && s.currentPrice)
+      .map(s => ({ ...s, score: calculateStockScore(s) }));
+  }
+
   // Sort by score and select top 10
-  const topStocks = qualityStocks
+  const topStocks = stocksToUse
     .sort((a, b) => b.score - a.score)
     .slice(0, 10)
     .map((stock, index) => ({
       ...stock,
       reason: `Ranked #${index + 1} in ${category} category. Strong fundamentals and growth potential.`,
-      weight: 10 // Equal weight - 10% each
+      weight: 10,
     }));
 
   return topStocks;
@@ -72,7 +93,7 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
       added: [],
       removed: [],
       partialRemoved: [],
-      updated: []
+      updated: [],
     };
 
     // Find removed stocks
@@ -84,7 +105,7 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
           symbol: oldStock.symbol,
           quantity: oldStock.quantity,
           salePrice: oldStock.currentPrice,
-          reason: 'No longer meets quality criteria'
+          reason: 'No longer meets quality criteria',
         });
       }
     }
@@ -96,9 +117,9 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
         changes.added.push({
           ticker: newStock.ticker,
           symbol: newStock.symbol,
-          quantity: Math.round((100 / newStock.weight) / newStock.currentPrice), // Assuming 100 per stock
+          quantity: Math.round((100 / newStock.weight) / newStock.currentPrice),
           reason: newStock.reason,
-          marketCapRank: newStocks.findIndex(s => s.ticker === newStock.ticker) + 1
+          marketCapRank: newStocks.findIndex(s => s.ticker === newStock.ticker) + 1,
         });
       }
     }
@@ -107,26 +128,23 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
     basket.stocks = newStocks.map(stock => ({
       ...stock,
       status: 'active',
-      addedDate: basket.stocks.find(s => s.ticker === stock.ticker)?.addedDate || new Date()
+      addedDate: basket.stocks.find(s => s.ticker === stock.ticker)?.addedDate || new Date(),
     }));
 
-    // Update rebalance dates
     basket.lastRebalanceDate = new Date();
     basket.nextRebalanceDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    // Save changes to history
     const historyEntry = new RebalanceHistory({
       basketId,
       changes,
       reason: manualTrigger ? 'Manual rebalance by user' : 'Automatic rebalance (30-day cycle)',
       manualTrigger,
-      subscribers: basket.subscribers
+      subscribers: basket.subscribers,
     });
 
     await basket.save();
     await historyEntry.save();
 
-    // Send email notifications to subscribers
     if (basket.subscribers && basket.subscribers.length > 0) {
       for (const email of basket.subscribers) {
         await emailService.sendRebalanceNotification(email, basket, changes);
@@ -137,7 +155,7 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
       success: true,
       basket,
       changes,
-      emailsSent: basket.subscribers.length
+      emailsSent: basket.subscribers.length,
     };
   } catch (error) {
     console.error('Error rebalancing basket:', error);
@@ -157,9 +175,9 @@ const getRebalanceSummary = async (basketId) => {
         lastRebalanceDate: basket.lastRebalanceDate,
         nextRebalanceDate: basket.nextRebalanceDate,
         totalValue: basket.totalValue,
-        minimumInvestment: basket.minimumInvestment
+        minimumInvestment: basket.minimumInvestment,
       },
-      recentChanges: history
+      recentChanges: history,
     };
   } catch (error) {
     console.error('Error getting rebalance summary:', error);
@@ -171,5 +189,5 @@ module.exports = {
   rebalanceBasket,
   selectTopStocks,
   getRebalanceSummary,
-  isQualityStock
+  isQualityStock,
 };

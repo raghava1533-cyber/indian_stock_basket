@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
 // Initialize default baskets (admin endpoint - must come before /:id routes)
 router.get('/init', async (req, res) => {
   try {
-    const baskets = [
+    const basketDefs = [
       {
         name: 'Bluechip Giants',
         description: 'Top 10 large-cap companies with strong market presence',
@@ -40,7 +40,7 @@ router.get('/init', async (req, res) => {
         theme: 'Large Cap',
         stocks: [],
         subscribers: [],
-        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
       {
         name: 'Midcap Momentum',
@@ -49,7 +49,7 @@ router.get('/init', async (req, res) => {
         theme: 'Mid Cap',
         stocks: [],
         subscribers: [],
-        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
       {
         name: 'Smallcap Leaders',
@@ -58,7 +58,7 @@ router.get('/init', async (req, res) => {
         theme: 'Small Cap',
         stocks: [],
         subscribers: [],
-        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
       {
         name: 'Tech Innovators',
@@ -67,7 +67,7 @@ router.get('/init', async (req, res) => {
         theme: 'Technology',
         stocks: [],
         subscribers: [],
-        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
       {
         name: 'Finance Leaders',
@@ -76,7 +76,7 @@ router.get('/init', async (req, res) => {
         theme: 'Finance',
         stocks: [],
         subscribers: [],
-        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
       {
         name: 'Healthcare Growth',
@@ -85,18 +85,35 @@ router.get('/init', async (req, res) => {
         theme: 'Healthcare',
         stocks: [],
         subscribers: [],
-        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      }
+        nextRebalanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
     ];
 
     // Delete existing baskets and insert new ones
     await Basket.deleteMany({});
-    const createdBaskets = await Basket.insertMany(baskets);
-    
+    const createdBaskets = await Basket.insertMany(basketDefs);
+
+    // Auto-rebalance each basket to populate stocks
+    const rebalanceResults = [];
+    for (const basket of createdBaskets) {
+      try {
+        console.log(`Rebalancing basket: ${basket.name}`);
+        await rebalanceBasket(basket._id.toString(), false);
+        rebalanceResults.push({ name: basket.name, success: true });
+      } catch (err) {
+        console.error(`Rebalance failed for ${basket.name}:`, err.message);
+        rebalanceResults.push({ name: basket.name, success: false, error: err.message });
+      }
+    }
+
+    // Re-fetch baskets with populated stocks
+    const updatedBaskets = await Basket.find();
+
     res.json({
-      message: 'Baskets initialized successfully',
-      count: createdBaskets.length,
-      baskets: createdBaskets
+      message: 'Baskets initialized and populated with stocks successfully',
+      count: updatedBaskets.length,
+      rebalanceResults,
+      baskets: updatedBaskets,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
