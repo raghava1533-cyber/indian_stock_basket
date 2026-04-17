@@ -1,9 +1,26 @@
 const express = require('express');
 const Basket = require('../models/Basket');
-const { rebalanceBasket, getRebalanceSummary } = require('../services/rebalanceService');
+const { rebalanceBasket, getRebalanceSummary, STATIC_FALLBACK, buildReason } = require('../services/rebalanceService');
 const { getMultipleStocksData } = require('../services/stockDataService');
 
 const router = express.Router();
+
+// ─── Helper: fill null PE/EPS/futureGrowth from STATIC_FALLBACK ───────────────
+const supplementStock = (stock) => {
+  const fb = STATIC_FALLBACK[stock.ticker] || {};
+  const peRatio        = stock.peRatio        ?? fb.peRatio        ?? null;
+  const earningsGrowth = stock.earningsGrowth ?? fb.earningsGrowth ?? null;
+  const futureGrowth   = stock.futureGrowth   ?? fb.futureGrowth   ?? 5;
+  const socialSentiment = stock.socialSentiment ?? fb.socialSentiment ?? 5;
+  // Derive rank from stock position if not in reason
+  const rankMatch = (stock.reason || '').match(/Rank #(\d+)/);
+  const rank = rankMatch ? parseInt(rankMatch[1]) : 1;
+  const reason = buildReason(
+    { ...stock, peRatio, earningsGrowth, futureGrowth, socialSentiment },
+    rank
+  );
+  return { ...stock.toObject ? stock.toObject() : stock, peRatio, earningsGrowth, futureGrowth, socialSentiment, reason };
+};
 
 // Get all baskets
 router.get('/', async (req, res) => {
@@ -156,12 +173,49 @@ router.get('/populate', async (req, res) => {
   }
 });
 
+// Fix PE/EPS in all baskets using STATIC_FALLBACK (one-time migration)
+router.get('/fix-pe-eps', async (req, res) => {
+  try {
+    const baskets = await Basket.find();
+    let updated = 0;
+    for (const basket of baskets) {
+      let changed = false;
+      basket.stocks = basket.stocks.map((stock, idx) => {
+        const fb = STATIC_FALLBACK[stock.ticker] || {};
+        const hadNullPE  = stock.peRatio == null;
+        const hadNullEPS = stock.earningsGrowth == null;
+        if (hadNullPE || hadNullEPS) {
+          stock.peRatio        = stock.peRatio        ?? fb.peRatio        ?? null;
+          stock.earningsGrowth = stock.earningsGrowth ?? fb.earningsGrowth ?? null;
+          stock.futureGrowth   = stock.futureGrowth   ?? fb.futureGrowth   ?? 5;
+          stock.socialSentiment = stock.socialSentiment ?? fb.socialSentiment ?? 5;
+          const rankMatch = (stock.reason || '').match(/Rank #(\d+)/);
+          const rank = rankMatch ? parseInt(rankMatch[1]) : idx + 1;
+          stock.reason = buildReason(stock, rank);
+          changed = true;
+        }
+        return stock;
+      });
+      if (changed) {
+        basket.markModified('stocks');
+        await basket.save();
+        updated++;
+      }
+    }
+    res.json({ message: `Fixed fundamentals in ${updated} basket(s)` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get basket by ID
 router.get('/:id', async (req, res) => {
   try {
     const basket = await Basket.findById(req.params.id);
     if (!basket) return res.status(404).json({ message: 'Basket not found' });
-    res.json(basket);
+    const doc = basket.toObject();
+    doc.stocks = doc.stocks.map(supplementStock);
+    res.json(doc);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

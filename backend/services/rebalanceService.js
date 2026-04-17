@@ -520,4 +520,4 @@ const getRebalanceSummary = async (basketId) => {
   };
 };
 
-module.exports = { rebalanceBasket, selectTopStocks, getRebalanceSummary };
+module.exports = { rebalanceBasket, selectTopStocks, getRebalanceSummary, STATIC_FALLBACK, buildReason };
