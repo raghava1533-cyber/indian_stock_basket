@@ -77,7 +77,7 @@ export const basketAPI = {
   getBasketStocks: (id) => api.get(`/baskets/${id}/stocks`),
   getLiveSummary: () => api.get('/baskets/live-summary'),
   getBasketNews: (id) => api.get(`/baskets/${id}/news`),
-  getBasketBenchmark: (id) => api.get(`/baskets/${id}/benchmark`),
+  getBasketBenchmark: (id, tf) => api.get(`/baskets/${id}/benchmark${tf ? `?tf=${tf}` : ''}`),
   getMarketIndices: () => api.get('/market/indices'),
   createCustomBasket: (data, token) => api.post('/baskets/create-custom', data, {
     headers: { Authorization: `Bearer ${token}` }

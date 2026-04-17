@@ -2248,7 +2248,7 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
     for (const old of basket.stocks) {
       const newMatch = newStocks.find(s => s.ticker === old.ticker);
       if (!newMatch) {
-        changes.removed.push({ ticker: old.ticker, companyName: old.companyName, quantity: old.quantity, salePrice: old.currentPrice });
+        changes.removed.push({ ticker: old.ticker, companyName: old.companyName, quantity: old.quantity, buyPrice: old.buyPrice || old.currentPrice, salePrice: old.currentPrice });
       } else if (newMatch.quantity < old.quantity) {
         changes.partialRemoved.push({ ticker: old.ticker, companyName: old.companyName, quantityRemoved: old.quantity - newMatch.quantity, reason: 'Quality score decreased' });
       }

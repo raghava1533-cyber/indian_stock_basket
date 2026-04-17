@@ -696,7 +696,7 @@ router.get('/:id/news', async (req, res) => {
   }
 });
 
-// Get benchmark comparison for basket (since launch date)
+// Get benchmark comparison for basket with timeframe support
 router.get('/:id/benchmark', async (req, res) => {
   try {
     const basket = await Basket.findById(req.params.id);
@@ -704,14 +704,32 @@ router.get('/:id/benchmark', async (req, res) => {
 
     const axios = require('axios');
     const isUS = basket.country === 'US';
+    const tf = req.query.tf || 'max'; // 1m,3m,6m,1y,2y,3y,5y,ytd,max
 
-    // Calculate date range from basket creation to today
     const launchDate = new Date(basket.createdDate || basket.createdAt || Date.now());
     const now = new Date();
+
+    // Compute period1 based on timeframe
+    let startDate;
+    switch (tf) {
+      case '1m':  startDate = new Date(now); startDate.setMonth(startDate.getMonth() - 1); break;
+      case '3m':  startDate = new Date(now); startDate.setMonth(startDate.getMonth() - 3); break;
+      case '6m':  startDate = new Date(now); startDate.setMonth(startDate.getMonth() - 6); break;
+      case '1y':  startDate = new Date(now); startDate.setFullYear(startDate.getFullYear() - 1); break;
+      case '2y':  startDate = new Date(now); startDate.setFullYear(startDate.getFullYear() - 2); break;
+      case '3y':  startDate = new Date(now); startDate.setFullYear(startDate.getFullYear() - 3); break;
+      case '5y':  startDate = new Date(now); startDate.setFullYear(startDate.getFullYear() - 5); break;
+      case 'ytd': startDate = new Date(now.getFullYear(), 0, 1); break;
+      case 'max':
+      default:    startDate = launchDate; break;
+    }
+    // Don't go before launch date
+    if (startDate < launchDate) startDate = launchDate;
+
+    const daysSinceStart = Math.max(1, Math.ceil((now - startDate) / (1000 * 60 * 60 * 24)));
     const daysSinceLaunch = Math.max(1, Math.ceil((now - launchDate) / (1000 * 60 * 60 * 24)));
-    // Choose interval based on age: daily for < 6 months, weekly for < 3 years, monthly otherwise
-    const interval = daysSinceLaunch <= 180 ? '1d' : daysSinceLaunch <= 1095 ? '1wk' : '1mo';
-    const period1 = Math.floor(launchDate.getTime() / 1000);
+    const interval = daysSinceStart <= 90 ? '1d' : daysSinceStart <= 365 ? '1d' : daysSinceStart <= 1095 ? '1wk' : '1mo';
+    const period1 = Math.floor(startDate.getTime() / 1000);
     const period2 = Math.floor(now.getTime() / 1000);
 
     const benchmarks = isUS ? [
@@ -744,7 +762,6 @@ router.get('/:id/benchmark', async (req, res) => {
         const lastClose = meta.regularMarketPrice || 0;
         const returnPct = firstClose > 0 ? ((lastClose - firstClose) / firstClose * 100).toFixed(2) : 0;
 
-        // Build normalized time series (Day 0 = 100)
         const series = timestamps.map((ts, i) => {
           const c = closes[i];
           if (c == null || firstClose <= 0) return null;
@@ -766,42 +783,68 @@ router.get('/:id/benchmark', async (req, res) => {
       }
     }
 
-    // Calculate basket performance since launch
-    const basketStocks = basket.stocks.filter(s => s.status === 'active');
-    const basketValue = basketStocks.reduce((sum, s) => sum + ((s.currentPrice || 0) * (s.quantity || 1)), 0);
+    // Calculate basket performance — include ALL stocks (active + removed/sold)
+    const activeStocks = basket.stocks.filter(s => s.status === 'active');
+    const allStocks = basket.stocks; // includes removed stocks too
+    const basketValue = activeStocks.reduce((sum, s) => sum + ((s.currentPrice || 0) * (s.quantity || 1)), 0);
 
-    // Overall return from buyPrice (inception return)
-    const investedValue = basketStocks.reduce((sum, s) => sum + ((s.buyPrice || s.currentPrice || 0) * (s.quantity || 1)), 0);
-    const overallReturn = investedValue > 0 ? Number(((basketValue - investedValue) / investedValue * 100).toFixed(2)) : 0;
+    // Realized P&L from sold/removed stocks
+    const removedStocks = basket.stocks.filter(s => s.status === 'removed');
+    const realizedPnL = removedStocks.reduce((sum, s) => {
+      const sellPrice = s.currentPrice || 0; // price at time of removal
+      const buyP = s.buyPrice || sellPrice;
+      return sum + ((sellPrice - buyP) * (s.quantity || 1));
+    }, 0);
 
-    // Build basket normalized series by fetching each stock's chart since launch
+    // Also gather realized P&L from rebalance history
+    let historyRealizedPnL = 0;
+    try {
+      const RebalanceHistory = require('../models/RebalanceHistory');
+      const histories = await RebalanceHistory.find({ basketId: basket._id }).lean();
+      for (const h of histories) {
+        if (h.changes?.removed) {
+          for (const r of h.changes.removed) {
+            const saleP = r.salePrice || 0;
+            const buyP = r.buyPrice || saleP;
+            historyRealizedPnL += (saleP - buyP) * (r.quantity || 1);
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Total P&L = unrealized (active) + realized (sold)
+    const investedActive = activeStocks.reduce((sum, s) => sum + ((s.buyPrice || s.currentPrice || 0) * (s.quantity || 1)), 0);
+    const unrealizedPnL = basketValue - investedActive;
+    const totalPnL = unrealizedPnL + realizedPnL + historyRealizedPnL;
+    const totalInvested = investedActive + removedStocks.reduce((sum, s) => sum + ((s.buyPrice || s.currentPrice || 0) * (s.quantity || 1)), 0);
+    const overallReturn = totalInvested > 0 ? Number(((totalPnL / totalInvested) * 100).toFixed(2)) : 0;
+
+    // Build basket normalized series by fetching each active stock's chart
     let basketSeries = [];
     let basketReturnPct = 0;
     try {
       const stockCharts = [];
-      for (const s of basketStocks.slice(0, 15)) {
+      for (const s of activeStocks.slice(0, 15)) {
         try {
           const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.ticker)}?period1=${period1}&period2=${period2}&interval=${interval}`;
           const resp = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
           const result = resp.data?.chart?.result?.[0];
           const timestamps = result?.timestamp || [];
           const closes = result?.indicators?.quote?.[0]?.close || [];
-          stockCharts.push({ ticker: s.ticker, weight: s.weight || (100 / basketStocks.length), timestamps, closes });
+          stockCharts.push({ ticker: s.ticker, weight: s.weight || (100 / activeStocks.length), timestamps, closes });
         } catch (_) {}
       }
 
       if (stockCharts.length > 0) {
-        // Get all unique dates
         const allDates = new Map();
         stockCharts.forEach(sc => {
-          sc.timestamps.forEach((ts, i) => {
+          sc.timestamps.forEach((ts) => {
             const dateStr = new Date(ts * 1000).toISOString().split('T')[0];
             if (!allDates.has(dateStr)) allDates.set(dateStr, []);
           });
         });
         const sortedDates = [...allDates.keys()].sort();
 
-        // For each stock, compute normalized return at each date
         const totalWeight = stockCharts.reduce((s, sc) => s + sc.weight, 0);
         const dailyReturns = sortedDates.map(date => {
           let weightedReturn = 0;
@@ -830,17 +873,21 @@ router.get('/:id/benchmark', async (req, res) => {
       basket: {
         name: basket.name,
         totalValue: basketValue,
-        investedValue,
-        stockCount: basketStocks.length,
+        investedValue: investedActive,
+        stockCount: activeStocks.length,
         minimumInvestment: basket.minimumInvestment,
         returnPct: basketReturnPct,
         overallReturn,
+        realizedPnL: realizedPnL + historyRealizedPnL,
+        unrealizedPnL,
+        totalPnL,
         series: basketSeries,
         launchDate: launchDate.toISOString(),
       },
       benchmarks: results,
       daysSinceLaunch,
-      interval,
+      daysSinceStart,
+      timeframe: tf,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

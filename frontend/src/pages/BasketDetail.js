@@ -227,6 +227,7 @@ function BasketDetail({ onReload }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [newsLoading, setNewsLoading] = useState(false);
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
+  const [benchmarkTf, setBenchmarkTf] = useState('max');
   const [subscribed, setSubscribed] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [liveRefreshing, setLiveRefreshing] = useState(false);
@@ -277,17 +278,16 @@ function BasketDetail({ onReload }) {
     setNewsLoading(false);
   }, [id, news.length]);
 
-  const loadBenchmark = useCallback(async () => {
-    if (benchmark) return;
+  const loadBenchmark = useCallback(async (tf) => {
     setBenchmarkLoading(true);
     try {
-      const res = await basketAPI.getBasketBenchmark(id);
+      const res = await basketAPI.getBasketBenchmark(id, tf || benchmarkTf);
       setBenchmark(res.data);
     } catch (err) {
       console.error('Error loading benchmark:', err);
     }
     setBenchmarkLoading(false);
-  }, [id, benchmark]);
+  }, [id, benchmarkTf]);
 
   useEffect(() => {
     loadBasketData();
@@ -310,8 +310,8 @@ function BasketDetail({ onReload }) {
 
   useEffect(() => {
     if (activeTab === 'news') loadNews();
-    if (activeTab === 'benchmark') loadBenchmark();
-  }, [activeTab, loadNews, loadBenchmark]);
+    if (activeTab === 'benchmark' && !benchmark) loadBenchmark();
+  }, [activeTab, loadNews, loadBenchmark, benchmark]);
 
   const handleRebalance = async () => {
     if (!window.confirm('Trigger manual rebalance? This will re-evaluate all stocks.')) return;
@@ -468,18 +468,26 @@ function BasketDetail({ onReload }) {
           </div>
         </div>
 
-        {/* Overall Returns from buyPrice */}
+        {/* Overall Returns from buyPrice — includes sold stocks */}
         {(() => {
           const investedVal = activeStocks.reduce((sum, s) => sum + ((s.buyPrice || s.currentPrice || 0) * (s.quantity || 1)), 0);
+          const removedStocks = stocks.filter(s => s.status === 'removed');
+          const realizedPnL = removedStocks.reduce((sum, s) => {
+            const sellP = s.currentPrice || 0;
+            const buyP = s.buyPrice || sellP;
+            return sum + ((sellP - buyP) * (s.quantity || 1));
+          }, 0);
           const currentVal = totalValue;
-          const pnl = currentVal - investedVal;
-          const returnPct = investedVal > 0 ? ((pnl / investedVal) * 100).toFixed(2) : 0;
+          const unrealizedPnL = currentVal - investedVal;
+          const totalPnL = unrealizedPnL + realizedPnL;
+          const totalInvested = investedVal + removedStocks.reduce((sum, s) => sum + ((s.buyPrice || s.currentPrice || 0) * (s.quantity || 1)), 0);
+          const returnPct = totalInvested > 0 ? ((totalPnL / totalInvested) * 100).toFixed(2) : 0;
           const daysSince = basket.createdDate ? Math.ceil((new Date() - new Date(basket.createdDate)) / (1000 * 60 * 60 * 24)) : 0;
           const investLabel = isUS ? '$10,000' : '₹1,00,000';
           return (
             <div style={{ background: 'var(--color-bg-secondary, #f7f8fa)', borderRadius: '12px', padding: '20px', margin: '20px 0', border: '1px solid var(--color-border, #e8e8e5)' }}>
               <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '12px' }}>📈 Overall Returns {daysSince > 0 ? `(${daysSince} days)` : ''}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '16px' }}>
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Invested ({investLabel})</div>
                   <div style={{ fontSize: '18px', fontWeight: '600' }}>{cur}{investedVal.toLocaleString(loc, { maximumFractionDigits: 0 })}</div>
@@ -489,9 +497,21 @@ function BasketDetail({ onReload }) {
                   <div style={{ fontSize: '18px', fontWeight: '600' }}>{cur}{currentVal.toLocaleString(loc, { maximumFractionDigits: 0 })}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>P&L</div>
-                  <div style={{ fontSize: '18px', fontWeight: '600', color: pnl >= 0 ? '#4caf50' : '#f44336' }}>
-                    {pnl >= 0 ? '+' : ''}{cur}{pnl.toLocaleString(loc, { maximumFractionDigits: 0 })}
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Unrealized P&L</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: unrealizedPnL >= 0 ? '#4caf50' : '#f44336' }}>
+                    {unrealizedPnL >= 0 ? '+' : ''}{cur}{unrealizedPnL.toLocaleString(loc, { maximumFractionDigits: 0 })}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Realized P&L (Sold)</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: realizedPnL >= 0 ? '#4caf50' : '#f44336' }}>
+                    {realizedPnL >= 0 ? '+' : ''}{cur}{realizedPnL.toLocaleString(loc, { maximumFractionDigits: 0 })}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Total P&L</div>
+                  <div style={{ fontSize: '18px', fontWeight: '600', color: totalPnL >= 0 ? '#4caf50' : '#f44336' }}>
+                    {totalPnL >= 0 ? '+' : ''}{cur}{totalPnL.toLocaleString(loc, { maximumFractionDigits: 0 })}
                   </div>
                 </div>
                 <div>
@@ -824,6 +844,37 @@ function BasketDetail({ onReload }) {
 
       {/* ═══ BENCHMARK TAB ═══ */}
       <div className={`tab-content ${activeTab === 'benchmark' ? 'active' : ''}`}>
+        {/* Timeframe Selector */}
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px', justifyContent: 'center' }}>
+          {[
+            { value: '1m', label: '1M' },
+            { value: '3m', label: '3M' },
+            { value: '6m', label: '6M' },
+            { value: '1y', label: '1Y' },
+            { value: '2y', label: '2Y' },
+            { value: '3y', label: '3Y' },
+            { value: '5y', label: '5Y' },
+            { value: 'ytd', label: 'YTD' },
+            { value: 'max', label: 'MAX' },
+          ].map(tf => (
+            <button
+              key={tf.value}
+              onClick={() => { setBenchmarkTf(tf.value); loadBenchmark(tf.value); }}
+              disabled={benchmarkLoading}
+              style={{
+                padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600',
+                border: benchmarkTf === tf.value ? '2px solid var(--color-accent, #2563eb)' : '1px solid var(--color-border, #d1d5db)',
+                background: benchmarkTf === tf.value ? 'var(--color-accent, #2563eb)' : 'var(--color-bg-secondary, #f7f8fa)',
+                color: benchmarkTf === tf.value ? '#fff' : 'var(--color-text-primary, #333)',
+                cursor: benchmarkLoading ? 'wait' : 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {tf.label}
+            </button>
+          ))}
+        </div>
+
         {benchmarkLoading ? (
           <div className="loading">Loading benchmark data...</div>
         ) : benchmark && benchmark.benchmarks?.length > 0 ? (
@@ -834,9 +885,9 @@ function BasketDetail({ onReload }) {
                 <div className="bm-basket-label">This Basket</div>
                 <div className="bm-basket-name">{benchmark.basket.name?.replace(/ \(\d{10,}\)$/, '')}</div>
                 <div className="bm-basket-value">{cur}{benchmark.basket.totalValue?.toLocaleString(loc, { maximumFractionDigits: 0 }) || '—'}</div>
-                <div className="bm-basket-sub">{benchmark.basket.stockCount} stocks · {benchmark.basket.returnPct >= 0 ? '+' : ''}{benchmark.basket.returnPct || 0}% since launch</div>
+                <div className="bm-basket-sub">{benchmark.basket.stockCount} stocks · {benchmark.basket.returnPct >= 0 ? '+' : ''}{benchmark.basket.returnPct || 0}% ({benchmark.timeframe === 'max' ? 'since launch' : benchmark.timeframe?.toUpperCase()})</div>
                 {benchmark.basket.launchDate && (
-                  <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>Launched {new Date(benchmark.basket.launchDate).toLocaleDateString()} ({benchmark.daysSinceLaunch} days ago)</div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>Launched {new Date(benchmark.basket.launchDate).toLocaleDateString()} ({benchmark.daysSinceLaunch} days ago) · Showing {benchmark.daysSinceStart} days</div>
                 )}
               </div>
               <div className="bm-compare-select">
@@ -854,12 +905,15 @@ function BasketDetail({ onReload }) {
               const overallRet = benchmark.basket.overallReturn || 0;
               const invested = investBase;
               const currentVal = benchmark.basket.totalValue || invested;
-              const profit = currentVal - invested;
+              const unrealizedPnL = benchmark.basket.unrealizedPnL || 0;
+              const realizedPnL = benchmark.basket.realizedPnL || 0;
+              const totalPnL = benchmark.basket.totalPnL || 0;
               const investLabel = isUS ? '$10,000' : '₹1,00,000';
+              const tfLabel = benchmark.timeframe === 'max' ? 'Since Launch' : benchmark.timeframe?.toUpperCase();
               return (
                 <div className="bm-overall-returns" style={{ background: 'var(--color-bg-secondary, #f7f8fa)', borderRadius: '12px', padding: '20px', margin: '16px 0', border: '1px solid var(--color-border, #e8e8e5)' }}>
-                  <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '12px' }}>📈 Overall Basket Returns (Since Launch)</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '12px' }}>📈 Overall Basket Returns ({tfLabel})</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '16px' }}>
                     <div>
                       <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Invested</div>
                       <div style={{ fontSize: '18px', fontWeight: '600' }}>{cur}{invested.toLocaleString(loc)}</div>
@@ -869,9 +923,21 @@ function BasketDetail({ onReload }) {
                       <div style={{ fontSize: '18px', fontWeight: '600' }}>{cur}{currentVal.toLocaleString(loc, { maximumFractionDigits: 0 })}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>P&L</div>
-                      <div style={{ fontSize: '18px', fontWeight: '600', color: profit >= 0 ? '#4caf50' : '#f44336' }}>
-                        {profit >= 0 ? '+' : ''}{cur}{profit.toLocaleString(loc, { maximumFractionDigits: 0 })}
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Unrealized P&L</div>
+                      <div style={{ fontSize: '16px', fontWeight: '600', color: unrealizedPnL >= 0 ? '#4caf50' : '#f44336' }}>
+                        {unrealizedPnL >= 0 ? '+' : ''}{cur}{unrealizedPnL.toLocaleString(loc, { maximumFractionDigits: 0 })}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Realized P&L (Sold)</div>
+                      <div style={{ fontSize: '16px', fontWeight: '600', color: realizedPnL >= 0 ? '#4caf50' : '#f44336' }}>
+                        {realizedPnL >= 0 ? '+' : ''}{cur}{realizedPnL.toLocaleString(loc, { maximumFractionDigits: 0 })}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Total P&L</div>
+                      <div style={{ fontSize: '18px', fontWeight: '600', color: totalPnL >= 0 ? '#4caf50' : '#f44336' }}>
+                        {totalPnL >= 0 ? '+' : ''}{cur}{totalPnL.toLocaleString(loc, { maximumFractionDigits: 0 })}
                       </div>
                     </div>
                     <div>
@@ -906,7 +972,7 @@ function BasketDetail({ onReload }) {
 
               return (
                 <div className="bm-chart-wrap">
-                  <div className="bm-chart-title">Basket vs {bm.name} — Normalized Since Launch (Base = 100)</div>
+                  <div className="bm-chart-title">Basket vs {bm.name} — Normalized {benchmark.timeframe === 'max' ? 'Since Launch' : benchmark.timeframe?.toUpperCase()} (Base = 100)</div>
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e5" />
@@ -934,11 +1000,13 @@ function BasketDetail({ onReload }) {
               const indexProfit = indexFinalValue - invested;
               const diff = basketProfit - indexProfit;
               const investLabel = isUS ? '$10,000' : '₹1,00,000';
-              const launchStr = benchmark.basket.launchDate ? new Date(benchmark.basket.launchDate).toLocaleDateString() : 'launch';
+              const tfLabel = benchmark.timeframe === 'max'
+                ? (benchmark.basket.launchDate ? new Date(benchmark.basket.launchDate).toLocaleDateString() : 'launch')
+                : benchmark.timeframe?.toUpperCase() + ' ago';
 
               return (
                 <div className="bm-projection">
-                  <div className="bm-projection-title">💰 If you invested {investLabel} on {launchStr}</div>
+                  <div className="bm-projection-title">💰 If you invested {investLabel} {benchmark.timeframe === 'max' ? `on ${tfLabel}` : tfLabel}</div>
                   <div className="bm-projection-grid">
                     <div className={`bm-projection-card${basketReturn >= indexReturn ? ' winner' : ''}`}>
                       <div className="bm-proj-label">This Basket</div>
@@ -971,7 +1039,7 @@ function BasketDetail({ onReload }) {
             {/* All index return cards */}
             <div className="bm-vs-row">
               <div className="bm-divider-line" />
-              <span className="bm-vs-label">Index Returns Since Launch</span>
+              <span className="bm-vs-label">Index Returns ({benchmark.timeframe === 'max' ? 'Since Launch' : benchmark.timeframe?.toUpperCase()})</span>
               <div className="bm-divider-line" />
             </div>
             <div className="bm-index-grid">
@@ -990,7 +1058,7 @@ function BasketDetail({ onReload }) {
             </div>
 
             <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '16px', textAlign: 'center' }}>
-              Index data sourced from Yahoo Finance. Chart shows normalized values (base = 100) since basket launch date.
+              Index data sourced from Yahoo Finance. Chart shows normalized values (base = 100) for selected timeframe.
             </p>
           </div>
         ) : (
