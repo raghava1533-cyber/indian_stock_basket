@@ -134,6 +134,32 @@ const initializeBaskets = async () => {
   }
 };
 
+// Populate baskets with stocks (only if stocks array is empty)
+const populateBaskets = async () => {
+  try {
+    const baskets = await Basket.find();
+    const needsPopulation = baskets.filter(b => b.stocks.length === 0);
+    
+    if (needsPopulation.length === 0) {
+      console.log('All baskets already populated with stocks');
+      return;
+    }
+
+    console.log(`Populating ${needsPopulation.length} baskets with stocks...`);
+    for (const basket of needsPopulation) {
+      try {
+        await rebalanceBasket(basket._id, false);
+        console.log(`✓ Populated: ${basket.name}`);
+      } catch (error) {
+        console.error(`Error populating ${basket.name}:`, error.message);
+      }
+    }
+    console.log('Basket population completed');
+  } catch (error) {
+    console.error('Error in populateBaskets:', error);
+  }
+};
+
 // Scheduler for automatic rebalancing (every 30 days at 9:30 AM)
 const scheduleRebalancing = () => {
   // Run every day at 9:30 AM IST to check if rebalancing is needed
@@ -164,6 +190,9 @@ const startServer = async () => {
 
     console.log('Initializing baskets...');
     await initializeBaskets();
+    
+    console.log('Populating baskets with stocks...');
+    await populateBaskets();
     
     console.log('Setting up rebalance scheduler...');
     scheduleRebalancing();

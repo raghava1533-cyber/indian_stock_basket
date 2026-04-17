@@ -49,6 +49,16 @@ export const basketAPI = {
       throw err;
     });
   },
+  populateBaskets: () => {
+    console.log('Calling POST /populate to populate baskets with stocks');
+    return api.post('/populate').then(res => {
+      console.log('Populate response:', res.data);
+      return res;
+    }).catch(err => {
+      console.error('Populate error:', err.message);
+      throw err;
+    });
+  },
   getBasketById: (id) => api.get(`/baskets/${id}`),
   createBasket: (data) => api.post('/baskets', data),
   updateBasket: (id, data) => api.patch(`/baskets/${id}`, data),

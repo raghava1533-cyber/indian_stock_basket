@@ -1,0 +1,15 @@
+tree 8c27393660689312cf0246bc83353874fec73e59
+parent 323cc1dec31c72b18fa89203f9b4fa9a60f84be8
+author Raghava chary Eruganti <raghava.eruganti@awavesemi.com> 1776358639 +0530
+committer Raghava chary Eruganti <raghava.eruganti@awavesemi.com> 1776358639 +0530
+
+Add MongoDB URI error fix guide
+
+- Explains 'Invalid scheme' error
+- MONGODB_URI missing or malformed on Render
+- Step-by-step fix process
+- Correct connection string format
+- All 6 environment variables required
+- Common mistakes table
+- Validation checklist
+- Troubleshooting section

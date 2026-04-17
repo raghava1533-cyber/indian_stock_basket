@@ -54,8 +54,11 @@ function Debug() {
         <button onClick={testHealth} style={{ marginRight: '10px', padding: '8px 16px' }}>
           Test /api/health
         </button>
-        <button onClick={testBaskets} style={{ padding: '8px 16px' }}>
+        <button onClick={testBaskets} style={{ marginRight: '10px', padding: '8px 16px' }}>
           Test /api/baskets
+        </button>
+        <button onClick={populateBaskets} style={{ padding: '8px 16px', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          Populate Baskets with Stocks
         </button>
       </div>
 
