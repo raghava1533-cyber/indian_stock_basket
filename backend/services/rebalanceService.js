@@ -334,10 +334,20 @@ const getCategoryFromName = (name) => {
 const mergeWithFallback = (universeDefs, liveResults) => {
   return universeDefs.map((def, idx) => {
     const live = liveResults[idx];
-    if (live && live.currentPrice > 0) return live;
+    const fallback = STATIC_FALLBACK[def.ticker] || {};
 
-    const fallback = STATIC_FALLBACK[def.ticker];
-    if (fallback) {
+    if (live && live.currentPrice > 0) {
+      // Supplement missing fundamentals from static fallback (v8 chart lacks PE/EPS)
+      return {
+        ...live,
+        peRatio:         live.peRatio         ?? fallback.peRatio         ?? null,
+        earningsGrowth:  live.earningsGrowth  ?? fallback.earningsGrowth  ?? null,
+        futureGrowth:    live.futureGrowth     ?? fallback.futureGrowth    ?? 5,
+        socialSentiment: live.socialSentiment  ?? fallback.socialSentiment ?? 5,
+      };
+    }
+
+    if (fallback.currentPrice) {
       const range = fallback.high52Week - fallback.low52Week;
       const socialSentiment = range > 0
         ? Math.max(0, Math.min(10, ((fallback.currentPrice - fallback.low52Week) / range) * 10))
