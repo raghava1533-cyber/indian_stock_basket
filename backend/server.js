@@ -177,6 +177,20 @@ const startServer = async () => {
 
 startServer();
 
+// 404 Handler - log all unmatched requests
+app.use((req, res) => {
+  console.log(`404 Not Found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ 
+    message: 'Route not found',
+    method: req.method,
+    path: req.originalUrl,
+    availableEndpoints: {
+      GET: ['/api/baskets', '/api/baskets/:id', '/api/baskets/:id/rebalance-summary', '/api/baskets/:id/stocks', '/api/health', '/health', '/'],
+      POST: ['/api/baskets', '/api/baskets/init', '/api/baskets/:id/subscribe', '/api/baskets/:id/unsubscribe', '/api/baskets/:id/rebalance']
+    }
+  });
+});
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err);

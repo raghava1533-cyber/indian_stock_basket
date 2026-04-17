@@ -8,9 +8,12 @@ const router = express.Router();
 // Get all baskets
 router.get('/', async (req, res) => {
   try {
+    console.log('GET /api/baskets called');
     const baskets = await Basket.find();
+    console.log(`Found ${baskets.length} baskets`);
     res.json(baskets);
   } catch (error) {
+    console.error('Error fetching baskets:', error);
     res.status(500).json({ message: error.message });
   }
 });
