@@ -79,13 +79,27 @@ function Dashboard({ baskets, onReload }) {
       <div className="sc-cards-grid">
         {baskets.map((basket) => {
           const meta = THEME_META[basket.theme] || THEME_META['Large Cap'];
-          const totalValue = basket.stocks?.reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0) || 0;
+          const stocks = basket.stocks || [];
+          const totalValue = stocks.reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0);
+
+          // Weighted average day change %
+          const basketDayChangePct = totalValue > 0
+            ? stocks.reduce((sum, st) => {
+                const w = ((st.currentPrice || 0) * (st.quantity || 1)) / totalValue;
+                return sum + (st.dayChangePercent != null ? st.dayChangePercent * w : 0);
+              }, 0)
+            : null;
+          const hasChange = stocks.some(st => st.dayChangePercent != null);
+
           const isSubscribed = subscribedBaskets.includes(basket._id);
-          const createdDate = basket.createdAt ? new Date(basket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+          const createdDate = basket.createdAt
+            ? new Date(basket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            : null;
 
           return (
             <div key={basket._id} className="sc-card">
               <Link to={`/basket/${basket._id}`} className="sc-card-body">
+                {/* Top: icon + name */}
                 <div className="sc-card-top">
                   <div className="sc-icon" style={{ background: meta.bg, color: meta.color }}>
                     {meta.letter}
@@ -96,29 +110,38 @@ function Dashboard({ baskets, onReload }) {
                   </div>
                 </div>
 
+                {/* Stats row */}
                 <div className="sc-card-stats">
                   <div className="sc-stat">
                     <div className="sc-stat-label">Min Investment</div>
-                    <div className="sc-stat-val green">₹{totalValue > 0 ? totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}</div>
+                    <div className="sc-stat-val accent">
+                      ₹{totalValue > 0 ? totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}
+                    </div>
                   </div>
                   <div className="sc-stat">
                     <div className="sc-stat-label">Stocks</div>
-                    <div className="sc-stat-val">{basket.stocks?.length || 0}</div>
+                    <div className="sc-stat-val">{stocks.length}</div>
                   </div>
                   <div className="sc-stat">
-                    <div className="sc-stat-label">Subscribers</div>
-                    <div className="sc-stat-val">{basket.subscribers?.length || 0}</div>
+                    <div className="sc-stat-label">Today</div>
+                    <div className={`sc-stat-val${hasChange ? (basketDayChangePct >= 0 ? ' green' : ' red') : ''}`}>
+                      {hasChange
+                        ? `${basketDayChangePct >= 0 ? '+' : ''}${basketDayChangePct.toFixed(2)}%`
+                        : '—'}
+                    </div>
                   </div>
-                  <button
-                    className={`sc-subscribe-btn${isSubscribed ? ' subscribed' : ''}`}
-                    onClick={(e) => { e.preventDefault(); isSubscribed ? handleUnsubscribe(basket._id) : handleSubscribe(basket._id); }}
-                  >
-                    {isSubscribed ? '✓ Subscribed' : 'Subscribe'}
-                  </button>
                 </div>
               </Link>
-              <div className="sc-card-footer">
-                {createdDate ? `Created ${createdDate}` : `Theme: ${basket.theme}`}
+
+              {/* Action row — outside the Link so button doesn't navigate */}
+              <div className="sc-card-action">
+                <span className="sc-card-date">{createdDate ? `Since ${createdDate}` : ''}</span>
+                <button
+                  className={`sc-subscribe-btn${isSubscribed ? ' subscribed' : ''}`}
+                  onClick={() => { isSubscribed ? handleUnsubscribe(basket._id) : handleSubscribe(basket._id); }}
+                >
+                  {isSubscribed ? '✓ Subscribed' : '+ Subscribe'}
+                </button>
               </div>
             </div>
           );

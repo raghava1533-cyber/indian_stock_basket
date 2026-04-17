@@ -81,41 +81,22 @@ function Baskets({ baskets, onReload }) {
 
   return (
     <div className="baskets-page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="sc-page-header">
         <div>
-          <h1>All Stock Baskets</h1>
-          <p className="subtitle">Choose from our curated collection of stock baskets</p>
+          <h1 className="sc-page-title">Explore Baskets</h1>
+          <p className="sc-page-sub">Choose from our curated collection of stock baskets</p>
         </div>
-        <button 
-          onClick={handleRefresh} 
+        <button
+          onClick={handleRefresh}
           disabled={isLoading}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: isLoading ? '#ff9800' : '#1e88e5',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            fontWeight: isLoading ? 'bold' : 'normal',
-            opacity: isLoading ? 1 : 0.9,
-            transform: isLoading ? 'scale(1.05)' : 'scale(1)',
-            transition: 'all 0.2s ease'
-          }}
+          className={`btn${isLoading ? ' btn-disabled' : ''}`}
         >
-          {isLoading ? '⏳ Loading...' : '🔄 Refresh'}
+          {isLoading ? 'Loading…' : 'Refresh'}
         </button>
       </div>
 
       {error && (
-        <div style={{
-          backgroundColor: '#ffebee',
-          color: '#c62828',
-          padding: '15px',
-          borderRadius: '5px',
-          marginBottom: '20px',
-          border: '1px solid #ef5350'
-        }}>
+        <div className="error-banner">
           <strong>Error:</strong> {error}
         </div>
       )}
@@ -124,7 +105,15 @@ function Baskets({ baskets, onReload }) {
         {localBaskets && localBaskets.length > 0 ? (
           localBaskets.map((basket) => {
             const meta = THEME_META[basket.theme] || THEME_META['Large Cap'];
-            const totalValue = basket.stocks?.reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0) || 0;
+            const stocks = basket.stocks || [];
+            const totalValue = stocks.reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0);
+            const basketDayChangePct = totalValue > 0
+              ? stocks.reduce((sum, st) => {
+                  const w = ((st.currentPrice || 0) * (st.quantity || 1)) / totalValue;
+                  return sum + (st.dayChangePercent != null ? st.dayChangePercent * w : 0);
+                }, 0)
+              : null;
+            const hasChange = stocks.some(st => st.dayChangePercent != null);
             const createdDate = basket.createdAt
               ? new Date(basket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
               : null;
@@ -146,20 +135,27 @@ function Baskets({ baskets, onReload }) {
                     <div className="sc-card-stats">
                       <div className="sc-stat">
                         <div className="sc-stat-label">Min Investment</div>
-                        <div className="sc-stat-val green">₹{totalValue > 0 ? totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}</div>
+                        <div className="sc-stat-val accent">
+                          ₹{totalValue > 0 ? totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}
+                        </div>
                       </div>
                       <div className="sc-stat">
                         <div className="sc-stat-label">Stocks</div>
-                        <div className="sc-stat-val">{basket.stocks?.length || 0}</div>
+                        <div className="sc-stat-val">{stocks.length}</div>
                       </div>
                       <div className="sc-stat">
-                        <div className="sc-stat-label">Subscribers</div>
-                        <div className="sc-stat-val">{basket.subscribers?.length || 0}</div>
+                        <div className="sc-stat-label">Today</div>
+                        <div className={`sc-stat-val${hasChange ? (basketDayChangePct >= 0 ? ' green' : ' red') : ''}`}>
+                          {hasChange
+                            ? `${basketDayChangePct >= 0 ? '+' : ''}${basketDayChangePct.toFixed(2)}%`
+                            : '—'}
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="sc-card-footer">
-                    {createdDate ? `Created ${createdDate}` : `Theme: ${basket.theme}`}
+                  <div className="sc-card-action">
+                    <span className="sc-card-date">{createdDate ? `Since ${createdDate}` : ''}</span>
+                    <span className="sc-explore-link">View →</span>
                   </div>
                 </div>
               </Link>

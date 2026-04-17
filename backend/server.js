@@ -9,7 +9,28 @@ const authRoutes = require('./routes/auth');
 const { rebalanceBasket } = require('./services/rebalanceService');
 const { testEmailConnection } = require('./services/emailService');
 const { getEnrichedUniverseData } = require('./services/stockDataService');
+const axios = require('axios');
 const Basket = require('./models/Basket');
+
+// ── Dedicated index fetcher (v8 chart — accurate prevClose) ───────────────
+const YF_HEADERS = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' };
+
+const fetchIndexQuote = async (ticker) => {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
+  const resp = await axios.get(url, {
+    params: { interval: '1d', range: '5d' },
+    headers: YF_HEADERS,
+    timeout: 12000,
+  });
+  const result = resp.data?.chart?.result?.[0];
+  if (!result) throw new Error(`No result for ${ticker}`);
+  const meta = result.meta || {};
+  const price   = meta.regularMarketPrice ?? 0;
+  const prev    = meta.chartPreviousClose ?? meta.previousClose ?? null;
+  const change  = prev ? price - prev : null;
+  const changePct = prev && prev > 0 ? ((price - prev) / prev) * 100 : null;
+  return { price, dayChange: change, dayChangePercent: changePct };
+};
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -69,21 +90,13 @@ app.get('/api/market/indices', async (req, res) => {
     if (_indicesCache && now - _indicesCacheTime < INDICES_CACHE_TTL) {
       return res.json(_indicesCache);
     }
-    const results = await getEnrichedUniverseData(['^NSEI', '^NSEBANK'], 2);
-    const nifty    = results[0];
-    const bankNifty = results[1];
-
-    const fmt = (d) => d ? {
-      price:           d.currentPrice,
-      dayChange:       d.dayChange,
-      dayChangePercent: d.dayChangePercent,
-      high52Week:      d.high52Week,
-      low52Week:       d.low52Week,
-    } : null;
-
+    const [nifty, bank] = await Promise.all([
+      fetchIndexQuote('^NSEI'),
+      fetchIndexQuote('^NSEBANK'),
+    ]);
     const payload = {
-      nifty50:   { name: 'NIFTY 50',   ...fmt(nifty) },
-      bankNifty: { name: 'BANK NIFTY', ...fmt(bankNifty) },
+      nifty50:   { name: 'NIFTY 50',   ...nifty },
+      bankNifty: { name: 'BANK NIFTY', ...bank },
       updatedAt: new Date(),
     };
     _indicesCache = payload;
