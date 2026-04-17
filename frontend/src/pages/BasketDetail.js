@@ -276,8 +276,6 @@ function BasketDetail({ onReload }) {
                 const price = stock.currentPrice || 0;
                 const h52 = stock.high52Week || 0;
                 const l52 = stock.low52Week || 0;
-                const range52 = h52 - l52;
-                const pos52 = range52 > 0 ? ((price - l52) / range52 * 100) : 50;
 
                 return (
                   <tr key={idx}>
