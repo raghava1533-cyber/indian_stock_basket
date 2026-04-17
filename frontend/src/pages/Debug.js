@@ -12,8 +12,10 @@ function Debug() {
 
   useEffect(() => {
     addLog(`=== DEBUG PAGE LOADED ===`);
-    addLog(`API_BASE_URL: ${process.env.REACT_APP_API_URL || 'NOT SET - using default'}`);
+    addLog(`API_BASE_URL: ${process.env.REACT_APP_API_URL || 'NOT SET - using default (http://localhost:5000/api)'}`);
     addLog(`NODE_ENV: ${process.env.NODE_ENV}`);
+    addLog(`Full health URL: ${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/health`);
+    addLog(`Full baskets URL: ${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/baskets`);
   }, []);
 
   const testHealth = async () => {
