@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Baskets from './pages/Baskets';
 import Portfolio from './pages/Portfolio';
@@ -30,9 +30,9 @@ function App() {
           <div className="header-content">
             <h1 className="logo">📈 Indian Stock Basket</h1>
             <nav className="nav">
-              <Link to="/" className="nav-link">Dashboard</Link>
-              <Link to="/baskets" className="nav-link">Baskets</Link>
-              <Link to="/portfolio" className="nav-link">Portfolio</Link>
+              <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Dashboard</NavLink>
+              <NavLink to="/baskets" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Baskets</NavLink>
+              <NavLink to="/portfolio" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Portfolio</NavLink>
             </nav>
           </div>
         </header>
