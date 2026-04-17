@@ -22,7 +22,6 @@ function BrokerConnect({ stocks, totalValue }) {
 
   const handleZerodhaDisconnect = () => {
     localStorage.removeItem('zerodhaApiKey');
-    setZerodhaKey('');
     setZerodhaConnected(false);
   };
 
