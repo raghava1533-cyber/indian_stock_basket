@@ -94,8 +94,6 @@ function Dashboard({ baskets, onReload }) {
         {baskets.map((basket) => {
           const meta = THEME_META[basket.theme] || THEME_META['Large Cap'];
           const totalValue = basket.stocks?.reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0) || 0;
-          const topStock = basket.stocks?.[0];
-          const movedBy = topStock?.dayChangePercent != null ? topStock.dayChangePercent : null;
           const isSubscribed = subscribedBaskets.includes(basket._id);
           const createdDate = basket.createdAt ? new Date(basket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
 
