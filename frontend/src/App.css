@@ -1664,6 +1664,20 @@ body {
   margin-bottom: 14px;
 }
 
+/* Live pulse dot */
+.live-dot-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: livePulse 1.2s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+
 /* Explore link in card footer */
 .sc-explore-link {
   font-size: 12px;

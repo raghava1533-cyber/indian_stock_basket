@@ -17,6 +17,8 @@ function BasketDetail({ onReload }) {
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
   const [email, setEmail] = useState(localStorage.getItem('userEmail') || '');
   const [subscribed, setSubscribed] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [liveRefreshing, setLiveRefreshing] = useState(false);
 
   const loadBasketData = useCallback(async () => {
     try {
@@ -70,6 +72,21 @@ function BasketDetail({ onReload }) {
   useEffect(() => {
     loadBasketData();
   }, [loadBasketData]);
+
+  // ── Live price polling every 30 s ──────────────────────────────────────────
+  useEffect(() => {
+    const refreshPrices = async () => {
+      try {
+        setLiveRefreshing(true);
+        const res = await basketAPI.getBasketStocks(id);
+        setStocks(res.data);
+        setLastUpdated(new Date());
+      } catch (_) {}
+      finally { setLiveRefreshing(false); }
+    };
+    const interval = setInterval(refreshPrices, 30000);
+    return () => clearInterval(interval);
+  }, [id]);
 
   useEffect(() => {
     if (activeTab === 'news') loadNews();
@@ -254,6 +271,12 @@ function BasketDetail({ onReload }) {
 
       {/* ═══ STOCKS TAB ═══ */}
       <div className={`tab-content ${activeTab === 'stocks' ? 'active' : ''}`}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          {liveRefreshing && <span className="live-dot-pulse" />}
+          <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>
+            {liveRefreshing ? 'Updating prices…' : lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : 'Live prices · auto-refresh every 30s'}
+          </span>
+        </div>
         <div style={{ overflowX: 'auto' }}>
           <table className="stocks-table">
             <thead>

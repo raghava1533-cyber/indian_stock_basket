@@ -181,50 +181,17 @@ const getStocksByCategory = () => [];
 const calculateStockScore = () => 0;
 
 /**
- * Batch-fetch accurate 1-day change % for many tickers.
- * Primary: Yahoo v7 batch quote — uses regularMarketChange (absolute) to derive %
- *   because regularMarketPreviousClose in v7 can be adjusted and give wrong %.
- *   prevClose = price - change  →  pct = change / prevClose * 100
- * Fallback: Yahoo v8 chart per-ticker using chartPreviousClose (8 at a time).
+ * Batch-fetch accurate 1-day change % for many tickers using Yahoo v8 chart.
+ * v8 meta.chartPreviousClose is the unadjusted previous session close that
+ * matches what Google Finance / NSE website shows.
+ * Runs 8 tickers in parallel per batch.
  * Returns a map of { ticker: dayChangePercent (%) } — null means unavailable.
  */
 const getBatchDayChanges = async (tickers) => {
   if (!tickers || tickers.length === 0) return {};
   const map = {};
-
-  // ── Try v7 batch first (one request) ──────────────────────────────────────
-  try {
-    const resp = await axios.get('https://query1.finance.yahoo.com/v7/finance/quote', {
-      params: { symbols: tickers.join(',') },
-      headers: YF_HEADERS,
-      timeout: 12000,
-    });
-    const results = resp.data?.quoteResponse?.result || [];
-    for (const r of results) {
-      const price  = r.regularMarketPrice  ?? null;
-      const change = r.regularMarketChange ?? null;
-      if (price != null && change != null) {
-        // Derive prevClose from (price - change) — avoids adjusted-close issues
-        const prevClose = price - change;
-        if (prevClose > 0) {
-          map[r.symbol] = (change / prevClose) * 100;
-          continue;
-        }
-      }
-      // Last resort: use Yahoo's own changePercent field (may be decimal on some endpoints)
-      const pct = r.regularMarketChangePercent ?? null;
-      if (pct != null) {
-        // Yahoo v7 returns changePercent as a percentage (e.g. -1.05), not decimal
-        map[r.symbol] = pct;
-      }
-    }
-    if (Object.keys(map).length > 0) return map;
-  } catch (err) {
-    console.warn('[getBatchDayChanges] v7 failed:', err.message);
-  }
-
-  // ── Fallback: v8 chart per ticker using chartPreviousClose ────────────────
   const concurrency = 8;
+
   for (let i = 0; i < tickers.length; i += concurrency) {
     const batch = tickers.slice(i, i + concurrency);
     await Promise.all(batch.map(async (ticker) => {
@@ -234,10 +201,10 @@ const getBatchDayChanges = async (tickers) => {
           headers: YF_HEADERS,
           timeout: 10000,
         });
-        const meta = resp.data?.chart?.result?.[0]?.meta || {};
+        const meta  = resp.data?.chart?.result?.[0]?.meta || {};
         const price = meta.regularMarketPrice ?? null;
         const prev  = meta.chartPreviousClose ?? meta.previousClose ?? null;
-        if (price && prev && prev > 0) {
+        if (price != null && prev && prev > 0) {
           map[ticker] = ((price - prev) / prev) * 100;
         }
       } catch (_) { /* skip */ }
