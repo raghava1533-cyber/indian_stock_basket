@@ -446,8 +446,8 @@ function BasketDetail({ onReload }) {
                 <th>52W Low</th>
                 <th>PE</th>
                 <th>EPS%</th>
-                <th>Qty</th>
                 <th>Weight</th>
+                <th>Qty</th>
                 <th>Value</th>
                 <th>Score</th>
               </tr>
@@ -492,8 +492,8 @@ function BasketDetail({ onReload }) {
                       <td className="price-negative">₹{l52.toFixed(0)}</td>
                       <td>{stock.peRatio != null ? stock.peRatio.toFixed(1) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}</td>
                       <td>{stock.earningsGrowth != null ? `${stock.earningsGrowth.toFixed(1)}%` : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}</td>
-                      <td style={{ fontWeight: '500' }}>{stock.quantity || 1}</td>
                       <td>{stock.weight?.toFixed(1)}%</td>
+                      <td style={{ fontWeight: '500' }}>{stock.quantity || 1}</td>
                       <td style={{ fontWeight: '500' }}>₹{(price * (stock.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
                       <td>
                         <div className="score-bar">
