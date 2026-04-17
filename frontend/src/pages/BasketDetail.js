@@ -466,7 +466,7 @@ function BasketDetail({ onReload }) {
                       onClick={() => setExpandedRow(isExpanded ? null : idx)}
                       style={{ cursor: 'pointer' }}
                     >
-                      <td style={{ fontWeight: '500', color: 'var(--color-text-secondary)', width: '28px' }}>{idx + 1}</td>
+                      <td>{idx + 1}</td>
                       <td>
                         <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--color-text-primary)' }}>
                           {stock.companyName || stock.ticker?.replace('.NS', '')}
@@ -490,11 +490,11 @@ function BasketDetail({ onReload }) {
                       </td>
                       <td className="price-positive">₹{h52.toFixed(0)}</td>
                       <td className="price-negative">₹{l52.toFixed(0)}</td>
-                      <td>{stock.peRatio != null ? stock.peRatio.toFixed(1) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}</td>
-                      <td>{stock.earningsGrowth != null ? `${stock.earningsGrowth.toFixed(1)}%` : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}</td>
+                      <td>{stock.peRatio != null ? stock.peRatio.toFixed(1) : '—'}</td>
+                      <td>{stock.earningsGrowth != null ? `${stock.earningsGrowth.toFixed(1)}%` : '—'}</td>
                       <td>{stock.weight?.toFixed(1)}%</td>
-                      <td style={{ fontWeight: '500' }}>{stock.quantity || 1}</td>
-                      <td style={{ fontWeight: '500' }}>₹{(price * (stock.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                      <td>{stock.quantity || 1}</td>
+                      <td>₹{(price * (stock.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
                       <td>
                         <div className="score-bar">
                           <div className="score-fill" style={{ width: `${Math.min(stock.score || 0, 100)}%` }}></div>
