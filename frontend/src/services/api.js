@@ -62,8 +62,12 @@ export const basketAPI = {
   getBasketById: (id) => api.get(`/baskets/${id}`),
   createBasket: (data) => api.post('/baskets', data),
   updateBasket: (id, data) => api.patch(`/baskets/${id}`, data),
-  subscribeToBasket: (id, email) => api.post(`/baskets/${id}/subscribe`, { email }),
-  unsubscribeFromBasket: (id, email) => api.post(`/baskets/${id}/unsubscribe`, { email }),
+  subscribeToBasket: (id, token) => api.post(`/baskets/${id}/subscribe`, {}, {
+    headers: { Authorization: `Bearer ${token}` },
+  }),
+  unsubscribeFromBasket: (id, token) => api.post(`/baskets/${id}/unsubscribe`, {}, {
+    headers: { Authorization: `Bearer ${token}` },
+  }),
   rebalanceBasket: (id) => api.post(`/baskets/${id}/rebalance`),
   rebalanceAll: (token) => api.post('/baskets/rebalance-all', {}, {
     headers: { Authorization: `Bearer ${token}` },

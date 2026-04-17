@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Basket = require('../models/Basket');
 const { rebalanceBasket, getRebalanceSummary, STATIC_FALLBACK, buildReason, STOCK_UNIVERSE } = require('../services/rebalanceService');
 const { getMultipleStocksData, getBatchDayChanges } = require('../services/stockDataService');
+const emailService = require('../services/emailService');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme_secret';
@@ -394,30 +395,40 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-// Subscribe to basket
-router.post('/:id/subscribe', async (req, res) => {
+// Subscribe to basket (auth required — uses logged-in user's email)
+router.post('/:id/subscribe', authenticateToken, async (req, res) => {
   try {
-    const { email } = req.body;
+    const userEmail = req.user.email;
     const basket = await Basket.findByIdAndUpdate(
       req.params.id,
-      { $addToSet: { subscribers: email } },
+      { $addToSet: { subscribers: userEmail } },
       { new: true }
     );
-    res.json({ message: 'Subscribed successfully', basket });
+    if (!basket) return res.status(404).json({ message: 'Basket not found' });
+
+    // Send confirmation email
+    try {
+      await emailService.sendSubscriptionConfirmation(userEmail, basket.name.replace(/ \(\d{10,}\)$/, ''));
+    } catch (emailErr) {
+      console.warn('[subscribe] Confirmation email failed:', emailErr.message);
+    }
+
+    res.json({ message: `Subscribed! Confirmation sent to ${userEmail}`, basket });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-// Unsubscribe from basket
-router.post('/:id/unsubscribe', async (req, res) => {
+// Unsubscribe from basket (auth required)
+router.post('/:id/unsubscribe', authenticateToken, async (req, res) => {
   try {
-    const { email } = req.body;
+    const userEmail = req.user.email;
     const basket = await Basket.findByIdAndUpdate(
       req.params.id,
-      { $pull: { subscribers: email } },
+      { $pull: { subscribers: userEmail } },
       { new: true }
     );
+    if (!basket) return res.status(404).json({ message: 'Basket not found' });
     res.json({ message: 'Unsubscribed successfully', basket });
   } catch (error) {
     res.status(400).json({ message: error.message });

@@ -227,7 +227,6 @@ function BasketDetail({ onReload }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [newsLoading, setNewsLoading] = useState(false);
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
-  const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [liveRefreshing, setLiveRefreshing] = useState(false);
@@ -255,6 +254,8 @@ function BasketDetail({ onReload }) {
       const userEmail = localStorage.getItem('userEmail');
       if (userEmail && basketRes.data.subscribers?.includes(userEmail)) {
         setSubscribed(true);
+      } else {
+        setSubscribed(false);
       }
 
       setLoading(false);
@@ -329,28 +330,30 @@ function BasketDetail({ onReload }) {
   };
 
   const handleSubscribe = async () => {
-    if (!email) { alert('Enter your email first'); return; }
+    const token = localStorage.getItem('authToken');
+    if (!token) { alert('Please log in to subscribe'); return; }
     try {
-      await basketAPI.subscribeToBasket(id, email);
-      localStorage.setItem('userEmail', email);
+      await basketAPI.subscribeToBasket(id, token);
       setSubscribed(true);
-      setMessage('Subscribed! You will receive rebalance notifications.');
-      setTimeout(() => setMessage(''), 3000);
+      setMessage('Subscribed! Confirmation email sent.');
+      setTimeout(() => setMessage(''), 4000);
       loadBasketData();
     } catch (err) {
-      alert('Error subscribing');
+      alert(err.response?.data?.message || 'Error subscribing');
     }
   };
 
   const handleUnsubscribe = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) { alert('Please log in to unsubscribe'); return; }
     try {
-      await basketAPI.unsubscribeFromBasket(id, email);
+      await basketAPI.unsubscribeFromBasket(id, token);
       setSubscribed(false);
       setMessage('Unsubscribed from notifications.');
       setTimeout(() => setMessage(''), 3000);
       loadBasketData();
     } catch (err) {
-      alert('Error unsubscribing');
+      alert(err.response?.data?.message || 'Error unsubscribing');
     }
   };
 
@@ -405,20 +408,13 @@ function BasketDetail({ onReload }) {
             🔄 Rebalance Now
           </button>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <input
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '13px', width: '180px' }}
-            />
             {subscribed ? (
               <button onClick={handleUnsubscribe} className="btn btn-danger" style={{ fontSize: '12px', padding: '8px 12px' }}>
-                Unsubscribe
+                ✉️ Unsubscribe
               </button>
             ) : (
               <button onClick={handleSubscribe} className="btn btn-secondary" style={{ fontSize: '12px', padding: '8px 12px' }}>
-                Subscribe
+                ✉️ Subscribe for Email Alerts
               </button>
             )}
           </div>

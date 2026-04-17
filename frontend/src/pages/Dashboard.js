@@ -36,24 +36,27 @@ function Dashboard({ baskets, onReload }) {
   }, []);
 
   const handleSubscribe = async (basketId) => {
-    if (!email) { alert('Please log in to subscribe to baskets'); return; }
+    const token = localStorage.getItem('authToken');
+    if (!token) { alert('Please log in to subscribe to baskets'); return; }
     try {
-      await basketAPI.subscribeToBasket(basketId, email);
+      await basketAPI.subscribeToBasket(basketId, token);
       const newSubscribed = [...subscribedBaskets, basketId];
       setSubscribedBaskets(newSubscribed);
       localStorage.setItem('subscribedBaskets', JSON.stringify(newSubscribed));
-      setMessage('Successfully subscribed to basket notifications!');
+      setMessage('Subscribed! Confirmation email sent.');
       setTimeout(() => setMessage(''), 3000);
       onReload();
     } catch (error) {
       console.error('Error subscribing:', error);
-      alert('Error subscribing to basket');
+      alert(error.response?.data?.message || 'Error subscribing to basket');
     }
   };
 
   const handleUnsubscribe = async (basketId) => {
+    const token = localStorage.getItem('authToken');
+    if (!token) { alert('Please log in to unsubscribe'); return; }
     try {
-      await basketAPI.unsubscribeFromBasket(basketId, email);
+      await basketAPI.unsubscribeFromBasket(basketId, token);
       const newSubscribed = subscribedBaskets.filter(id => id !== basketId);
       setSubscribedBaskets(newSubscribed);
       localStorage.setItem('subscribedBaskets', JSON.stringify(newSubscribed));
@@ -62,7 +65,7 @@ function Dashboard({ baskets, onReload }) {
       onReload();
     } catch (error) {
       console.error('Error unsubscribing:', error);
-      alert('Error unsubscribing from basket');
+      alert(error.response?.data?.message || 'Error unsubscribing from basket');
     }
   };
 
