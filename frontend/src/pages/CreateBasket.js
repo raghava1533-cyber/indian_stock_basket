@@ -33,6 +33,19 @@ const SECTORS_US = [
   { value: 'renewable',      label: 'Renewable Energy' },
   { value: 'consumer',       label: 'Consumer Brands' },
   { value: 'infrastructure', label: 'Infrastructure & Industrials' },
+  { value: 'auto',           label: 'Automobile & EV' },
+  { value: 'metals',         label: 'Metals & Mining' },
+  { value: 'telecom',        label: 'Telecom & Communication' },
+  { value: 'psu',            label: 'Utilities' },
+  { value: 'realty',         label: 'Real Estate (REITs)' },
+  { value: 'chemicals',      label: 'Chemicals & Materials' },
+  { value: 'cement',         label: 'Construction & Building' },
+  { value: 'oilgas',         label: 'Oil & Gas' },
+  { value: 'fertilizer',     label: 'Agriculture & Fertilizers' },
+  { value: 'defence',        label: 'Defence & Aerospace' },
+  { value: 'media',          label: 'Media & Entertainment' },
+  { value: 'textile',        label: 'Fashion & Retail' },
+  { value: 'undervalued',    label: 'Undervalued Stocks' },
 ];
 
 const MARKET_CAPS_IN = [
@@ -47,7 +60,8 @@ const MARKET_CAPS_US = [
   { value: 'all',      label: 'Select market cap…' },
   { value: 'largeCap', label: 'Large Cap  ($10B+)' },
   { value: 'midCap',   label: 'Mid Cap  ($2B–$10B)' },
-  { value: 'smallCap', label: 'Small Cap  (below $2B)' },
+  { value: 'smallCap', label: 'Small Cap  ($500M–$2B)' },
+  { value: 'microCap', label: 'Micro Cap  (below $500M)' },
 ];
 
 const FEATURES = [

@@ -83,7 +83,11 @@ function Baskets({ baskets, onReload }) {
     }
   };
 
-  const filteredBaskets = localBaskets.filter(b => (b.country || 'IN') === country);
+  const filteredBaskets = localBaskets.filter(b => {
+    if ((b.country || 'IN') !== country) return false;
+    if (b.isUserCreated && b.createdBy !== email) return false;
+    return true;
+  });
   const currencySymbol = country === 'US' ? '$' : '₹';
   const investBase = country === 'US' ? 10000 : 100000;
   const locale = country === 'US' ? 'en-US' : 'en-IN';

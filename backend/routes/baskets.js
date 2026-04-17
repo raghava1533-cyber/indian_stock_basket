@@ -538,7 +538,12 @@ const SECTOR_LABELS = {
   // USA sectors
   usa_tech: 'Technology', usa_finance: 'Finance', usa_healthcare: 'Healthcare',
   usa_renewable: 'Renewable', usa_consumer: 'Consumer', usa_infrastructure: 'Infrastructure',
-  usa_largeCap: 'Large Cap', usa_midCap: 'Mid Cap', usa_smallCap: 'Small Cap',
+  usa_auto: 'Automobile & EV', usa_metals: 'Metals & Mining', usa_telecom: 'Telecom',
+  usa_psu: 'Utilities', usa_realty: 'Real Estate', usa_chemicals: 'Chemicals',
+  usa_cement: 'Construction', usa_oilgas: 'Oil & Gas', usa_fertilizer: 'Agriculture',
+  usa_defence: 'Defence & Aerospace', usa_media: 'Media & Entertainment',
+  usa_textile: 'Fashion & Retail', usa_undervalued: 'Undervalued Stocks',
+  usa_largeCap: 'Large Cap', usa_midCap: 'Mid Cap', usa_smallCap: 'Small Cap', usa_microCap: 'Micro Cap',
 };
 const MARKET_CAP_THRESHOLDS = { largeCap: 50000, midCap: 10000 };
 
