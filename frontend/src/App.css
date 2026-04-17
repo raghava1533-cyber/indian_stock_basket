@@ -996,6 +996,25 @@ body {
 
 .broker-card:last-child { border-bottom: none; }
 
+.broker-card.broker-connected { background: transparent; }
+.broker-card.broker-connected .broker-desc { color: var(--color-accent); }
+
+.broker-btn {
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.broker-disconnect {
+  background: transparent;
+  border: 1px solid #D85A30;
+  color: #D85A30;
+}
+
+.broker-disconnect:hover { background: rgba(216, 90, 48, 0.08); }
+
 .broker-icon {
   width: 36px;
   height: 36px;

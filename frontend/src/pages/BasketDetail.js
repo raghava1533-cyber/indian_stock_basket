@@ -2,6 +2,168 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { basketAPI } from '../services/api';
 
+// ── BrokerConnect component ───────────────────────────────────────────────────
+function BrokerConnect({ stocks, totalValue }) {
+  const [modal, setModal] = useState(null); // null | 'zerodha' | 'groww'
+  const [zerodhaKey, setZerodhaKey] = useState(localStorage.getItem('zerodhaApiKey') || '');
+  const [zerodhaConnected, setZerodhaConnected] = useState(!!localStorage.getItem('zerodhaApiKey'));
+  const [growwConnected, setGrowwConnected] = useState(!!localStorage.getItem('growwConnected'));
+  const [growwEmail, setGrowwEmail] = useState(localStorage.getItem('growwEmail') || '');
+  const [keyInput, setKeyInput] = useState('');
+
+  const handleZerodhaConnect = () => {
+    const key = keyInput.trim();
+    if (!key) { alert('Please enter your Zerodha API Key'); return; }
+    localStorage.setItem('zerodhaApiKey', key);
+    setZerodhaKey(key);
+    setZerodhaConnected(true);
+    setModal(null);
+    // Redirect to Kite Connect OAuth
+    window.open(`https://kite.zerodha.com/connect/login?v=3&api_key=${encodeURIComponent(key)}`, '_blank');
+  };
+
+  const handleZerodhaDisconnect = () => {
+    localStorage.removeItem('zerodhaApiKey');
+    setZerodhaKey('');
+    setZerodhaConnected(false);
+  };
+
+  const handleGrowwConnect = () => {
+    const em = growwEmail.trim();
+    if (!em || !em.includes('@')) { alert('Please enter your Groww account email'); return; }
+    localStorage.setItem('growwConnected', '1');
+    localStorage.setItem('growwEmail', em);
+    setGrowwConnected(true);
+    setModal(null);
+  };
+
+  const handleGrowwDisconnect = () => {
+    localStorage.removeItem('growwConnected');
+    localStorage.removeItem('growwEmail');
+    setGrowwConnected(false);
+    setGrowwEmail('');
+  };
+
+  const brokers = [
+    { key: 'zerodha', name: 'Zerodha (Kite)', icon: '🟢', desc: 'Kite Connect API — OAuth 2.0', connected: zerodhaConnected },
+    { key: 'groww',   name: 'Groww',          icon: '🔵', desc: 'Link your Groww account',     connected: growwConnected },
+    { key: null, name: 'Angel One',   icon: '🟠', desc: 'Angel SmartAPI',         connected: false, soon: true },
+    { key: null, name: 'Upstox',      icon: '🟣', desc: 'Upstox API v2',          connected: false, soon: true },
+    { key: null, name: '5paisa',      icon: '🔴', desc: '5paisa Connect',         connected: false, soon: true },
+    { key: null, name: 'ICICI Direct',icon: '🔵', desc: 'Breeze API',             connected: false, soon: true },
+  ];
+
+  return (
+    <div className="portfolio-section-detail">
+      <h3>🏦 Connect to Broker</h3>
+      <p className="portfolio-desc">Connect your trading account to execute buy/sell orders during rebalancing.</p>
+
+      <div className="broker-grid">
+        {brokers.map((b, i) => (
+          <div key={i} className={`broker-card${b.connected ? ' broker-connected' : ''}`}>
+            <div className="broker-icon">{b.icon}</div>
+            <div className="broker-info">
+              <div className="broker-name">{b.name}</div>
+              <div className="broker-desc">{b.connected ? '✓ Connected' : b.desc}</div>
+            </div>
+            {b.soon ? (
+              <button className="btn btn-secondary broker-btn" disabled>Coming Soon</button>
+            ) : b.connected ? (
+              <button className="btn broker-btn broker-disconnect"
+                onClick={() => b.key === 'zerodha' ? handleZerodhaDisconnect() : handleGrowwDisconnect()}>
+                Disconnect
+              </button>
+            ) : (
+              <button className="btn btn-primary broker-btn"
+                onClick={() => { setKeyInput(''); setModal(b.key); }}>
+                Connect
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Zerodha modal */}
+      {modal === 'zerodha' && (
+        <div className="cb-modal-overlay" onClick={() => setModal(null)}>
+          <div className="cb-modal" onClick={e => e.stopPropagation()}>
+            <h3>Connect Zerodha (Kite)</h3>
+            <p style={{ fontSize: '13px', color: '#666', marginBottom: '16px' }}>
+              Enter your Kite Connect API Key. You'll be redirected to Zerodha to authorize.
+              Get your API key from <a href="https://developers.kite.trade" target="_blank" rel="noreferrer">developers.kite.trade</a>.
+            </p>
+            <div className="cb-field">
+              <label className="cb-label">Kite API Key</label>
+              <input className="cb-input" placeholder="e.g. xxxxxxxxxxxxxxxx"
+                value={keyInput} onChange={e => setKeyInput(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
+              <button className="cb-create-btn" onClick={handleZerodhaConnect}>Authorize with Zerodha →</button>
+              <button className="cb-cancel-btn" onClick={() => setModal(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Groww modal */}
+      {modal === 'groww' && (
+        <div className="cb-modal-overlay" onClick={() => setModal(null)}>
+          <div className="cb-modal" onClick={e => e.stopPropagation()}>
+            <h3>Connect Groww</h3>
+            <p style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+              Groww does not provide a public trading API yet. Link your account to track your portfolio and get buy/sell recommendations.
+            </p>
+            <div className="cb-field">
+              <label className="cb-label">Groww Account Email</label>
+              <input className="cb-input" type="email" placeholder="your@email.com"
+                value={growwEmail} onChange={e => setGrowwEmail(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
+              <button className="cb-create-btn" onClick={handleGrowwConnect}>Link Account</button>
+              <button className="cb-cancel-btn" onClick={() => setModal(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pending orders table */}
+      <div className="rebalance-orders">
+        <h4>📋 Pending Rebalance Orders</h4>
+        {stocks.length > 0 ? (
+          <table className="stocks-table" style={{ marginTop: '15px' }}>
+            <thead>
+              <tr>
+                <th>Action</th><th>Stock</th><th>Qty</th><th>Price</th><th>Amount</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stocks.map((s, i) => (
+                <tr key={i}>
+                  <td><span className="order-badge buy">BUY</span></td>
+                  <td className="stock-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</td>
+                  <td>{s.quantity || 1}</td>
+                  <td>₹{s.currentPrice?.toFixed(2) || '—'}</td>
+                  <td>₹{((s.currentPrice || 0) * (s.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                  <td><span className="order-status pending">Pending Broker</span></td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr style={{ fontWeight: 'bold' }}>
+                <td colSpan="4">Total Investment Required</td>
+                <td>₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        ) : (
+          <p style={{ color: '#666', marginTop: '15px' }}>No orders pending. Rebalance the basket first.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function BasketDetail({ onReload }) {
   const { id } = useParams();
   const [basket, setBasket] = useState(null);
@@ -569,71 +731,7 @@ function BasketDetail({ onReload }) {
 
       {/* ═══ PORTFOLIO / BROKER TAB ═══ */}
       <div className={`tab-content ${activeTab === 'portfolio' ? 'active' : ''}`}>
-        <div className="portfolio-section-detail">
-          <h3>🏦 Connect to Broker</h3>
-          <p className="portfolio-desc">Connect your trading account to automatically execute buy/sell orders during rebalancing.</p>
-          
-          <div className="broker-grid">
-            {[
-              { name: 'Zerodha (Kite)', icon: '🟢', status: 'Popular', desc: 'Connect via Kite Connect API' },
-              { name: 'Groww', icon: '🔵', status: 'Coming Soon', desc: 'Groww API integration' },
-              { name: 'Angel One', icon: '🟠', status: 'Coming Soon', desc: 'Angel Broking SmartAPI' },
-              { name: 'Upstox', icon: '🟣', status: 'Coming Soon', desc: 'Upstox API v2' },
-              { name: '5paisa', icon: '🔴', status: 'Coming Soon', desc: '5paisa Connect API' },
-              { name: 'ICICI Direct', icon: '🔵', status: 'Coming Soon', desc: 'ICICI Direct Breeze API' },
-            ].map((broker, i) => (
-              <div key={i} className="broker-card">
-                <div className="broker-icon">{broker.icon}</div>
-                <div className="broker-info">
-                  <div className="broker-name">{broker.name}</div>
-                  <div className="broker-desc">{broker.desc}</div>
-                </div>
-                <button className="btn btn-secondary broker-btn" disabled={broker.status === 'Coming Soon'}>
-                  {broker.status === 'Coming Soon' ? 'Coming Soon' : 'Connect'}
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="rebalance-orders">
-            <h4>📋 Pending Rebalance Orders</h4>
-            {activeStocks.length > 0 ? (
-              <table className="stocks-table" style={{ marginTop: '15px' }}>
-                <thead>
-                  <tr>
-                    <th>Action</th>
-                    <th>Stock</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeStocks.map((s, i) => (
-                    <tr key={i}>
-                      <td><span className="order-badge buy">BUY</span></td>
-                      <td className="stock-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</td>
-                      <td>{s.quantity || 1}</td>
-                      <td>₹{s.currentPrice?.toFixed(2) || '—'}</td>
-                      <td>₹{((s.currentPrice || 0) * (s.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
-                      <td><span className="order-status pending">Pending Broker</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr style={{ fontWeight: 'bold' }}>
-                    <td colSpan="4">Total Investment Required</td>
-                    <td>₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              </table>
-            ) : (
-              <p style={{ color: '#666', marginTop: '15px' }}>No orders pending. Rebalance the basket first.</p>
-            )}
-          </div>
-        </div>
+        <BrokerConnect stocks={activeStocks} totalValue={totalValue} />
       </div>
 
       {/* ═══ ABOUT TAB ═══ */}
@@ -653,7 +751,7 @@ function BasketDetail({ onReload }) {
             </div>
             <div className="about-item">
               <span className="about-label">Stocks</span>
-              <span className="about-value">{activeStocks.length} / 10</span>
+              <span className="about-value">{activeStocks.length} stocks</span>
             </div>
             <div className="about-item">
               <span className="about-label">Rebalance Frequency</span>
@@ -690,7 +788,7 @@ function BasketDetail({ onReload }) {
           <ol className="rebalance-steps">
             <li>Fetch live data for all stocks in the {basket.theme} universe from Yahoo Finance</li>
             <li>Score each stock on 5 quality criteria (total 100 points)</li>
-            <li>Select top 10 stocks by quality score</li>
+            <li>Select top 15 stocks by quality score</li>
             <li>Allocate shares proportional to quality (higher score = more shares)</li>
             <li>Calculate minimum investment amount based on current prices × quantities</li>
             <li>Compare with previous basket — identify added, removed, and partially sold stocks</li>

@@ -147,7 +147,8 @@ const STOCK_UNIVERSE = {
     { ticker: 'GPIL.NS',         companyName: 'Godawari Power & Ispat'  },
     { ticker: 'GREENPANEL.NS',   companyName: 'Greenpanel Industries'   },
     { ticker: 'ORIENTGREEN.NS',  companyName: 'Orient Green Power'      },
-    { ticker: 'JSWENERGY.NS',    companyName: 'JSW Energy'               },\n  ],
+    { ticker: 'JSWENERGY.NS',    companyName: 'JSW Energy'               },
+  ],
   consumer: [
     { ticker: 'HINDUNILVR.NS',   companyName: 'Hindustan Unilever'      },
     { ticker: 'ITC.NS',          companyName: 'ITC Limited'             },
