@@ -5,6 +5,7 @@ const cors = require('cors');
 const cron = require('node-cron');
 const connectDB = require('./config/database');
 const basketRoutes = require('./routes/baskets');
+const authRoutes = require('./routes/auth');
 const { rebalanceBasket } = require('./services/rebalanceService');
 const { testEmailConnection } = require('./services/emailService');
 const { getEnrichedUniverseData } = require('./services/stockDataService');
@@ -26,6 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes (will be started after DB connection)
 app.use('/api/baskets', basketRoutes);
+app.use('/api/auth', authRoutes);
 
 // Root endpoint - API documentation
 app.get('/', (req, res) => {

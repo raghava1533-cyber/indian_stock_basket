@@ -72,4 +72,10 @@ export const basketAPI = {
   getMarketIndices: () => api.get('/market/indices'),
 };
 
+export const authAPI = {
+  signup: (name, email, password) => api.post('/auth/signup', { name, email, password }),
+  login: (email, password) => api.post('/auth/login', { email, password }),
+  me: (token) => api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } }),
+};
+
 export default api;

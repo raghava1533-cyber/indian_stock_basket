@@ -19,8 +19,8 @@ function Dashboard({ baskets, onReload }) {
   const [subscribedBaskets, setSubscribedBaskets] = useState(
     JSON.parse(localStorage.getItem('subscribedBaskets') || '[]')
   );
-  const [email, setEmail] = useState(localStorage.getItem('userEmail') || '');
   const [message, setMessage] = useState('');
+  const email = localStorage.getItem('userEmail') || '';
 
   useEffect(() => {
     setLoading(false);
@@ -28,7 +28,7 @@ function Dashboard({ baskets, onReload }) {
 
   const handleSubscribe = async (basketId) => {
     if (!email) {
-      alert('Please enter your email first');
+      alert('Please log in to subscribe to baskets');
       return;
     }
 
@@ -37,7 +37,6 @@ function Dashboard({ baskets, onReload }) {
       const newSubscribed = [...subscribedBaskets, basketId];
       setSubscribedBaskets(newSubscribed);
       localStorage.setItem('subscribedBaskets', JSON.stringify(newSubscribed));
-      localStorage.setItem('userEmail', email);
       setMessage('Successfully subscribed to basket notifications!');
       setTimeout(() => setMessage(''), 3000);
       onReload();
@@ -72,19 +71,6 @@ function Dashboard({ baskets, onReload }) {
         <div>
           <h1 className="sc-page-title">Discover Baskets</h1>
           <p className="sc-page-sub">Curated stock baskets, rebalanced monthly</p>
-        </div>
-        <div className="sc-email-row">
-          <input
-            type="email"
-            className="sc-email-input"
-            placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => { if (email) { localStorage.setItem('userEmail', email); setMessage('Email saved!'); setTimeout(() => setMessage(''), 2000); } }}
-          >Save</button>
         </div>
       </div>
 

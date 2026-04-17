@@ -1,17 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Baskets from './pages/Baskets';
 import Portfolio from './pages/Portfolio';
 import BasketDetail from './pages/BasketDetail';
 import Debug from './pages/Debug';
 import Status from './pages/Status';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 import { basketAPI } from './services/api';
 import './App.css';
 
 function App() {
   const [baskets, setBaskets] = useState([]);
   const [indices, setIndices] = useState(null);
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('authUser')); } catch { return null; }
+  });
+
+  const handleLogin = (userData) => setUser(userData);
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
+    localStorage.removeItem('userEmail');
+    setUser(null);
+  };
 
   useEffect(() => {
     console.log('App.js mounted - checking API connectivity');
@@ -62,7 +76,7 @@ function App() {
             <nav className="nav">
               <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} end>Baskets</NavLink>
               <NavLink to="/baskets" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Explore</NavLink>
-              <NavLink to="/portfolio" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Portfolio</NavLink>
+              {user && <NavLink to="/portfolio" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Portfolio</NavLink>}
             </nav>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {indices && (
@@ -88,6 +102,17 @@ function App() {
                 </>
               )}
               <span className="live-badge"><span className="live-dot"></span> Live NSE/BSE</span>
+              {user ? (
+                <div className="auth-user-chip">
+                  <span className="auth-user-name">{user.name}</span>
+                  <button className="auth-logout-btn" onClick={handleLogout}>Logout</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <NavLink to="/login" className="btn btn-sm">Login</NavLink>
+                  <NavLink to="/signup" className="btn btn-primary btn-sm">Sign up</NavLink>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -96,8 +121,10 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard baskets={baskets} onReload={loadBaskets} />} />
             <Route path="/baskets" element={<Baskets baskets={baskets} onReload={loadBaskets} />} />
-            <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/portfolio" element={user ? <Portfolio user={user} /> : <Navigate to="/login" replace />} />
             <Route path="/basket/:id" element={<BasketDetail onReload={loadBaskets} />} />
+            <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
+            <Route path="/signup" element={user ? <Navigate to="/" replace /> : <Signup onLogin={handleLogin} />} />
             <Route path="/debug" element={<Debug />} />
             <Route path="/status" element={<Status />} />
           </Routes>
