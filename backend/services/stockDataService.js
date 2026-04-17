@@ -76,9 +76,16 @@ const getEnrichedStockData = async (ticker) => {
       futureGrowth,
       socialSentiment,
       dayChange:        price.regularMarketChange?.raw        ?? null,
-      dayChangePercent: price.regularMarketChangePercent?.raw != null
-        ? price.regularMarketChangePercent.raw * 100
-        : null,
+      dayChangePercent: (() => {
+        const chg = price.regularMarketChange?.raw ?? null;
+        const cur = price.regularMarketPrice?.raw  ?? null;
+        if (chg != null && cur != null && (cur - chg) > 0)
+          return (chg / (cur - chg)) * 100;
+        // fallback to API field if available
+        return price.regularMarketChangePercent?.raw != null
+          ? price.regularMarketChangePercent.raw * 100
+          : null;
+      })(),
       lastUpdated: new Date(),
     };
   } catch (v10Err) {
