@@ -182,8 +182,10 @@ const calculateStockScore = () => 0;
 
 /**
  * Batch-fetch accurate 1-day change % for many tickers.
- * Primary: Yahoo v7 batch quote (single request).
- * Fallback: Yahoo v8 chart per-ticker using chartPreviousClose (5 at a time).
+ * Primary: Yahoo v7 batch quote — uses regularMarketChange (absolute) to derive %
+ *   because regularMarketPreviousClose in v7 can be adjusted and give wrong %.
+ *   prevClose = price - change  →  pct = change / prevClose * 100
+ * Fallback: Yahoo v8 chart per-ticker using chartPreviousClose (8 at a time).
  * Returns a map of { ticker: dayChangePercent (%) } — null means unavailable.
  */
 const getBatchDayChanges = async (tickers) => {
@@ -199,12 +201,21 @@ const getBatchDayChanges = async (tickers) => {
     });
     const results = resp.data?.quoteResponse?.result || [];
     for (const r of results) {
-      const prev  = r.regularMarketPreviousClose ?? null;
-      const price = r.regularMarketPrice ?? null;
-      if (prev && price && prev > 0) {
-        map[r.symbol] = ((price - prev) / prev) * 100;
-      } else if (r.regularMarketChangePercent != null) {
-        map[r.symbol] = r.regularMarketChangePercent;
+      const price  = r.regularMarketPrice  ?? null;
+      const change = r.regularMarketChange ?? null;
+      if (price != null && change != null) {
+        // Derive prevClose from (price - change) — avoids adjusted-close issues
+        const prevClose = price - change;
+        if (prevClose > 0) {
+          map[r.symbol] = (change / prevClose) * 100;
+          continue;
+        }
+      }
+      // Last resort: use Yahoo's own changePercent field (may be decimal on some endpoints)
+      const pct = r.regularMarketChangePercent ?? null;
+      if (pct != null) {
+        // Yahoo v7 returns changePercent as a percentage (e.g. -1.05), not decimal
+        map[r.symbol] = pct;
       }
     }
     if (Object.keys(map).length > 0) return map;
@@ -213,7 +224,7 @@ const getBatchDayChanges = async (tickers) => {
   }
 
   // ── Fallback: v8 chart per ticker using chartPreviousClose ────────────────
-  const concurrency = 5;
+  const concurrency = 8;
   for (let i = 0; i < tickers.length; i += concurrency) {
     const batch = tickers.slice(i, i + concurrency);
     await Promise.all(batch.map(async (ticker) => {
@@ -232,7 +243,7 @@ const getBatchDayChanges = async (tickers) => {
       } catch (_) { /* skip */ }
     }));
     if (i + concurrency < tickers.length) {
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 150));
     }
   }
   return map;
