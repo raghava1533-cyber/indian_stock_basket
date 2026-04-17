@@ -382,15 +382,11 @@ function BasketDetail({ onReload }) {
         <div className="summary-grid">
           <div className="summary-card">
             <div className="summary-label">Total Stocks</div>
-            <div className="summary-value">{activeStocks.length}/10</div>
+            <div className="summary-value">{activeStocks.length} stocks</div>
           </div>
           <div className="summary-card green">
-            <div className="summary-label">Total Value</div>
+            <div className="summary-label">Minimum Investment</div>
             <div className="summary-value">₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
-          </div>
-          <div className="summary-card orange">
-            <div className="summary-label">Min. Investment</div>
-            <div className="summary-value">₹{basket.minimumInvestment?.toLocaleString('en-IN') || totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
           </div>
           <div className="summary-card">
             <div className="summary-label">Last Rebalanced</div>
