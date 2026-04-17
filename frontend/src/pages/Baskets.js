@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { basketAPI } from '../services/api';
 import '../styles/BasketGrid.css';
 
 function Baskets({ baskets, onReload }) {
@@ -9,13 +10,21 @@ function Baskets({ baskets, onReload }) {
   const handleRefresh = async () => {
     setIsLoading(true);
     setError(null);
-    console.log('Refresh clicked - calling onReload');
+    console.log('=== REFRESH CLICKED ===');
     try {
+      // First check if API is reachable
+      console.log('Checking API health...');
+      await basketAPI.checkHealth();
+      console.log('API health check passed');
+
+      // Then load baskets
+      console.log('Loading baskets...');
       await onReload();
-      console.log('onReload completed, baskets should update');
+      console.log('Baskets loaded successfully');
     } catch (err) {
-      console.error('Error refreshing baskets:', err);
-      setError('Failed to load baskets. Please try again.');
+      console.error('Error during refresh:', err);
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to load baskets';
+      setError(`Failed to load baskets: ${errorMsg}`);
     } finally {
       setIsLoading(false);
     }

@@ -49,6 +49,15 @@ app.get('/health', (req, res) => {
   res.json({ status: 'Server is running', timestamp: new Date() });
 });
 
+// API Health check (separate endpoint for frontend monitoring)
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'API is running', 
+    timestamp: new Date(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Initialize baskets on startup (if they don't exist)
 const initializeBaskets = async () => {
   try {
