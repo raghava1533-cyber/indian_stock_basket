@@ -825,8 +825,8 @@ body {
 
 .change-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 2px;
   padding: 8px 0;
   border-bottom: 0.5px solid var(--color-border-tertiary);
   font-size: 13px;
@@ -834,19 +834,48 @@ body {
 
 .change-item:last-child { border-bottom: none; }
 
+.change-item-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .change-ticker {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
-  background: var(--color-background-secondary);
-  padding: 2px 7px;
-  border-radius: var(--border-radius-sm);
-  color: var(--color-text-secondary);
-  display: inline-block;
-  margin-right: 8px;
+  color: var(--color-text-primary);
 }
 
 .change-detail { font-size: 13px; color: var(--color-text-secondary); }
-.change-reason { font-size: 11px; color: var(--color-text-secondary); }
+.change-reason { font-size: 11px; color: var(--color-text-secondary); margin-left: 0; }
+
+/* Changes tab — Current Holdings table */
+.changes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.changes-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border-tertiary);
+}
+.changes-table td {
+  padding: 10px 10px;
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+  color: var(--color-text-primary);
+}
+.changes-table tr:last-child td { border-bottom: none; }
+.changes-table th:first-child,
+.changes-table td:first-child { width: 32px; text-align: center; }
+.changes-table .changes-company { font-weight: 500; }
+.changes-table th:nth-child(n+3),
+.changes-table td:nth-child(n+3) { text-align: right; }
 
 .change-badge {
   font-size: 11px;
@@ -1110,6 +1139,40 @@ body {
 }
 
 .rebalance-orders { margin-top: 20px; }
+
+/* Portfolio Holdings (after broker connect) */
+.portfolio-holdings {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-tertiary);
+}
+.portfolio-holdings h4 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+}
+.portfolio-summary-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 14px;
+}
+.portfolio-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.portfolio-summary-label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.portfolio-summary-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
 
 .rebalance-orders h4 {
   font-size: 14px;

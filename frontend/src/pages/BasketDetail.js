@@ -124,20 +124,71 @@ function BrokerConnect({ stocks, totalValue }) {
         </div>
       )}
 
+      {/* Portfolio Holdings — visible when any broker is connected */}
+      {(zerodhaConnected || growwConnected) && stocks.length > 0 && (
+        <div className="portfolio-holdings">
+          <h4>💼 Your Portfolio Holdings</h4>
+          <div className="portfolio-summary-row">
+            <div className="portfolio-summary-item">
+              <span className="portfolio-summary-label">Total Value</span>
+              <span className="portfolio-summary-value">₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+            </div>
+            <div className="portfolio-summary-item">
+              <span className="portfolio-summary-label">Stocks</span>
+              <span className="portfolio-summary-value">{stocks.length}</span>
+            </div>
+            <div className="portfolio-summary-item">
+              <span className="portfolio-summary-label">Broker</span>
+              <span className="portfolio-summary-value">{zerodhaConnected ? 'Zerodha' : 'Groww'}</span>
+            </div>
+          </div>
+          <table className="changes-table">
+            <thead>
+              <tr>
+                <th>#</th><th style={{ textAlign: 'left' }}>Company</th><th>Qty</th><th>Price</th><th>Value</th><th>Weight</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stocks.map((s, i) => {
+                const val = (s.currentPrice || 0) * (s.quantity || 1);
+                const weight = totalValue > 0 ? ((val / totalValue) * 100).toFixed(1) : '0.0';
+                return (
+                  <tr key={i}>
+                    <td>{i + 1}</td>
+                    <td style={{ textAlign: 'left', fontWeight: 500 }}>{s.companyName || s.ticker?.replace('.NS', '')}</td>
+                    <td>{s.quantity || 1}</td>
+                    <td>₹{s.currentPrice?.toFixed(0) || '—'}</td>
+                    <td>₹{val.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                    <td>{weight}%</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr style={{ fontWeight: 'bold' }}>
+                <td colSpan="4">Total Portfolio Value</td>
+                <td>₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                <td>100%</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+
       {/* Pending orders table */}
       <div className="rebalance-orders">
         <h4>📋 Pending Rebalance Orders</h4>
         {stocks.length > 0 ? (
-          <table className="stocks-table" style={{ marginTop: '15px' }}>
+          <table className="changes-table" style={{ marginTop: '10px' }}>
             <thead>
               <tr>
-                <th>Action</th><th>Stock</th><th>Qty</th><th>Price</th><th>Amount</th><th>Status</th>
+                <th>Action</th><th style={{ textAlign: 'left' }}>Stock</th><th>Qty</th><th>Price</th><th>Amount</th><th>Status</th>
               </tr>
             </thead>
             <tbody>
               {stocks.map((s, i) => (
                 <tr key={i}>
-                  <td><span className="order-badge buy">BUY</span></td>
+                  <td style={{ textAlign: 'center' }}><span className="order-badge buy">BUY</span></td>
                   <td className="stock-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</td>
                   <td>{s.quantity || 1}</td>
                   <td>₹{s.currentPrice?.toFixed(2) || '—'}</td>
@@ -601,19 +652,37 @@ function BasketDetail({ onReload }) {
               <span>{latestHistory.reason || 'Auto rebalance'}</span>
             </div>
 
-            {/* Show current holdings */}
+            {/* Show current holdings as a table */}
             {activeStocks.length > 0 && (
               <div className="changes-section">
                 <h3 className="changes-title added">📊 Current Holdings ({activeStocks.length})</h3>
-                <div className="changes-list">
-                  {activeStocks.map((s, i) => (
-                    <div key={i} className="change-item added">
-                      <div className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</div>
-                      <div className="change-detail">Qty: {s.quantity || 1} shares @ ₹{s.currentPrice?.toFixed(0) || '—'}</div>
-                      <div className="change-reason">{s.reason || 'Current portfolio allocation'}</div>
-                    </div>
-                  ))}
-                </div>
+                <table className="changes-table">
+                  <thead>
+                    <tr>
+                      <th>#</th><th>Company</th><th>Qty</th><th>Price</th><th>Value</th><th>Rank</th><th>PE</th><th>EPS Growth</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeStocks.map((s, i) => {
+                      const reason = s.reason || '';
+                      const rankMatch = reason.match(/Rank #(\d+)/);
+                      const peMatch = reason.match(/PE ([\d.]+)/);
+                      const epsMatch = reason.match(/EPS growth ([\d.]+%)/);
+                      return (
+                        <tr key={i}>
+                          <td>{i + 1}</td>
+                          <td className="changes-company">{s.companyName || s.ticker?.replace('.NS', '')}</td>
+                          <td>{s.quantity || 1}</td>
+                          <td>₹{s.currentPrice?.toFixed(0) || '—'}</td>
+                          <td>₹{((s.currentPrice || 0) * (s.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                          <td>{rankMatch ? `#${rankMatch[1]}` : '—'}</td>
+                          <td>{peMatch ? peMatch[1] : '—'}</td>
+                          <td>{epsMatch ? epsMatch[1] : '—'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
 
@@ -623,8 +692,10 @@ function BasketDetail({ onReload }) {
                 <div className="changes-list">
                   {addedStocks.map((s, i) => (
                     <div key={i} className="change-item added">
-                      <div className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</div>
-                      <div className="change-detail">Qty: {s.quantity || 1} shares</div>
+                      <div className="change-item-top">
+                        <span className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</span>
+                        <span className="change-detail">Qty: {s.quantity || 1} shares</span>
+                      </div>
                       <div className="change-reason">{s.reason || 'Quality score qualified'}</div>
                     </div>
                   ))}
@@ -638,9 +709,9 @@ function BasketDetail({ onReload }) {
                 <div className="changes-list">
                   {removedStocks.map((s, i) => (
                     <div key={i} className="change-item removed">
-                      <div className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</div>
-                      <div className="change-detail">
-                        Sold {s.quantity || 'all'} shares{s.salePrice ? ` at ₹${s.salePrice.toFixed(2)}` : ''}
+                      <div className="change-item-top">
+                        <span className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</span>
+                        <span className="change-detail">Sold {s.quantity || 'all'} shares{s.salePrice ? ` at ₹${s.salePrice.toFixed(2)}` : ''}</span>
                       </div>
                       <div className="change-reason">{s.reason || 'Quality score dropped'}</div>
                     </div>
@@ -655,8 +726,10 @@ function BasketDetail({ onReload }) {
                 <div className="changes-list">
                   {partialStocks.map((s, i) => (
                     <div key={i} className="change-item partial">
-                      <div className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</div>
-                      <div className="change-detail">Reduced by {s.quantityRemoved} shares</div>
+                      <div className="change-item-top">
+                        <span className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</span>
+                        <span className="change-detail">Reduced by {s.quantityRemoved} shares</span>
+                      </div>
                       <div className="change-reason">{s.reason || 'Weight rebalanced'}</div>
                     </div>
                   ))}
