@@ -2201,11 +2201,13 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
 
     const scored = enrichedStocks.map(stock => {
       const scores = scoreStock(stock);
-      // Penalize stocks running on static fallback (live Yahoo fetch failed).
-      // This prevents delisted/acquired stocks from ranking into the basket.
-      const fallbackPenalty = stock._isStaticFallback ? 25 : 0;
+      // Penalize stocks not served by live Yahoo Finance data.
+      // _isStooqFallback: Stooq price only (no fundamentals) → -10 pts
+      // _isStaticFallback: completely offline/stale data     → -25 pts
+      const fallbackPenalty = stock._isStaticFallback ? 25 : stock._isStooqFallback ? 10 : 0;
       if (fallbackPenalty > 0) {
-        console.warn(`[rebalanceService] ${stock.ticker} using static fallback — applying -25 score penalty`);
+        const reason = stock._isStaticFallback ? 'static fallback, -25pts' : 'Stooq fallback (Yahoo down), -10pts';
+        console.warn(`[rebalanceService] ${stock.ticker} using ${reason}`);
       }
       return { ...stock, score: Math.max(0, scores.total - fallbackPenalty), qualityScores: scores };
     });

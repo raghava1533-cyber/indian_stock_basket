@@ -118,9 +118,41 @@ const computeSMAs = (closes) => {
 };
 
 /**
+ * Fetch the latest close price from Stooq (independent secondary source).
+ * Works for NSE (.NS), BSE (.BO), and US tickers (appends .us suffix).
+ * Used as tertiary fallback when both Yahoo Finance v10 and v8 fail.
+ *
+ * @param {string} ticker - Yahoo Finance ticker e.g. 'RELIANCE.NS' or 'AAPL'
+ * @returns {number|null} latest close price or null if not found
+ */
+const getStooqPrice = async (ticker) => {
+  try {
+    // Convert Yahoo ticker format to Stooq format:
+    //   RELIANCE.NS → reliance.ns  (NSE — same suffix)
+    //   RELIANCE.BO → reliance.bo  (BSE — same suffix)
+    //   AAPL        → aapl.us      (US bare tickers get .us)
+    const stooqTicker = ticker.includes('.')
+      ? ticker.toLowerCase()
+      : `${ticker.toLowerCase()}.us`;
+    const url = `https://stooq.com/q/l/?s=${encodeURIComponent(stooqTicker)}&f=sd2t2ohlcv&h&e=csv`;
+    const resp = await axios.get(url, { headers: YF_HEADERS, timeout: 8000, responseType: 'text' });
+    const lines = (resp.data || '').trim().split('\n');
+    if (lines.length < 2) return null;
+    // CSV columns: Symbol,Date,Time,Open,High,Low,Close,Volume
+    const cols = lines[1].split(',');
+    if (cols.length < 7 || cols[6] === 'N/D' || cols[6] === '') return null;
+    const close = parseFloat(cols[6]);
+    return isNaN(close) ? null : close;
+  } catch (_) {
+    return null;
+  }
+};
+
+/**
  * Fetch enriched stock data from Yahoo Finance.
  * Primary: v10 quoteSummary (price, financialData, defaultKeyStatistics)
  * Fallback: v8 chart (basic price + 52W range)
+ * Tertiary: Stooq (independent source — verifies Yahoo, handles edge cases)
  *
  * @param {string} ticker - e.g. 'RELIANCE.NS'
  * @returns {object|null} enriched stock data or null on complete failure
@@ -376,9 +408,52 @@ const getEnrichedStockData = async (ticker) => {
       lastUpdated: new Date(),
     };
   } catch (v8Err) {
-    console.error(`[stockDataService] v8 failed for ${ticker}: ${v8Err.message}`);
-    return null;
+    console.warn(`[stockDataService] v8 failed for ${ticker}: ${v8Err.message}`);
+    // fall through to Stooq tertiary
   }
+
+  // ── Tertiary: Stooq (independent source — cross-verifies Yahoo, free, no API key) ──
+  try {
+    const stooqPrice = await getStooqPrice(ticker);
+    if (stooqPrice && stooqPrice > 0) {
+      console.warn(`[stockDataService] Both Yahoo sources failed for ${ticker}; using Stooq price: ${stooqPrice}`);
+      return {
+        ticker,
+        companyName:       ticker,
+        currentPrice:      stooqPrice,
+        high52Week:        stooqPrice,
+        low52Week:         stooqPrice,
+        marketCap:         0,
+        marketCapCr:       0,
+        peRatio:           null,
+        earningsGrowth:    null,
+        revenueGrowth:     null,
+        futureGrowth:      null,
+        socialSentiment:   5,
+        newsSentiment:     null,
+        momentumSentiment: 5,
+        targetMeanPrice:   null,
+        targetHighPrice:   null,
+        targetLowPrice:    null,
+        recommendationKey: null,
+        numberOfAnalysts:  null,
+        analystBuy:        null,
+        analystHold:       null,
+        analystSell:       null,
+        rsi:               null,
+        sma20:             null,
+        sma50:             null,
+        sma200:            null,
+        dayChange:         null,
+        dayChangePercent:  null,
+        _isStooqFallback:  true,
+        lastUpdated:       new Date(),
+      };
+    }
+  } catch (_) {}
+
+  console.error(`[stockDataService] All sources (Yahoo v10/v8 + Stooq) failed for ${ticker}`);
+  return null;
 };
 
 /**
@@ -490,6 +565,7 @@ module.exports = {
   getStocksByCategory,
   calculateStockScore,
   getBatchDayChanges,
+  getStooqPrice,
   computeRSI,
   computeSMAs,
   analyzeHeadlineSentiment,

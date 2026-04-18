@@ -180,3 +180,52 @@ if ($failList.Count -eq 0 -and $priceList.Count -eq 0 -and $dayList.Count -eq 0)
     Write-Host "`nAll tickers are healthy!" -ForegroundColor Green
 }
 Write-Host ""
+
+# ── Stooq cross-check for failed tickers ─────────────────────────────────────
+# Stooq is a free independent data source (no API key needed).
+# If Yahoo 404s but Stooq has data → ticker needs remapping in the codebase.
+# If both fail → stock is genuinely delisted/acquired and should be replaced.
+if ($failList.Count -gt 0) {
+    Write-Host "Cross-checking $($failList.Count) failed ticker(s) against Stooq (independent source)..." -ForegroundColor Cyan
+    $stooqOk   = [System.Collections.Generic.List[string]]::new()
+    $stooqFail = [System.Collections.Generic.List[string]]::new()
+
+    foreach ($entry in $failList) {
+        $raw = ($entry -split '\s+')[0].Trim()
+        # Convert Yahoo ticker format to Stooq: AAPL -> aapl.us, RELIANCE.NS -> reliance.ns
+        $stooqTicker = if ($raw -match '\.(NS|BO)$') { $raw.ToLower() } else { "$($raw.ToLower()).us" }
+        try {
+            $csv   = (Invoke-WebRequest "https://stooq.com/q/l/?s=$([uri]::EscapeDataString($stooqTicker))&f=sd2t2ohlcv&h&e=csv" `
+                          -TimeoutSec 10 -UseBasicParsing).Content
+            $lines = $csv.Trim().Split("`n")
+            if ($lines.Count -ge 2) {
+                $cols = $lines[1].Trim().Split(',')
+                if ($cols.Count -ge 7 -and $cols[6] -ne 'N/D' -and $cols[6] -ne '') {
+                    $close = [math]::Round([double]$cols[6], 2)
+                    $msg   = "$($raw.PadRight(20)) Stooq price=$close  (Yahoo 404 but Stooq OK — may need ticker remap)"
+                    Write-Host "  STOOQ OK : $msg" -ForegroundColor Yellow
+                    $stooqOk.Add($msg)
+                } else {
+                    $msg = "$($raw.PadRight(20)) no data on Stooq either — likely delisted/acquired"
+                    Write-Host "  STOOQ FAIL: $msg" -ForegroundColor Red
+                    $stooqFail.Add($msg)
+                }
+            }
+        } catch {
+            $err = $_.Exception.Message -replace '\r?\n.*', ''
+            Write-Host "  STOOQ ERR : $($raw.PadRight(20)) $err" -ForegroundColor DarkRed
+        }
+        Start-Sleep -Milliseconds 300
+    }
+
+    Write-Host ""
+    if ($stooqOk.Count -gt 0) {
+        Write-Host "ACTION NEEDED: $($stooqOk.Count) ticker(s) need Yahoo remapping (Stooq confirms they still trade):" -ForegroundColor Yellow
+        $stooqOk | ForEach-Object { Write-Host "    $_" }
+    }
+    if ($stooqFail.Count -gt 0) {
+        Write-Host "CONFIRMED DEAD: $($stooqFail.Count) ticker(s) are delisted/acquired on ALL sources:" -ForegroundColor Red
+        $stooqFail | ForEach-Object { Write-Host "    $_" }
+    }
+    Write-Host ""
+}
