@@ -186,7 +186,6 @@ function App() {
               ) : (
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <NavLink to="/login" className="btn btn-sm">Login</NavLink>
-                  <NavLink to="/signup" className="btn btn-primary btn-sm">Sign up</NavLink>
                 </div>
               )}
             </div>
@@ -201,7 +200,7 @@ function App() {
             <Route path="/portfolio" element={<Portfolio user={user} />} />
             <Route path="/basket/:id" element={<BasketDetail onReload={loadBaskets} />} />
             <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
-            <Route path="/signup" element={user ? <Navigate to="/" replace /> : <Signup onLogin={handleLogin} />} />
+            <Route path="/signup" element={<Navigate to="/login" replace />} />
             <Route path="/debug" element={<Debug />} />
             <Route path="/status" element={<Status />} />
           </Routes>
