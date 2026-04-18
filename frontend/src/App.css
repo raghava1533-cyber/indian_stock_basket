@@ -56,7 +56,7 @@ body {
   display: flex;
   align-items: center;
   position: sticky;
-  top: 0;
+  top: 30px;
   z-index: 100;
 }
 
@@ -2361,4 +2361,180 @@ body {
   background: var(--color-negative-bg);
   color: var(--color-negative-text);
   border-color: #f5c6c6;
+}
+
+/* ═══ Top Info Bar (Live Clock + Market Status) ═════════════════════ */
+.top-info-bar {
+  background: var(--color-background-secondary);
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+  padding: 0 24px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 101;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.tib-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.tib-right {
+  font-size: 9px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.clock-display {
+  display: flex;
+  align-items: center;
+  font-family: 'SF Mono', 'Fira Mono', 'Consolas', monospace;
+  white-space: nowrap;
+  gap: 0;
+}
+
+.clock-date {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.clock-sep {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin: 0 4px;
+}
+
+.clock-time {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: 0.5px;
+}
+
+.clock-tz {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+
+.market-status-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.market-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.market-status-badge.open {
+  background: #d4f0e4;
+  color: #1a6b42;
+}
+
+.market-status-badge.closed {
+  background: var(--color-negative-bg);
+  color: var(--color-negative-text);
+}
+
+.market-status-badge.preopen {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.ms-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.market-status-badge.open .ms-dot {
+  background: #1a6b42;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.market-status-badge.closed .ms-dot {
+  background: var(--color-negative-text);
+}
+
+.market-status-badge.preopen .ms-dot {
+  background: var(--color-warning-text);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.ms-label {
+  font-weight: 700;
+  font-size: 9px;
+  opacity: 0.8;
+}
+
+.ms-name {
+  font-size: 10px;
+}
+
+.ms-sub {
+  font-size: 9px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* Hide top bar on mobile */
+@media (max-width: 768px) {
+  .top-info-bar { display: none; }
+  .header { top: 0; }  /* restore header to top:0 when bar is hidden */
+}
+
+/* ═══ 52-Week Range Bar (stocks table) ═══════════════════════════ */
+.range52-wrap {
+  min-width: 100px;
+  max-width: 130px;
+}
+
+.range52-bar {
+  height: 3px;
+  background: var(--color-border-tertiary);
+  border-radius: 2px;
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.range52-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-background-primary);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.18);
+  transition: left 0.3s ease;
+}
+
+.range52-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--color-text-secondary);
+  letter-spacing: 0;
 }

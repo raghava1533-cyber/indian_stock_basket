@@ -559,8 +559,7 @@ function BasketDetail({ onReload }) {
                 <th>Company</th>
                 <th>Price</th>
                 <th>Day Change</th>
-                <th>52W High</th>
-                <th>52W Low</th>
+                <th>52W Range</th>
                 <th>PE</th>
                 <th>EPS%</th>
                 <th>Weight</th>
@@ -614,8 +613,23 @@ function BasketDetail({ onReload }) {
                           </span>
                         ) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}
                       </td>
-                      <td className="price-positive">{cur}{h52.toFixed(0)}</td>
-                      <td className="price-negative">{cur}{l52.toFixed(0)}</td>
+                      <td>
+                        {h52 > 0 && l52 > 0 && price > 0 ? (() => {
+                          const pct = Math.min(100, Math.max(0, ((price - l52) / (h52 - l52)) * 100));
+                          const dotColor = pct >= 75 ? 'var(--color-accent)' : pct <= 25 ? 'var(--color-negative)' : '#f59e0b';
+                          return (
+                            <div className="range52-wrap">
+                              <div className="range52-bar">
+                                <div className="range52-dot" style={{ left: `${pct}%`, background: dotColor }} />
+                              </div>
+                              <div className="range52-labels">
+                                <span>{cur}{l52.toFixed(0)}</span>
+                                <span>{cur}{h52.toFixed(0)}</span>
+                              </div>
+                            </div>
+                          );
+                        })() : '—'}
+                      </td>
                       <td>{stock.peRatio != null ? stock.peRatio.toFixed(1) : '—'}</td>
                       <td>{stock.earningsGrowth != null ? `${stock.earningsGrowth.toFixed(1)}%` : '—'}</td>
                       <td>{stock.weight?.toFixed(1)}%</td>
@@ -632,7 +646,7 @@ function BasketDetail({ onReload }) {
                     {/* ── Why Picked expanded row ── */}
                     {isExpanded && (
                       <tr className="why-row">
-                        <td colSpan="12">
+                        <td colSpan="11">
                           <div className="why-panel">
                             <div className="why-title">📌 Why this stock was picked</div>
                             <div className="why-pills">
@@ -707,7 +721,7 @@ function BasketDetail({ onReload }) {
             </tbody>
             <tfoot>
               <tr style={{ fontWeight: '500', background: 'var(--color-background-secondary)', fontSize: '12px' }}>
-                <td colSpan="8" style={{ textAlign: 'right' }}>Total</td>
+                <td colSpan="7" style={{ textAlign: 'right' }}>Total</td>
                 <td>100%</td>
                 <td>{activeStocks.reduce((s, st) => s + (st.quantity || 1), 0)}</td>
                 <td>{cur}{totalValue.toLocaleString(loc, { maximumFractionDigits: 0 })}</td>
