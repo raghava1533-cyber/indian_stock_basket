@@ -168,50 +168,6 @@ function App() {
               <NavLink to="/portfolio" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Portfolio</NavLink>
             </nav>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              {indices && (
-                <>
-                  <div className="index-chip">
-                    <span className="index-name">NIFTY 50</span>
-                    <span className="index-price">{indices.nifty50?.price?.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                    {indices.nifty50?.dayChangePercent != null && (
-                      <span className={`index-change ${indices.nifty50.dayChangePercent >= 0 ? 'pos' : 'neg'}`}>
-                        {indices.nifty50.dayChangePercent >= 0 ? '+' : ''}{indices.nifty50.dayChangePercent.toFixed(2)}%
-                      </span>
-                    )}
-                  </div>
-                  <div className="index-chip">
-                    <span className="index-name">BANK NIFTY</span>
-                    <span className="index-price">{indices.bankNifty?.price?.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                    {indices.bankNifty?.dayChangePercent != null && (
-                      <span className={`index-change ${indices.bankNifty.dayChangePercent >= 0 ? 'pos' : 'neg'}`}>
-                        {indices.bankNifty.dayChangePercent >= 0 ? '+' : ''}{indices.bankNifty.dayChangePercent.toFixed(2)}%
-                      </span>
-                    )}
-                  </div>
-                  {indices.sp500?.price > 0 && (
-                    <div className="index-chip">
-                      <span className="index-name">S&amp;P 500</span>
-                      <span className="index-price">{indices.sp500.price?.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-                      {indices.sp500?.dayChangePercent != null && (
-                        <span className={`index-change ${indices.sp500.dayChangePercent >= 0 ? 'pos' : 'neg'}`}>
-                          {indices.sp500.dayChangePercent >= 0 ? '+' : ''}{indices.sp500.dayChangePercent.toFixed(2)}%
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {indices.nasdaq?.price > 0 && (
-                    <div className="index-chip">
-                      <span className="index-name">NASDAQ</span>
-                      <span className="index-price">{indices.nasdaq.price?.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-                      {indices.nasdaq?.dayChangePercent != null && (
-                        <span className={`index-change ${indices.nasdaq.dayChangePercent >= 0 ? 'pos' : 'neg'}`}>
-                          {indices.nasdaq.dayChangePercent >= 0 ? '+' : ''}{indices.nasdaq.dayChangePercent.toFixed(2)}%
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
               <span className="live-badge"><span className="live-dot"></span> Live</span>
               {user ? (
                 <div className="auth-user-chip">
@@ -230,7 +186,7 @@ function App() {
 
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<Dashboard baskets={baskets} onReload={loadBaskets} />} />
+            <Route path="/" element={<Dashboard baskets={baskets} indices={indices} onReload={loadBaskets} />} />
             <Route path="/baskets" element={<Baskets baskets={baskets} onReload={loadBaskets} />} />
             <Route path="/create-basket" element={<CreateBasket />} />
             <Route path="/portfolio" element={<Portfolio user={user} />} />
