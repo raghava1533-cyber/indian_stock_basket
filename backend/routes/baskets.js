@@ -480,7 +480,7 @@ router.get('/:id/stocks', async (req, res) => {
     }
 
     const isIndian = basket.country !== 'US';
-    const INVEST_BASE = basket.country === 'US' ? 10000 : 100000;
+    const INVEST_BASE = basket.country === 'US' ? 1000 : 100000;
 
     // NSE symbols = base ticker without any suffix (e.g. MAHINDCIE, DEEPAKNITRITE)
     // Yahoo Finance Indian symbols = NSE symbol + .NS

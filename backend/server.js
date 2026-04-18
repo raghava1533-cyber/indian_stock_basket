@@ -275,6 +275,37 @@ const scheduleRebalancing = () => {
   console.log('Rebalance scheduler initialized (9:30 AM daily check)');
 };
 
+// Migrate: recalculate US basket stock quantities from $10,000 → $1,000 target
+// Safe to run on every startup: skips baskets whose totalValue is already ≤ $2,000
+const migrateUsBasketInvestTarget = async () => {
+  try {
+    const Basket = require('./models/Basket');
+    const usBAskets = await Basket.find({ country: 'US' });
+    let updated = 0;
+    for (const basket of usBAskets) {
+      if (!basket.stocks || basket.stocks.length === 0) continue;
+      // Skip if already migrated (totalValue already ≤ $2,000)
+      if ((basket.totalValue || 0) <= 2000) continue;
+      const NEW_INVEST = 1000;
+      basket.stocks = basket.stocks.map(s => {
+        const price  = s.currentPrice || 1;
+        const weight = s.weight || (100 / basket.stocks.length);
+        const qty    = Math.max(1, Math.floor((weight / 100 * NEW_INVEST) / price));
+        return { ...s.toObject ? s.toObject() : s, quantity: qty };
+      });
+      basket.totalValue        = Math.ceil(basket.stocks.reduce((sum, s) => sum + (s.currentPrice || 0) * (s.quantity || 1), 0));
+      basket.minimumInvestment = basket.totalValue;
+      await basket.save();
+      updated++;
+      console.log(`[migration] US basket "${basket.name}" totalValue → $${basket.totalValue}`);
+    }
+    if (updated > 0) console.log(`[migration] Updated ${updated} US basket(s) to $1,000 target`);
+    else console.log('[migration] US basket quantity migration: all already up to date');
+  } catch (err) {
+    console.warn('[migration] US basket quantity migration failed:', err.message);
+  }
+};
+
 // Migrate: replace stocks that have no reliable data source with working alternatives
 const migrateReplaceUnfetchableStocks = async () => {
   const REPLACEMENTS = [
@@ -431,6 +462,9 @@ const startServer = async () => {
 
     console.log('Running stock replacement migration...');
     await migrateReplaceUnfetchableStocks();
+
+    console.log('Running US basket invest-target migration ($10k → $1k)...');
+    await migrateUsBasketInvestTarget();
     
     console.log('Populating baskets with stocks...');
     await populateBaskets();
