@@ -332,6 +332,60 @@ const migrateReplaceUnfetchableStocks = async () => {
       newCompanyName: 'Olectra Greentech Limited',
       newPrice: 1225,
     },
+    {
+      oldTicker: 'SQ',
+      newTicker: 'AFRM',
+      newCompanyName: 'Affirm Holdings',
+      newPrice: 65,
+    },
+    {
+      oldTicker: 'MMC',
+      newTicker: 'AJG',
+      newCompanyName: 'Arthur J. Gallagher & Co.',
+      newPrice: 222,
+    },
+    {
+      oldTicker: 'NOVA',
+      newTicker: 'CEG',
+      newCompanyName: 'Constellation Energy',
+      newPrice: 296,
+    },
+    {
+      oldTicker: 'AY',
+      newTicker: 'BEP',
+      newCompanyName: 'Brookfield Renewable Partners',
+      newPrice: 35,
+    },
+    {
+      oldTicker: 'K',
+      newTicker: 'CPB',
+      newCompanyName: "Campbell's Company",
+      newPrice: 21,
+    },
+    {
+      oldTicker: 'X',
+      newTicker: 'WOR',
+      newCompanyName: 'Worthington Enterprises',
+      newPrice: 55,
+    },
+    {
+      oldTicker: 'SCHN',
+      newTicker: 'MT',
+      newCompanyName: 'ArcelorMittal S.A.',
+      newPrice: 62,
+    },
+    {
+      oldTicker: 'HAYN',
+      newTicker: 'KALU',
+      newCompanyName: 'Kaiser Aluminum Corp.',
+      newPrice: 148,
+    },
+    {
+      oldTicker: 'USM',
+      newTicker: 'SHEN',
+      newCompanyName: 'Shenandoah Telecommunications',
+      newPrice: 16,
+    },
   ];
 
   for (const rep of REPLACEMENTS) {
