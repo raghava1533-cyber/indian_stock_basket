@@ -16,21 +16,32 @@ const rebalanceHistorySchema = new mongoose.Schema({
     added: [{
       ticker: String,
       symbol: String,
+      companyName: String,
       quantity: Number,
+      buyPrice: Number,
+      addedDate: Date,
       reason: String,
       marketCapRank: Number
     }],
     removed: [{
       ticker: String,
       symbol: String,
+      companyName: String,
       quantity: Number,
+      buyPrice: Number,
       salePrice: Number,
+      addedDate: Date,
       reason: String
     }],
     partialRemoved: [{
       ticker: String,
       symbol: String,
+      companyName: String,
       quantityRemoved: Number,
+      quantityKept: Number,
+      buyPrice: Number,
+      salePrice: Number,
+      addedDate: Date,
       reason: String
     }],
     updated: [{
