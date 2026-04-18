@@ -2132,6 +2132,7 @@ const mergeWithFallback = (universeDefs, liveResults) => {
         sma50:             null,
         sma200:            null,
         lastUpdated:       new Date(),
+        _isStaticFallback: true,  // live fetch failed — may be delisted
       };
     }
 
@@ -2200,7 +2201,13 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
 
     const scored = enrichedStocks.map(stock => {
       const scores = scoreStock(stock);
-      return { ...stock, score: scores.total, qualityScores: scores };
+      // Penalize stocks running on static fallback (live Yahoo fetch failed).
+      // This prevents delisted/acquired stocks from ranking into the basket.
+      const fallbackPenalty = stock._isStaticFallback ? 25 : 0;
+      if (fallbackPenalty > 0) {
+        console.warn(`[rebalanceService] ${stock.ticker} using static fallback — applying -25 score penalty`);
+      }
+      return { ...stock, score: Math.max(0, scores.total - fallbackPenalty), qualityScores: scores };
     });
     scored.sort((a, b) => b.score - a.score);
     const top15 = scored.slice(0, 15);
