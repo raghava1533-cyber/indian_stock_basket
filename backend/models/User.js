@@ -63,6 +63,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '09:30' // 9:30 AM
   },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
   createdDate: {
     type: Date,
     default: Date.now

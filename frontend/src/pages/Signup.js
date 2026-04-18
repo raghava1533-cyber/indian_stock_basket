@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 
 function Signup({ onLogin }) {
@@ -9,7 +9,7 @@ function Signup({ onLogin }) {
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,18 +20,34 @@ function Signup({ onLogin }) {
     }
     setLoading(true);
     try {
-      const res = await authAPI.signup(name, email, password);
-      localStorage.setItem('authToken', res.data.token);
-      localStorage.setItem('authUser', JSON.stringify(res.data.user));
-      localStorage.setItem('userEmail', res.data.user.email);
-      onLogin(res.data.user);
-      navigate('/');
+      await authAPI.signup(name, email, password);
+      setSubmitted(true);
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (submitted) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card" style={{ textAlign: 'center' }}>
+          <div className="auth-logo">
+            <span className="logo-dot"></span> SmartBasket India
+          </div>
+          <div style={{ fontSize: '40px', margin: '20px 0 12px' }}>⏳</div>
+          <h2 className="auth-title">Request Submitted</h2>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '14px', lineHeight: '1.6' }}>
+            Your account request has been received.<br />
+            An admin will review and approve your access shortly.<br />
+            You will be able to login once approved.
+          </p>
+          <Link to="/login" className="btn btn-primary" style={{ marginTop: '24px', display: 'inline-block' }}>Back to Login</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-page">

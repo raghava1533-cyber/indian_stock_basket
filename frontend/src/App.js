@@ -7,6 +7,7 @@ import BasketDetail from './pages/BasketDetail';
 import Debug from './pages/Debug';
 import Status from './pages/Status';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import CreateBasket from './pages/CreateBasket';
 import Disclaimer from './components/Disclaimer';
 import { basketAPI } from './services/api';
@@ -185,6 +186,7 @@ function App() {
               ) : (
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <NavLink to="/login" className="btn btn-sm">Login</NavLink>
+                  <NavLink to="/signup" className="btn btn-primary btn-sm">Request Access</NavLink>
                 </div>
               )}
             </div>
@@ -199,7 +201,7 @@ function App() {
             <Route path="/portfolio" element={<Portfolio user={user} />} />
             <Route path="/basket/:id" element={<BasketDetail onReload={loadBaskets} />} />
             <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
-            <Route path="/signup" element={<Navigate to="/login" replace />} />
+            <Route path="/signup" element={user ? <Navigate to="/" replace /> : <Signup onLogin={handleLogin} />} />
             <Route path="/debug" element={<Debug />} />
             <Route path="/status" element={<Status />} />
           </Routes>

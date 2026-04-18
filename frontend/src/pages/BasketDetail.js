@@ -557,6 +557,7 @@ function BasketDetail({ onReload }) {
             <a href="/login" className="btn btn-primary" style={{ marginTop: '16px', display: 'inline-block' }}>Login to continue</a>
           </div>
         ) : (
+        <>
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           {liveRefreshing && <span className="live-dot-pulse" />}
           <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>
@@ -743,6 +744,7 @@ function BasketDetail({ onReload }) {
           </table>
         </div>
         <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '8px', textAlign: 'right' }}>Click any row to see why this stock was picked</p>
+        </>
         )}
       </div>
 
