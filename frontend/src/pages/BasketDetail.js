@@ -758,6 +758,19 @@ function BasketDetail({ onReload }) {
                                 {stock.targetHighPrice != null && <span> | High: {cur}{Math.round(stock.targetHighPrice).toLocaleString(loc)}</span>}
                                 {stock.targetLowPrice != null && <span> | Low: {cur}{Math.round(stock.targetLowPrice).toLocaleString(loc)}</span>}
                                 {stock.numberOfAnalysts != null && <span> | {stock.numberOfAnalysts} analyst{stock.numberOfAnalysts > 1 ? 's' : ''}</span>}
+                                {/* Valuation label */}
+                                {stock.currentPrice > 0 && (() => {
+                                  const diff = (stock.currentPrice - stock.targetMeanPrice) / stock.targetMeanPrice;
+                                  let label = '', color = '';
+                                  if (diff > 0.10) { label = 'Overvalued'; color = '#D85A30'; }
+                                  else if (diff < -0.10) { label = 'Undervalued'; color = '#1D9E75'; }
+                                  else { label = 'Fair Value'; color = '#f59e0b'; }
+                                  return (
+                                    <span style={{ marginLeft: '18px', fontWeight: 600, color }}>
+                                      {label} {`(${diff > 0 ? '+' : ''}${(diff * 100).toFixed(1)}%)`}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                             )}
                             {stock.reason && (
