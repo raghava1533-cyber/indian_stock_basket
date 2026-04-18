@@ -41,9 +41,16 @@ function getMarketStatus(now) {
   const et    = toZone('America/New_York');
   const etM   = hm(et);
   const etDow = et.getDay();
+  // Convert NYSE open (9:30 AM ET = 570 min) to IST dynamically (accounts for DST)
+  const _etOpenM  = (570 + istM - etM + 1440) % 1440;
+  const _etHour   = Math.floor(_etOpenM / 60);
+  const _etH12    = _etHour % 12 || 12;
+  const _etAmPm   = _etHour >= 12 ? 'PM' : 'AM';
+  const _etMinStr = String(_etOpenM % 60).padStart(2, '0');
+  const usOpenIST = `${_etH12}:${_etMinStr} ${_etAmPm} IST`;
   let us;
   if (etDow === 0 || etDow === 6) {
-    us = { status: 'CLOSED', cls: 'closed', sub: 'Opens Mon 9:30 AM ET' };
+    us = { status: 'CLOSED', cls: 'closed', sub: `Opens Mon ${usOpenIST}` };
   } else if (etM < 570) {
     const d = 570 - etM;
     us = { status: 'PRE-MARKET', cls: 'preopen', sub: `Opens in ${Math.floor(d/60)}h ${d%60}m` };
@@ -51,7 +58,7 @@ function getMarketStatus(now) {
     const d = 960 - etM;
     us = { status: 'OPEN', cls: 'open', sub: `Closes in ${Math.floor(d/60)}h ${d%60}m` };
   } else {
-    us = { status: 'CLOSED', cls: 'closed', sub: etDow === 5 ? 'Opens Mon 9:30 AM ET' : 'Opens tomorrow 9:30 AM ET' };
+    us = { status: 'CLOSED', cls: 'closed', sub: etDow === 5 ? `Opens Mon ${usOpenIST}` : `Opens tomorrow ${usOpenIST}` };
   }
 
   return { nse, us };
