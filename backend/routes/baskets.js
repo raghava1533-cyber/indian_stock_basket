@@ -983,35 +983,4 @@ router.get('/:id/benchmark', async (req, res) => {
   }
 });
 
-// ─── ONE-TIME ADMIN: clear rebalance history & reset basket launch dates ─────
-const RebalanceHistory = require('../models/RebalanceHistory');
-router.post('/admin/reset-history', async (req, res) => {
-  const secret = req.headers['x-admin-secret'];
-  if (secret !== (process.env.ADMIN_SECRET || 'smartbasket-reset-2026')) {
-    return res.status(403).json({ message: 'Forbidden' });
-  }
-  try {
-    const today = new Date();
-    const nextReb = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-    const histResult = await RebalanceHistory.deleteMany({});
-
-    const basketResult = await Basket.updateMany({}, {
-      $set: {
-        lastRebalanceDate: today,
-        nextRebalanceDate: nextReb,
-      }
-    });
-
-    res.json({
-      message: 'Reset complete',
-      rebalanceHistoryDeleted: histResult.deletedCount,
-      basketsUpdated: basketResult.modifiedCount,
-      newLaunchDate: today.toISOString().slice(0, 10),
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
 module.exports = router;
