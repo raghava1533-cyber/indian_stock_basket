@@ -37,11 +37,11 @@ function getMarketStatus(now) {
     nse = { status: 'CLOSED', cls: 'closed', sub: istDow === 5 ? 'Opens Mon 9:15 AM' : 'Opens tomorrow 9:15 AM' };
   }
 
-  // NYSE / NASDAQ — New York Eastern time
+  // NASDAQ — New York Eastern time
   const et    = toZone('America/New_York');
   const etM   = hm(et);
   const etDow = et.getDay();
-  // Convert NYSE open (9:30 AM ET = 570 min) to IST dynamically (accounts for DST)
+  // Convert NASDAQ open (9:30 AM ET = 570 min) to IST dynamically (accounts for DST)
   const _etOpenM  = (570 + istM - etM + 1440) % 1440;
   const _etHour   = Math.floor(_etOpenM / 60);
   const _etH12    = _etHour % 12 || 12;
@@ -146,12 +146,6 @@ function App() {
                 <span className="ms-name">{nseStatus.status}</span>
                 <span className="ms-sub"> · {nseStatus.sub}</span>
               </div>
-              <div className={`market-status-badge ${usStatus.cls}`}>
-                <span className="ms-dot" />
-                <span className="ms-label">NYSE </span>
-                <span className="ms-name">{usStatus.status}</span>
-                <span className="ms-sub"> · {usStatus.sub}</span>
-              </div>
             </div>
           </div>
           <div className="tib-center">
@@ -161,6 +155,12 @@ function App() {
               <span className="clock-time">{istTimeStr}</span>
               <span className="clock-tz"> IST</span>
             </span>
+            <div className={`market-status-badge ${usStatus.cls} tib-nasdaq`}>
+              <span className="ms-dot" />
+              <span className="ms-label">NASDAQ </span>
+              <span className="ms-name">{usStatus.status}</span>
+              <span className="ms-sub"> · {usStatus.sub}</span>
+            </div>
           </div>
           <div className="tib-right">Prices delayed · Not investment advice</div>
         </div>
