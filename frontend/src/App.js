@@ -7,7 +7,6 @@ import BasketDetail from './pages/BasketDetail';
 import Debug from './pages/Debug';
 import Status from './pages/Status';
 import Login from './pages/Login';
-import Signup from './pages/Signup';
 import CreateBasket from './pages/CreateBasket';
 import Disclaimer from './components/Disclaimer';
 import { basketAPI } from './services/api';
