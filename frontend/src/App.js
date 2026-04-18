@@ -139,13 +139,11 @@ function App() {
         {/* ═══ Top Info Bar: clock + market status ═══ */}
         <div className="top-info-bar">
           <div className="tib-left">
-            <div className="market-status-group">
-              <div className={`market-status-badge ${nseStatus.cls}`}>
-                <span className="ms-dot" />
-                <span className="ms-label">NSE </span>
-                <span className="ms-name">{nseStatus.status}</span>
-                <span className="ms-sub"> · {nseStatus.sub}</span>
-              </div>
+            <div className={`market-status-badge ${nseStatus.cls}`}>
+              <span className="ms-dot" />
+              <span className="ms-label">NSE </span>
+              <span className="ms-name">{nseStatus.status}</span>
+              <span className="ms-sub"> · {nseStatus.sub}</span>
             </div>
           </div>
           <div className="tib-center">
@@ -155,7 +153,9 @@ function App() {
               <span className="clock-time">{istTimeStr}</span>
               <span className="clock-tz"> IST</span>
             </span>
-            <div className={`market-status-badge ${usStatus.cls} tib-nasdaq`}>
+          </div>
+          <div className="tib-right">
+            <div className={`market-status-badge ${usStatus.cls}`}>
               <span className="ms-dot" />
               <span className="ms-label">NASDAQ </span>
               <span className="ms-name">{usStatus.status}</span>
