@@ -9,6 +9,11 @@ const emailService = require('../services/emailService');
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme_secret';
 
+// ─── In-memory cache for /live-summary (60 s TTL) ────────────────────────────
+// Prevents hammering Yahoo Finance on every dashboard page load/navigation.
+let _liveSummaryCache = { data: null, updatedAt: 0 };
+const LIVE_SUMMARY_TTL = 60 * 1000; // 60 seconds
+
 // ─── Auth middleware (optional) ──────────────────────────────────────────────
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -268,6 +273,11 @@ router.get('/fix-pe-eps', async (req, res) => {
 // Live day-change summary for all baskets (used by cards on Dashboard/Explore)
 router.get('/live-summary', async (req, res) => {
   try {
+    // Return cached result if it is still fresh
+    if (_liveSummaryCache.data && (Date.now() - _liveSummaryCache.updatedAt) < LIVE_SUMMARY_TTL) {
+      return res.json(_liveSummaryCache.data);
+    }
+
     const baskets = await Basket.find();
     const allTickers = [...new Set(baskets.flatMap(b => b.stocks.map(s => s.ticker)))];
     const dayChanges = await getBatchDayChanges(allTickers);
@@ -292,6 +302,8 @@ router.get('/live-summary', async (req, res) => {
       }
       summary[basket._id] = coveredWeight > 0 ? weightedSum : null;
     }
+    // Store in cache
+    _liveSummaryCache = { data: summary, updatedAt: Date.now() };
     res.json(summary);
   } catch (error) {
     res.status(500).json({ message: error.message });

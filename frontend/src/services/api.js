@@ -75,7 +75,23 @@ export const basketAPI = {
   }),
   getRebalanceSummary: (id) => api.get(`/baskets/${id}/rebalance-summary`),
   getBasketStocks: (id) => api.get(`/baskets/${id}/stocks`),
-  getLiveSummary: () => api.get('/baskets/live-summary'),
+  getLiveSummary: (() => {
+    // Module-level cache — survives React navigation but not full page reload.
+    // 90 s TTL: navigating Dashboard → Baskets → Dashboard within 90 s is instant.
+    let _cache = null;
+    let _cacheTs = 0;
+    const TTL = 90 * 1000;
+    return (force = false) => {
+      if (!force && _cache && (Date.now() - _cacheTs) < TTL) {
+        return Promise.resolve({ data: _cache });
+      }
+      return api.get('/baskets/live-summary').then(res => {
+        _cache = res.data;
+        _cacheTs = Date.now();
+        return res;
+      });
+    };
+  })(),
   getBasketNews: (id) => api.get(`/baskets/${id}/news`),
   getBasketBenchmark: (id, tf) => api.get(`/baskets/${id}/benchmark${tf ? `?tf=${tf}` : ''}`),
   getMarketIndices: () => api.get('/market/indices'),
