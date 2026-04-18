@@ -220,6 +220,17 @@ function BasketDetail({ onReload }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedRow, setExpandedRow] = useState(null);
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState('desc');
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('desc');
+    }
+  };
   const [message, setMessage] = useState('');
   const [rebalanceHistory, setRebalanceHistory] = useState([]);
   const [news, setNews] = useState([]);
@@ -371,6 +382,22 @@ function BasketDetail({ onReload }) {
 
   const activeStocks = stocks.filter(s => s.status === 'active' || !s.status);
   const totalValue = activeStocks.reduce((sum, s) => sum + ((s.currentPrice || 0) * (s.quantity || 1)), 0);
+
+  const sortedStocks = sortKey ? [...activeStocks].sort((a, b) => {
+    let av, bv;
+    if (sortKey === 'company') { av = (a.companyName || a.ticker || '').toLowerCase(); bv = (b.companyName || b.ticker || '').toLowerCase(); }
+    else if (sortKey === 'price') { av = a.currentPrice || 0; bv = b.currentPrice || 0; }
+    else if (sortKey === 'change') { av = a.dayChangePercent ?? a.dayChange ?? -Infinity; bv = b.dayChangePercent ?? b.dayChange ?? -Infinity; }
+    else if (sortKey === 'pe') { av = a.peRatio ?? -Infinity; bv = b.peRatio ?? -Infinity; }
+    else if (sortKey === 'eps') { av = a.earningsGrowth ?? -Infinity; bv = b.earningsGrowth ?? -Infinity; }
+    else if (sortKey === 'weight') { av = a.weight ?? 0; bv = b.weight ?? 0; }
+    else if (sortKey === 'qty') { av = a.quantity || 1; bv = b.quantity || 1; }
+    else if (sortKey === 'value') { av = (a.currentPrice || 0) * (a.quantity || 1); bv = (b.currentPrice || 0) * (b.quantity || 1); }
+    else if (sortKey === 'score') { av = a.score ?? -Infinity; bv = b.score ?? -Infinity; }
+    else { av = 0; bv = 0; }
+    if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    return sortDir === 'asc' ? av - bv : bv - av;
+  }) : activeStocks;
 
   // Derive changes from rebalance history
   const latestHistory = rebalanceHistory[0];
@@ -577,21 +604,24 @@ function BasketDetail({ onReload }) {
           <table className="stocks-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Company</th>
-                <th>Price</th>
-                <th>Day Change</th>
-                <th>52W Range</th>
-                <th>PE</th>
-                <th>EPS%</th>
-                <th>Weight</th>
-                <th>Qty</th>
-                <th>Value</th>
-                <th>Score</th>
+                {[['#', null], ['Company', 'company'], ['Price', 'price'], ['Day Change', 'change'], ['52W Range', null], ['PE', 'pe'], ['EPS%', 'eps'], ['Weight', 'weight'], ['Qty', 'qty'], ['Value', 'value'], ['Score', 'score']].map(([label, key]) => (
+                  <th
+                    key={label}
+                    onClick={key ? () => handleSort(key) : undefined}
+                    style={key ? { cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' } : {}}
+                    title={key ? `Sort by ${label}` : undefined}
+                  >
+                    {label}{key && (
+                      <span style={{ marginLeft: '4px', opacity: sortKey === key ? 1 : 0.3, fontSize: '10px' }}>
+                        {sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : '▼'}
+                      </span>
+                    )}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {activeStocks.map((stock, idx) => {
+              {sortedStocks.map((stock, idx) => {
                 const price = stock.currentPrice || 0;
                 const h52 = stock.high52Week || 0;
                 const l52 = stock.low52Week || 0;
