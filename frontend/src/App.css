@@ -563,6 +563,34 @@ body {
   overflow: hidden;
 }
 
+.stocks-login-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.stocks-gate-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+
+.stocks-gate-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.stocks-gate-sub {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  max-width: 380px;
+  line-height: 1.5;
+}
+
 .stocks-table {
   width: 100%;
   border-collapse: collapse;

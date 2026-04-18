@@ -549,6 +549,14 @@ function BasketDetail({ onReload }) {
 
       {/* ═══ STOCKS TAB ═══ */}
       <div className={`tab-content ${activeTab === 'stocks' ? 'active' : ''}`}>
+        {!localStorage.getItem('authToken') ? (
+          <div className="stocks-login-gate">
+            <div className="stocks-gate-icon">🔒</div>
+            <div className="stocks-gate-title">Login to view stocks</div>
+            <div className="stocks-gate-sub">Sign in to see the full list of stocks, live prices, and portfolio weightings in this basket.</div>
+            <a href="/login" className="btn btn-primary" style={{ marginTop: '16px', display: 'inline-block' }}>Login to continue</a>
+          </div>
+        ) : (
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           {liveRefreshing && <span className="live-dot-pulse" />}
           <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>
@@ -735,6 +743,7 @@ function BasketDetail({ onReload }) {
           </table>
         </div>
         <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '8px', textAlign: 'right' }}>Click any row to see why this stock was picked</p>
+        )}
       </div>
 
       {/* ═══ NEWS TAB ═══ */}
