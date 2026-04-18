@@ -214,7 +214,7 @@ function Baskets({ baskets, onReload }) {
                 </Link>
                 <div className="sc-card-action">
                   <span className="sc-card-date">{createdDate ? `Since ${createdDate}` : ''}</span>
-                  <span className="sc-explore-link">View →</span>
+                  <Link to={`/basket/${basket._id}`} className="sc-explore-link">View →</Link>
                 </div>
               </div>
             );
