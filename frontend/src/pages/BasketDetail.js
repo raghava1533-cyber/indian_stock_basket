@@ -236,7 +236,7 @@ function BasketDetail({ onReload }) {
   const isUS = (basket?.country || 'IN') === 'US';
   const cur = isUS ? '$' : '₹';
   const loc = isUS ? 'en-US' : 'en-IN';
-  const investBase = isUS ? 10000 : 100000;
+  const investBase = isUS ? 1000 : 100000;
   const capUnit = isUS ? 'B' : 'Cr';
 
   const loadBasketData = useCallback(async () => {

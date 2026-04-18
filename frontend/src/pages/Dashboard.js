@@ -107,7 +107,7 @@ function Dashboard({ baskets, onReload }) {
   // Show user-created baskets separately, filtered by country
   const userBaskets = baskets.filter(b => b.isUserCreated && b.createdBy === email && (b.country || 'IN') === country);
   const currencySymbol = country === 'US' ? '$' : '₹';
-  const investBase = country === 'US' ? 10000 : 100000;
+  const investBase = country === 'US' ? 1000 : 100000;
   const locale = country === 'US' ? 'en-US' : 'en-IN';
   const byLabel = country === 'US' ? 'by SmartBasket US' : 'by SmartBasket India';
 

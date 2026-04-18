@@ -89,7 +89,7 @@ function Baskets({ baskets, onReload }) {
     return true;
   });
   const currencySymbol = country === 'US' ? '$' : '₹';
-  const investBase = country === 'US' ? 10000 : 100000;
+  const investBase = country === 'US' ? 1000 : 100000;
   const locale = country === 'US' ? 'en-US' : 'en-IN';
 
   return (

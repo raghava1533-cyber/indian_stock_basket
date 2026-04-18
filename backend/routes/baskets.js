@@ -940,6 +940,24 @@ router.get('/:id/benchmark', async (req, res) => {
       }
     } catch (_) {}
 
+    // Fallback for new baskets (< 2 chart candles): compute return from live prices vs stored buy prices
+    if (basketReturnPct === 0 && activeStocks.length > 0) {
+      try {
+        const tickersForLive = activeStocks.map(s => s.ticker);
+        const liveQuotes = await getBatchDayChanges(tickersForLive);
+        let totalBought = 0, totalNow = 0;
+        for (const s of activeStocks) {
+          const livePrice = liveQuotes[s.ticker]?.price || s.currentPrice;
+          const buyP = s.buyPrice || s.currentPrice;
+          totalBought += buyP * (s.quantity || 1);
+          totalNow   += livePrice * (s.quantity || 1);
+        }
+        if (totalBought > 0) {
+          basketReturnPct = Number(((totalNow - totalBought) / totalBought * 100).toFixed(2));
+        }
+      } catch (_) {}
+    }
+
     res.json({
       basket: {
         name: basket.name,

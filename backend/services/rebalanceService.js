@@ -2145,7 +2145,7 @@ const mergeWithFallback = (universeDefs, liveResults) => {
 const selectTopStocks = (category) => {
   const universe = STOCK_UNIVERSE[category] || STOCK_UNIVERSE.largeCap;
   const isUS = category.startsWith('usa_');
-  const investAmount = isUS ? 10000 : 100000;
+  const investAmount = isUS ? 1000 : 100000;
   const scored = universe.map(def => {
     const fb = STATIC_FALLBACK[def.ticker] || {};
     const stock = { ...def, ...fb };
@@ -2215,7 +2215,7 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
     const top15 = scored.slice(0, 15);
     const qualityWeights = computeQualityWeights(top15);
     const isUS = category.startsWith('usa_');
-    const investAmount = isUS ? 10000 : 100000;
+    const investAmount = isUS ? 1000 : 100000;
     const quantities = computeQuantities(top15, qualityWeights, investAmount);
 
     const newStocks = top15.map((stock, idx) => ({
