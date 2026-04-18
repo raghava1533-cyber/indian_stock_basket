@@ -791,51 +791,121 @@ function BasketDetail({ onReload }) {
             <div className="changes-section">
               <h3 className="changes-title added">✅ Added Stocks ({addedStocks.length})</h3>
               {addedStocks.length > 0 ? (
-                <div className="changes-list">
-                  {addedStocks.map((s, i) => (
-                    <div key={i} className="change-item added">
-                      <div className="change-item-top">
-                        <span className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</span>
-                        <span className="change-detail">Qty: {s.quantity || 1} shares</span>
-                      </div>
-                      <div className="change-reason">{s.reason || 'Quality score qualified'}</div>
-                    </div>
-                  ))}
-                </div>
+                <table className="changes-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Stock</th>
+                      <th>Buy Price</th>
+                      <th>Qty to Buy</th>
+                      <th>Total Cost</th>
+                      <th>Date Added</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {addedStocks.map((s, i) => {
+                      const price = s.buyPrice || 0;
+                      const qty   = s.quantity || 1;
+                      return (
+                        <tr key={i}>
+                          <td>{i + 1}</td>
+                          <td className="changes-company">{s.companyName || s.ticker?.replace('.NS', '')}</td>
+                          <td>{price > 0 ? `${cur}${price.toFixed(2)}` : '—'}</td>
+                          <td>{qty}</td>
+                          <td>{price > 0 ? `${cur}${(price * qty).toLocaleString(loc, { maximumFractionDigits: 0 })}` : '—'}</td>
+                          <td>{s.addedDate ? new Date(s.addedDate).toLocaleDateString(loc) : new Date(latestHistory.rebalanceDate).toLocaleDateString(loc)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               ) : <p className="no-changes">No stocks added</p>}
             </div>
 
             <div className="changes-section">
               <h3 className="changes-title removed">❌ Removed Stocks ({removedStocks.length})</h3>
               {removedStocks.length > 0 ? (
-                <div className="changes-list">
-                  {removedStocks.map((s, i) => (
-                    <div key={i} className="change-item removed">
-                      <div className="change-item-top">
-                        <span className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</span>
-                        <span className="change-detail">Sold {s.quantity || 'all'} shares{s.salePrice ? ` at ${cur}${s.salePrice.toFixed(2)}` : ''}</span>
-                      </div>
-                      <div className="change-reason">{s.reason || 'Quality score dropped'}</div>
-                    </div>
-                  ))}
-                </div>
+                <table className="changes-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Stock</th>
+                      <th>Buy Price</th>
+                      <th>Exit Price</th>
+                      <th>Qty</th>
+                      <th>P&amp;L</th>
+                      <th>Date Added</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {removedStocks.map((s, i) => {
+                      const buyP  = s.buyPrice  || 0;
+                      const sellP = s.salePrice || 0;
+                      const qty   = s.quantity  || 1;
+                      const pnl   = (sellP - buyP) * qty;
+                      const pnlPct = buyP > 0 ? ((sellP - buyP) / buyP * 100) : 0;
+                      const gain  = pnl >= 0;
+                      return (
+                        <tr key={i}>
+                          <td>{i + 1}</td>
+                          <td className="changes-company">{s.companyName || s.ticker?.replace('.NS', '')}</td>
+                          <td>{buyP > 0  ? `${cur}${buyP.toFixed(2)}`  : '—'}</td>
+                          <td>{sellP > 0 ? `${cur}${sellP.toFixed(2)}` : '—'}</td>
+                          <td>{qty}</td>
+                          <td style={{ color: gain ? 'var(--color-green, #16a34a)' : 'var(--color-red, #dc2626)', fontWeight: '600' }}>
+                            {buyP > 0 ? `${gain ? '+' : ''}${cur}${Math.abs(pnl).toLocaleString(loc, { maximumFractionDigits: 0 })} (${gain ? '+' : ''}${pnlPct.toFixed(1)}%)` : '—'}
+                          </td>
+                          <td>{s.addedDate ? new Date(s.addedDate).toLocaleDateString(loc) : '—'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               ) : <p className="no-changes">No stocks removed</p>}
             </div>
 
             <div className="changes-section">
               <h3 className="changes-title partial">⚠️ Partially Removed ({partialStocks.length})</h3>
               {partialStocks.length > 0 ? (
-                <div className="changes-list">
-                  {partialStocks.map((s, i) => (
-                    <div key={i} className="change-item partial">
-                      <div className="change-item-top">
-                        <span className="change-ticker">{s.companyName || s.ticker?.replace('.NS', '')}</span>
-                        <span className="change-detail">Reduced by {s.quantityRemoved} shares</span>
-                      </div>
-                      <div className="change-reason">{s.reason || 'Weight rebalanced'}</div>
-                    </div>
-                  ))}
-                </div>
+                <table className="changes-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Stock</th>
+                      <th>Buy Price</th>
+                      <th>Exit Price</th>
+                      <th>Qty Sold</th>
+                      <th>Qty Kept</th>
+                      <th>P&amp;L on Sold</th>
+                      <th>Date Added</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {partialStocks.map((s, i) => {
+                      const buyP  = s.buyPrice  || 0;
+                      const sellP = s.salePrice || 0;
+                      const qtySold = s.quantityRemoved || 0;
+                      const qtyKept = s.quantityKept    || 0;
+                      const pnl   = (sellP - buyP) * qtySold;
+                      const pnlPct = buyP > 0 ? ((sellP - buyP) / buyP * 100) : 0;
+                      const gain  = pnl >= 0;
+                      return (
+                        <tr key={i}>
+                          <td>{i + 1}</td>
+                          <td className="changes-company">{s.companyName || s.ticker?.replace('.NS', '')}</td>
+                          <td>{buyP > 0  ? `${cur}${buyP.toFixed(2)}`  : '—'}</td>
+                          <td>{sellP > 0 ? `${cur}${sellP.toFixed(2)}` : '—'}</td>
+                          <td>{qtySold}</td>
+                          <td>{qtyKept}</td>
+                          <td style={{ color: gain ? 'var(--color-green, #16a34a)' : 'var(--color-red, #dc2626)', fontWeight: '600' }}>
+                            {buyP > 0 ? `${gain ? '+' : ''}${cur}${Math.abs(pnl).toLocaleString(loc, { maximumFractionDigits: 0 })} (${gain ? '+' : ''}${pnlPct.toFixed(1)}%)` : '—'}
+                          </td>
+                          <td>{s.addedDate ? new Date(s.addedDate).toLocaleDateString(loc) : '—'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               ) : <p className="no-changes">No partial removals</p>}
             </div>
           </>
@@ -1072,7 +1142,7 @@ function BasketDetail({ onReload }) {
           rebalanceHistory.map((entry, idx) => (
             <div key={idx} className="history-item">
               <div className="history-date">
-                {new Date(entry.rebalanceDate).toLocaleDateString()} at{' '}
+                {new Date(entry.rebalanceDate).toLocaleDateString(loc)} at{' '}
                 {new Date(entry.rebalanceDate).toLocaleTimeString()}
               </div>
               <div className="history-changes">{entry.reason}</div>
@@ -1084,14 +1154,92 @@ function BasketDetail({ onReload }) {
                 )}
                 <span className="history-stat emails">📧 {entry.emailsSent || 0} emails</span>
               </div>
+
               {entry.changes?.added?.length > 0 && (
-                <div style={{ marginTop: '8px', fontSize: '12px', color: '#4caf50' }}>
-                  Added: {entry.changes.added.map(s => s.companyName || s.ticker).join(', ')}
+                <div style={{ marginTop: '12px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#16a34a', marginBottom: '6px' }}>✅ Added</div>
+                  <table className="changes-table" style={{ fontSize: '12px' }}>
+                    <thead><tr><th>Stock</th><th>Buy Price</th><th>Qty</th><th>Total</th><th>Date</th></tr></thead>
+                    <tbody>
+                      {entry.changes.added.map((s, i) => {
+                        const price = s.buyPrice || 0;
+                        const qty   = s.quantity || 1;
+                        return (
+                          <tr key={i}>
+                            <td className="changes-company">{s.companyName || s.ticker?.replace('.NS', '')}</td>
+                            <td>{price > 0 ? `${cur}${price.toFixed(2)}` : '—'}</td>
+                            <td>{qty}</td>
+                            <td>{price > 0 ? `${cur}${(price * qty).toLocaleString(loc, { maximumFractionDigits: 0 })}` : '—'}</td>
+                            <td>{s.addedDate ? new Date(s.addedDate).toLocaleDateString(loc) : new Date(entry.rebalanceDate).toLocaleDateString(loc)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
+
               {entry.changes?.removed?.length > 0 && (
-                <div style={{ marginTop: '4px', fontSize: '12px', color: '#f44336' }}>
-                  Removed: {entry.changes.removed.map(s => s.companyName || s.ticker).join(', ')}
+                <div style={{ marginTop: '10px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#dc2626', marginBottom: '6px' }}>❌ Removed</div>
+                  <table className="changes-table" style={{ fontSize: '12px' }}>
+                    <thead><tr><th>Stock</th><th>Buy Price</th><th>Exit Price</th><th>Qty</th><th>P&amp;L</th><th>Date Added</th></tr></thead>
+                    <tbody>
+                      {entry.changes.removed.map((s, i) => {
+                        const buyP  = s.buyPrice  || 0;
+                        const sellP = s.salePrice || 0;
+                        const qty   = s.quantity  || 1;
+                        const pnl   = (sellP - buyP) * qty;
+                        const pnlPct = buyP > 0 ? ((sellP - buyP) / buyP * 100) : 0;
+                        const gain  = pnl >= 0;
+                        return (
+                          <tr key={i}>
+                            <td className="changes-company">{s.companyName || s.ticker?.replace('.NS', '')}</td>
+                            <td>{buyP > 0  ? `${cur}${buyP.toFixed(2)}`  : '—'}</td>
+                            <td>{sellP > 0 ? `${cur}${sellP.toFixed(2)}` : '—'}</td>
+                            <td>{qty}</td>
+                            <td style={{ color: gain ? '#16a34a' : '#dc2626', fontWeight: '600' }}>
+                              {buyP > 0 ? `${gain ? '+' : ''}${cur}${Math.abs(pnl).toLocaleString(loc, { maximumFractionDigits: 0 })} (${gain ? '+' : ''}${pnlPct.toFixed(1)}%)` : '—'}
+                            </td>
+                            <td>{s.addedDate ? new Date(s.addedDate).toLocaleDateString(loc) : '—'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {(entry.changes?.partialRemoved?.length || 0) > 0 && (
+                <div style={{ marginTop: '10px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#b45309', marginBottom: '6px' }}>⚠️ Partial</div>
+                  <table className="changes-table" style={{ fontSize: '12px' }}>
+                    <thead><tr><th>Stock</th><th>Buy Price</th><th>Exit Price</th><th>Sold</th><th>Kept</th><th>P&amp;L on Sold</th><th>Date Added</th></tr></thead>
+                    <tbody>
+                      {entry.changes.partialRemoved.map((s, i) => {
+                        const buyP    = s.buyPrice  || 0;
+                        const sellP   = s.salePrice || 0;
+                        const qtySold = s.quantityRemoved || 0;
+                        const qtyKept = s.quantityKept    || 0;
+                        const pnl     = (sellP - buyP) * qtySold;
+                        const pnlPct  = buyP > 0 ? ((sellP - buyP) / buyP * 100) : 0;
+                        const gain    = pnl >= 0;
+                        return (
+                          <tr key={i}>
+                            <td className="changes-company">{s.companyName || s.ticker?.replace('.NS', '')}</td>
+                            <td>{buyP > 0  ? `${cur}${buyP.toFixed(2)}`  : '—'}</td>
+                            <td>{sellP > 0 ? `${cur}${sellP.toFixed(2)}` : '—'}</td>
+                            <td>{qtySold}</td>
+                            <td>{qtyKept}</td>
+                            <td style={{ color: gain ? '#16a34a' : '#dc2626', fontWeight: '600' }}>
+                              {buyP > 0 ? `${gain ? '+' : ''}${cur}${Math.abs(pnl).toLocaleString(loc, { maximumFractionDigits: 0 })} (${gain ? '+' : ''}${pnlPct.toFixed(1)}%)` : '—'}
+                            </td>
+                            <td>{s.addedDate ? new Date(s.addedDate).toLocaleDateString(loc) : '—'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>

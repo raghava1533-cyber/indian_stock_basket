@@ -2258,14 +2258,30 @@ const rebalanceBasket = async (basketId, manualTrigger = false) => {
     for (const old of basket.stocks) {
       const newMatch = newStocks.find(s => s.ticker === old.ticker);
       if (!newMatch) {
-        changes.removed.push({ ticker: old.ticker, companyName: old.companyName, quantity: old.quantity, buyPrice: old.buyPrice || old.currentPrice, salePrice: old.currentPrice });
+        changes.removed.push({ ticker: old.ticker, companyName: old.companyName, quantity: old.quantity, buyPrice: old.buyPrice || old.currentPrice, salePrice: old.currentPrice, addedDate: old.addedDate || null });
       } else if (newMatch.quantity < old.quantity) {
-        changes.partialRemoved.push({ ticker: old.ticker, companyName: old.companyName, quantityRemoved: old.quantity - newMatch.quantity, reason: 'Quality score decreased' });
+        changes.partialRemoved.push({
+          ticker:          old.ticker,
+          companyName:     old.companyName,
+          quantityRemoved: old.quantity - newMatch.quantity,
+          quantityKept:    newMatch.quantity,
+          buyPrice:        old.buyPrice || old.currentPrice,
+          salePrice:       old.currentPrice,
+          addedDate:       old.addedDate || null,
+          reason:          'Quality score decreased',
+        });
       }
     }
     for (const ns of newStocks) {
       if (!basket.stocks.find(s => s.ticker === ns.ticker))
-        changes.added.push({ ticker: ns.ticker, companyName: ns.companyName, quantity: ns.quantity, reason: ns.reason });
+        changes.added.push({
+          ticker:      ns.ticker,
+          companyName: ns.companyName,
+          quantity:    ns.quantity,
+          buyPrice:    ns.currentPrice,
+          addedDate:   new Date(),
+          reason:      ns.reason,
+        });
     }
 
     basket.stocks            = newStocks;
