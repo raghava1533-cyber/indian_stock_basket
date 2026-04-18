@@ -132,12 +132,6 @@ function App() {
         {/* ═══ Top Info Bar: clock + market status ═══ */}
         <div className="top-info-bar">
           <div className="tib-left">
-            <span className="clock-display">
-              <span className="clock-date">{istDateStr}</span>
-              <span className="clock-sep"> · </span>
-              <span className="clock-time">{istTimeStr}</span>
-              <span className="clock-tz"> IST</span>
-            </span>
             <div className="market-status-group">
               <div className={`market-status-badge ${nseStatus.cls}`}>
                 <span className="ms-dot" />
@@ -152,6 +146,14 @@ function App() {
                 <span className="ms-sub"> · {usStatus.sub}</span>
               </div>
             </div>
+          </div>
+          <div className="tib-center">
+            <span className="clock-display">
+              <span className="clock-date">{istDateStr}</span>
+              <span className="clock-sep"> · </span>
+              <span className="clock-time">{istTimeStr}</span>
+              <span className="clock-tz"> IST</span>
+            </span>
           </div>
           <div className="tib-right">Prices delayed · Not investment advice</div>
         </div>

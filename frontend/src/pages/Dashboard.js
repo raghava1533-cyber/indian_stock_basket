@@ -62,13 +62,9 @@ function MoverRow({ rank, ticker, name, price, pct, cur, locale }) {
   );
 }
 
-function Dashboard({ baskets, indices, onReload }) {
+function Dashboard({ baskets, indices }) {
   const [liveSummary, setLiveSummary] = useState({});
   const [country, setCountry]         = useState('IN');
-  const token = localStorage.getItem('authToken') || '';
-  const [isRebalancing, setIsRebalancing] = useState(false);
-  const [rebalanceResult, setRebalanceResult] = useState(null);
-  const [message, setMessage] = useState('');
 
   useEffect(() => {
     basketAPI.getLiveSummary()
@@ -76,23 +72,7 @@ function Dashboard({ baskets, indices, onReload }) {
       .catch(() => {});
   }, []);
 
-  const handleRebalanceAll = async () => {
-    if (!token) { alert('Please log in to rebalance your baskets'); return; }
-    setIsRebalancing(true);
-    setRebalanceResult(null);
-    try {
-      const res = await basketAPI.rebalanceAll(token);
-      setRebalanceResult(res.data);
-      onReload();
-    } catch (err) {
-      setMessage(err.response?.data?.message || 'Rebalance failed');
-      setTimeout(() => setMessage(''), 4000);
-    } finally {
-      setIsRebalancing(false);
-    }
-  };
-
-  const currencySymbol    = country === 'US' ? '$' : '\u20B9';
+  const currencySymbol    = country === 'US' ? '$' : '₹';
   const locale            = country === 'US' ? 'en-US' : 'en-IN';
   const allDefaultBaskets = baskets.filter(b => !b.isUserCreated);
   const countryBaskets    = allDefaultBaskets.filter(b => (b.country || 'IN') === country);
@@ -112,10 +92,13 @@ function Dashboard({ baskets, indices, onReload }) {
 
   const sectorMap = {};
   countryBaskets.forEach(b => {
-    const theme = b.theme || 'Other';
-    const pct   = liveSummary[b._id];
-    if (!sectorMap[theme]) sectorMap[theme] = [];
-    if (pct != null) sectorMap[theme].push(pct);
+    const theme  = b.theme || 'Other';
+    const stocks = (b.stocks || []).filter(s => s.status !== 'removed' && s.dayChangePercent != null);
+    if (stocks.length > 0) {
+      const avg = stocks.reduce((s, st) => s + st.dayChangePercent, 0) / stocks.length;
+      if (!sectorMap[theme]) sectorMap[theme] = [];
+      sectorMap[theme].push(avg);
+    }
   });
   const sectors = Object.entries(sectorMap)
     .map(([theme, vals]) => ({
@@ -158,37 +141,8 @@ function Dashboard({ baskets, indices, onReload }) {
             <button className={`country-btn${country === 'IN' ? ' active' : ''}`} onClick={() => setCountry('IN')}>🇮🇳 India</button>
             <button className={`country-btn${country === 'US' ? ' active' : ''}`} onClick={() => setCountry('US')}>🇺🇸 USA</button>
           </div>
-          {token && (
-            <button onClick={handleRebalanceAll} disabled={isRebalancing} className="btn btn-accent">
-              {isRebalancing ? 'Rebalancing\u2026' : '\u27F3 Rebalance All'}
-            </button>
-          )}
         </div>
       </div>
-
-      {message && <div className="success">{message}</div>}
-
-      {rebalanceResult && (
-        <div className="rebalance-result-banner">
-          <div className="rebalance-result-header">
-            <strong>{rebalanceResult.message}</strong>
-            <button className="rebalance-result-close" onClick={() => setRebalanceResult(null)}>✕</button>
-          </div>
-          {rebalanceResult.results?.length > 0 && (
-            <div className="rebalance-result-list">
-              {rebalanceResult.results.map((r, i) => (
-                <div key={i} className={`rebalance-result-item ${r.status}`}>
-                  <span className="rebalance-result-name">{r.name}</span>
-                  <span className={`rebalance-result-status ${r.status}`}>
-                    {r.status === 'rebalanced' ? '\u2713 Rebalanced' :
-                     r.status === 'skipped' ? `\u23ED ${r.message}` : `\u2717 ${r.message}`}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       <section className="dash-section">
         <div className="dash-section-title">
