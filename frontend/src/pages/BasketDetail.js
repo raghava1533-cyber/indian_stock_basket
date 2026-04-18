@@ -378,6 +378,10 @@ function BasketDetail({ onReload }) {
   const removedStocks = latestHistory?.changes?.removed || [];
   const partialStocks = latestHistory?.changes?.partialRemoved || [];
 
+  // Fallback price map: use live stock prices when history records lack buyPrice
+  const _normTicker = t => (t || '').replace(/\.(NS|BO)$/i, '');
+  const stockPriceMap = Object.fromEntries(stocks.map(s => [_normTicker(s.ticker), s.currentPrice || 0]));
+
   const tabs = [
     { key: 'overview', label: 'Overview', icon: '📊' },
     { key: 'stocks', label: `Stocks (${activeStocks.length})`, icon: '📈' },
@@ -827,7 +831,7 @@ function BasketDetail({ onReload }) {
                   </thead>
                   <tbody>
                     {addedStocks.map((s, i) => {
-                      const price = s.buyPrice || 0;
+                      const price = s.buyPrice || stockPriceMap[_normTicker(s.ticker)] || 0;
                       const qty   = s.quantity || 1;
                       return (
                         <tr key={i}>
@@ -862,7 +866,7 @@ function BasketDetail({ onReload }) {
                   </thead>
                   <tbody>
                     {removedStocks.map((s, i) => {
-                      const buyP  = s.buyPrice  || 0;
+                      const buyP  = s.buyPrice  || stockPriceMap[_normTicker(s.ticker)] || 0;
                       const sellP = s.salePrice || 0;
                       const qty   = s.quantity  || 1;
                       const pnl   = (sellP - buyP) * qty;
@@ -905,7 +909,7 @@ function BasketDetail({ onReload }) {
                   </thead>
                   <tbody>
                     {partialStocks.map((s, i) => {
-                      const buyP  = s.buyPrice  || 0;
+                      const buyP  = s.buyPrice  || stockPriceMap[_normTicker(s.ticker)] || 0;
                       const sellP = s.salePrice || 0;
                       const qtySold = s.quantityRemoved || 0;
                       const qtyKept = s.quantityKept    || 0;
@@ -1185,7 +1189,7 @@ function BasketDetail({ onReload }) {
                     <thead><tr><th>Stock</th><th>Buy Price</th><th>Qty</th><th>Total</th><th>Date</th></tr></thead>
                     <tbody>
                       {entry.changes.added.map((s, i) => {
-                        const price = s.buyPrice || 0;
+                        const price = s.buyPrice || stockPriceMap[_normTicker(s.ticker)] || 0;
                         const qty   = s.quantity || 1;
                         return (
                           <tr key={i}>
@@ -1209,7 +1213,7 @@ function BasketDetail({ onReload }) {
                     <thead><tr><th>Stock</th><th>Buy Price</th><th>Exit Price</th><th>Qty</th><th>P&amp;L</th><th>Date Added</th></tr></thead>
                     <tbody>
                       {entry.changes.removed.map((s, i) => {
-                        const buyP  = s.buyPrice  || 0;
+                        const buyP  = s.buyPrice  || stockPriceMap[_normTicker(s.ticker)] || 0;
                         const sellP = s.salePrice || 0;
                         const qty   = s.quantity  || 1;
                         const pnl   = (sellP - buyP) * qty;
