@@ -155,8 +155,8 @@ function Dashboard({ baskets, indices, onReload }) {
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <div className="country-toggle">
-            <button className={`country-btn${country === 'IN' ? ' active' : ''}`} onClick={() => setCountry('IN')}>\uD83C\uDDEE\uD83C\uDDF3 India</button>
-            <button className={`country-btn${country === 'US' ? ' active' : ''}`} onClick={() => setCountry('US')}>\uD83C\uDDFA\uD83C\uDDF8 USA</button>
+            <button className={`country-btn${country === 'IN' ? ' active' : ''}`} onClick={() => setCountry('IN')}>🇮🇳 India</button>
+            <button className={`country-btn${country === 'US' ? ' active' : ''}`} onClick={() => setCountry('US')}>🇺🇸 USA</button>
           </div>
           {token && (
             <button onClick={handleRebalanceAll} disabled={isRebalancing} className="btn btn-accent">
@@ -172,7 +172,7 @@ function Dashboard({ baskets, indices, onReload }) {
         <div className="rebalance-result-banner">
           <div className="rebalance-result-header">
             <strong>{rebalanceResult.message}</strong>
-            <button className="rebalance-result-close" onClick={() => setRebalanceResult(null)}>\u2715</button>
+            <button className="rebalance-result-close" onClick={() => setRebalanceResult(null)}>✕</button>
           </div>
           {rebalanceResult.results?.length > 0 && (
             <div className="rebalance-result-list">
@@ -199,13 +199,13 @@ function Dashboard({ baskets, indices, onReload }) {
             <IndexTile key={name} name={name} data={data} locale={loc} />
           ))}
           {(!indices || shownIndices.every(i => !i.data?.price)) && (
-            <div className="dash-placeholder">Fetching live index data\u2026</div>
+            <div className="dash-placeholder">Fetching live index data…</div>
           )}
         </div>
       </section>
 
       <section className="dash-section">
-        <div className="dash-section-title">\uD83D\uDCC8 SmartBasket at a Glance</div>
+        <div className="dash-section-title">📈 SmartBasket at a Glance</div>
         <div className="pstats-row">
           <div className="pstat-card">
             <div className="pstat-val">{countryBaskets.length}</div>
@@ -236,10 +236,10 @@ function Dashboard({ baskets, indices, onReload }) {
 
       {uniqStocks.length > 0 && (
         <section className="dash-section">
-          <div className="dash-section-title">\u26A1 Top Movers Today</div>
+          <div className="dash-section-title">⚡ Top Movers Today</div>
           <div className="movers-grid">
             <div className="movers-panel">
-              <div className="movers-panel-head gainers-head">\u25B2 Top Gainers</div>
+              <div className="movers-panel-head gainers-head">▲ Top Gainers</div>
               {gainers.map((s, i) => (
                 <MoverRow key={s.ticker} rank={i + 1} ticker={s.ticker}
                   name={s.name} price={s.price} pct={s.pct}
@@ -247,7 +247,7 @@ function Dashboard({ baskets, indices, onReload }) {
               ))}
             </div>
             <div className="movers-panel">
-              <div className="movers-panel-head losers-head">\u25BC Top Losers</div>
+              <div className="movers-panel-head losers-head">▼ Top Losers</div>
               {losers.map((s, i) => (
                 <MoverRow key={s.ticker} rank={i + 1} ticker={s.ticker}
                   name={s.name} price={s.price} pct={s.pct}
@@ -260,7 +260,7 @@ function Dashboard({ baskets, indices, onReload }) {
 
       {sectors.length > 0 && (
         <section className="dash-section">
-          <div className="dash-section-title">\uD83D\uDD25 Sector Performance Today</div>
+          <div className="dash-section-title">🔥 Sector Performance Today</div>
           <div className="sector-heat-row">
             {sectors.map(({ theme, avg, meta }) => {
               const isUp = avg != null ? avg >= 0 : null;
@@ -282,20 +282,20 @@ function Dashboard({ baskets, indices, onReload }) {
       )}
 
       <section className="dash-section">
-        <div className="dash-section-title">\uD83D\uDDC2 Quick Links</div>
+        <div className="dash-section-title">🗂 Quick Links</div>
         <div className="quick-links-row">
           <Link to="/baskets" className="quick-link-card">
-            <span className="ql-icon">\uD83D\uDCE6</span>
+            <span className="ql-icon">📦</span>
             <span className="ql-label">All Baskets</span>
             <span className="ql-sub">Browse &amp; invest in curated baskets</span>
           </Link>
           <Link to="/portfolio" className="quick-link-card">
-            <span className="ql-icon">\uD83D\uDCBC</span>
+            <span className="ql-icon">💼</span>
             <span className="ql-label">My Portfolio</span>
             <span className="ql-sub">Track your holdings &amp; returns</span>
           </Link>
           <Link to="/create-basket" className="quick-link-card">
-            <span className="ql-icon">\u270F\uFE0F</span>
+            <span className="ql-icon">✏️</span>
             <span className="ql-label">Create Basket</span>
             <span className="ql-sub">Build your own stock basket</span>
           </Link>
