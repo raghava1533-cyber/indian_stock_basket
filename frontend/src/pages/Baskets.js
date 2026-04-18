@@ -157,7 +157,7 @@ function Baskets({ baskets, onReload }) {
             const hasChange = basketDayChangePct != null;
             const displayName = basket.name.replace(/ \(\d{13}\)$/, '');
             const createdDate = basket.createdAt
-              ? new Date(basket.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
+              ? new Date(basket.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })
               : null;
             const isOwner = basket.isUserCreated && basket.createdBy === email;
             const byLabel = (basket.country || 'IN') === 'US' ? 'by SmartBasket US' : 'by SmartBasket India';

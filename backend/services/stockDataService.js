@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { getFinnhubTargets } = require('./finnhubService');
 
 const YF_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -159,6 +160,8 @@ const getStooqPrice = async (ticker) => {
  */
 const getEnrichedStockData = async (ticker) => {
   // ── Primary: v10 quoteSummary ──────────────────────────────────────────────
+  let finnhubTargets = null;
+  let triedFinnhub = false;
   try {
     const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${ticker}`;
     const resp = await axios.get(url, {
@@ -285,6 +288,11 @@ const getEnrichedStockData = async (ticker) => {
     const finalDayChange    = v10Change    ?? v8Change;
     const finalDayChangePct = v10ChangePct ?? v8ChangePct;
 
+    // If Yahoo has no analyst targets, try Finnhub
+    if (targetMeanPrice == null && !triedFinnhub) {
+      finnhubTargets = await getFinnhubTargets(ticker);
+      triedFinnhub = true;
+    }
     return {
       ticker,
       companyName:     price.longName || price.shortName || ticker,
@@ -301,9 +309,9 @@ const getEnrichedStockData = async (ticker) => {
       newsSentiment,
       momentumSentiment,
       // Analyst fields
-      targetMeanPrice,
-      targetHighPrice,
-      targetLowPrice,
+      targetMeanPrice: targetMeanPrice ?? finnhubTargets?.targetMean ?? null,
+      targetHighPrice: targetHighPrice ?? finnhubTargets?.targetHigh ?? null,
+      targetLowPrice:  targetLowPrice  ?? finnhubTargets?.targetLow  ?? null,
       recommendationKey,
       numberOfAnalysts,
       analystBuy,
@@ -317,6 +325,7 @@ const getEnrichedStockData = async (ticker) => {
       dayChange: finalDayChange,
       dayChangePercent: finalDayChangePct,
       lastUpdated: new Date(),
+      _analystSource: targetMeanPrice != null ? 'Yahoo' : (finnhubTargets?.targetMean ? 'Finnhub' : null),
     };
   } catch (v10Err) {
     console.warn(`[stockDataService] v10 failed for ${ticker}: ${v10Err.message}`);

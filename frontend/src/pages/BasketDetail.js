@@ -494,7 +494,14 @@ function BasketDetail({ onReload }) {
           <div className="summary-card">
             <div className="summary-label">Launch Date</div>
             <div className="summary-value">
-              {basket.createdDate ? new Date(basket.createdDate).toLocaleDateString() : '—'}
+              {(() => {
+                if (!basket.createdDate) return '—';
+                try {
+                  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(new Date(basket.createdDate)).replace(/\//g, '-');
+                } catch (e) {
+                  return new Date(basket.createdDate).toLocaleDateString();
+                }
+              })()}
             </div>
           </div>
         </div>
@@ -513,7 +520,20 @@ function BasketDetail({ onReload }) {
           const totalPnL = unrealizedPnL + realizedPnL;
           const totalInvested = investedVal + removedStocks.reduce((sum, s) => sum + ((s.buyPrice || s.currentPrice || 0) * (s.quantity || 1)), 0);
           const returnPct = totalInvested > 0 ? ((totalPnL / totalInvested) * 100).toFixed(2) : 0;
-          const daysSince = basket.createdDate ? Math.ceil((new Date() - new Date(basket.createdDate)) / (1000 * 60 * 60 * 24)) : 0;
+          const daysSince = (() => {
+            if (!basket.createdDate) return 0;
+            try {
+              const launch = new Date(basket.createdDate);
+              const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric' });
+              const [ld, lm, ly] = fmt.format(launch).split('/');
+              const [nd, nm, ny] = fmt.format(new Date()).split('/');
+              const launchDate = new Date(Number(ly), Number(lm) - 1, Number(ld));
+              const nowDate = new Date(Number(ny), Number(nm) - 1, Number(nd));
+              return Math.max(0, Math.floor((nowDate - launchDate) / (1000 * 60 * 60 * 24)));
+            } catch (e) {
+              return Math.max(0, Math.ceil((new Date() - new Date(basket.createdDate)) / (1000 * 60 * 60 * 24)));
+            }
+          })();
           const investLabel = isUS ? '$1,000' : '₹1,00,000';
           return (
             <div style={{ background: 'var(--color-bg-secondary, #f7f8fa)', borderRadius: '12px', padding: '20px', margin: '20px 0', border: '1px solid var(--color-border, #e8e8e5)' }}>
