@@ -9,6 +9,7 @@ import Status from './pages/Status';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import CreateBasket from './pages/CreateBasket';
+import AdminPanel from './pages/AdminPanel';
 import Disclaimer from './components/Disclaimer';
 import { basketAPI } from './services/api';
 import './App.css';
@@ -202,6 +203,7 @@ function App() {
             <Route path="/basket/:id" element={<BasketDetail onReload={loadBaskets} />} />
             <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
             <Route path="/signup" element={user ? <Navigate to="/" replace /> : <Signup onLogin={handleLogin} />} />
+            <Route path="/admin" element={<AdminPanel />} />
             <Route path="/debug" element={<Debug />} />
             <Route path="/status" element={<Status />} />
           </Routes>

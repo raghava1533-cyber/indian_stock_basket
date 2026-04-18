@@ -531,6 +531,14 @@ function BasketDetail({ onReload }) {
 
         {/* Quick stock summary table */}
         <h3 style={{ marginTop: '30px', marginBottom: '15px' }}>Stock Allocation Summary</h3>
+        {!localStorage.getItem('authToken') ? (
+          <div className="stocks-login-gate">
+            <div className="stocks-gate-icon">🔒</div>
+            <div className="stocks-gate-title">Login to view stock allocation</div>
+            <div className="stocks-gate-sub">Sign in to see which stocks are in this basket and their allocations.</div>
+            <a href="/login" className="btn btn-primary" style={{ marginTop: '16px', display: 'inline-block' }}>Login to continue</a>
+          </div>
+        ) : (
         <div className="stock-allocation-grid">
           {activeStocks.map((stock, idx) => (
             <div key={idx} className="alloc-card">
@@ -545,6 +553,7 @@ function BasketDetail({ onReload }) {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* ═══ STOCKS TAB ═══ */}
