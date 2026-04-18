@@ -983,23 +983,4 @@ router.get('/:id/benchmark', async (req, res) => {
   }
 });
 
-// ─── ONE-TIME ADMIN: reset basket createdAt to today ─────────────────────────
-router.post('/admin/reset-createdat', async (req, res) => {
-  const secret = req.headers['x-admin-secret'];
-  if (secret !== (process.env.ADMIN_SECRET || 'smartbasket-reset-2026')) {
-    return res.status(403).json({ message: 'Forbidden' });
-  }
-  try {
-    const today = new Date();
-    // createdAt is managed by timestamps:true, use $set with strict:false workaround
-    const result = await Basket.collection.updateMany(
-      {},
-      { $set: { createdAt: today } }
-    );
-    res.json({ message: 'createdAt reset', updated: result.modifiedCount, date: today.toISOString().slice(0, 10) });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
 module.exports = router;
