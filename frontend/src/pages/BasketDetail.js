@@ -483,7 +483,7 @@ function BasketDetail({ onReload }) {
           const totalInvested = investedVal + removedStocks.reduce((sum, s) => sum + ((s.buyPrice || s.currentPrice || 0) * (s.quantity || 1)), 0);
           const returnPct = totalInvested > 0 ? ((totalPnL / totalInvested) * 100).toFixed(2) : 0;
           const daysSince = basket.createdDate ? Math.ceil((new Date() - new Date(basket.createdDate)) / (1000 * 60 * 60 * 24)) : 0;
-          const investLabel = isUS ? '$10,000' : '₹1,00,000';
+          const investLabel = isUS ? '$1,000' : '₹1,00,000';
           return (
             <div style={{ background: 'var(--color-bg-secondary, #f7f8fa)', borderRadius: '12px', padding: '20px', margin: '20px 0', border: '1px solid var(--color-border, #e8e8e5)' }}>
               <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '12px' }}>📈 Overall Returns {daysSince > 0 ? `(${daysSince} days)` : ''}</div>
@@ -599,9 +599,18 @@ function BasketDetail({ onReload }) {
                       </td>
                       <td>{cur}{price.toFixed(0)}</td>
                       <td>
-                        {stock.dayChange != null ? (
+                        {stock.dayChangePercent != null ? (
+                          <span className={stock.dayChangePercent >= 0 ? 'price-positive' : 'price-negative'} style={{ fontWeight: '500' }}>
+                            {stock.dayChangePercent >= 0 ? '+' : ''}{stock.dayChangePercent.toFixed(2)}%
+                            {stock.dayChange != null && (
+                              <div style={{ fontSize: '10px', fontWeight: '400', opacity: 0.75 }}>
+                                {stock.dayChange >= 0 ? '+' : ''}{cur}{Math.abs(stock.dayChange).toFixed(2)}
+                              </div>
+                            )}
+                          </span>
+                        ) : stock.dayChange != null ? (
                           <span className={stock.dayChange >= 0 ? 'price-positive' : 'price-negative'} style={{ fontWeight: '500' }}>
-                            {stock.dayChange >= 0 ? '+' : ''}{cur}{stock.dayChange.toFixed(1)}
+                            {stock.dayChange >= 0 ? '+' : ''}{cur}{stock.dayChange.toFixed(2)}
                           </span>
                         ) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}
                       </td>
@@ -1068,7 +1077,7 @@ function BasketDetail({ onReload }) {
               const basketProfit = basketFinalValue - invested;
               const indexProfit = indexFinalValue - invested;
               const diff = basketProfit - indexProfit;
-              const investLabel = isUS ? '$10,000' : '₹1,00,000';
+              const investLabel = isUS ? '$1,000' : '₹1,00,000';
               const tfLabel = benchmark.timeframe === 'max'
                 ? (benchmark.basket.launchDate ? new Date(benchmark.basket.launchDate).toLocaleDateString() : 'launch')
                 : benchmark.timeframe?.toUpperCase() + ' ago';
@@ -1290,11 +1299,13 @@ function BasketDetail({ onReload }) {
           <h4 style={{ marginTop: '30px', marginBottom: '15px' }}>📊 Quality Scoring Criteria</h4>
           <div className="scoring-grid">
             {[
-              { name: 'Market Trend', pts: '0-20 pts', desc: 'Position within 52-week range. Best when mid-range (not overbought/oversold)' },
-              { name: 'Valuation (PE)', pts: '0-25 pts', desc: 'Price-to-Earnings ratio. Lower PE = higher score (undervalued)' },
-              { name: 'Earnings Growth', pts: '0-20 pts', desc: 'Recent EPS growth rate. Higher growth = higher score' },
-              { name: 'Future Growth', pts: '0-20 pts', desc: 'Analyst price targets and growth projections' },
-              { name: 'Market Sentiment', pts: '0-15 pts', desc: '52-week momentum and social/market sentiment indicators' },
+              { name: 'Market Trend', pts: '0-15 pts', desc: 'Position within 52-week range. Best when mid-range (not overbought/oversold)' },
+              { name: 'Valuation (PE)', pts: '0-20 pts', desc: 'Price-to-Earnings ratio. Lower PE = higher score (undervalued)' },
+              { name: 'Earnings Growth', pts: '0-15 pts', desc: 'Recent EPS growth rate. Higher growth = higher score' },
+              { name: 'Future Growth', pts: '0-15 pts', desc: 'Analyst price targets and forward earnings projections' },
+              { name: 'Market Sentiment', pts: '0-12 pts', desc: 'News sentiment, 52-week momentum and social indicators' },
+              { name: 'Momentum / RSI', pts: '0-13 pts', desc: 'RSI indicator, SMA50 vs SMA200 trend signals' },
+              { name: 'Analyst Rating', pts: '0-10 pts', desc: 'Buy/Hold/Sell consensus across covering analysts' },
             ].map((c, i) => (
               <div key={i} className="scoring-card">
                 <div className="scoring-name">{c.name}</div>
@@ -1306,10 +1317,10 @@ function BasketDetail({ onReload }) {
 
           <h4 style={{ marginTop: '30px', marginBottom: '15px' }}>🔧 How Rebalancing Works</h4>
           <ol className="rebalance-steps">
-            <li>Fetch live data for all stocks in the {basket.theme} universe from Yahoo Finance</li>
-            <li>Score each stock on 5 quality criteria (total 100 points)</li>
-            <li>Select top 15 stocks by quality score</li>
-            <li>Allocate shares proportional to quality (higher score = more shares)</li>
+            <li>Fetch live data for all stocks in the {basket.theme} universe from Yahoo Finance (NSE primary for India, with Stooq as tertiary fallback)</li>
+            <li>Score each stock on 7 quality criteria (total 100 points): Market Trend, Valuation, Earnings Growth, Future Growth, Sentiment, Momentum/RSI, Analyst Rating</li>
+            <li>Penalize stocks with unreliable data: −25 pts for static fallback, −10 pts for Stooq-only data</li>
+            <li>Select top-scoring stocks and allocate shares proportional to quality score</li>
             <li>Calculate minimum investment amount based on current prices × quantities</li>
             <li>Compare with previous basket — identify added, removed, and partially sold stocks</li>
             <li>Send email notifications to all subscribers with change details</li>

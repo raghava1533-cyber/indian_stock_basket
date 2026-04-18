@@ -95,13 +95,19 @@ app.get('/api/market/indices', async (req, res) => {
     if (_indicesCache && now - _indicesCacheTime < INDICES_CACHE_TTL) {
       return res.json(_indicesCache);
     }
-    const [nifty, bank] = await Promise.all([
+    const [nifty, bank, sp500, nasdaq, dow] = await Promise.all([
       fetchIndexQuote('^NSEI'),
       fetchIndexQuote('^NSEBANK'),
+      fetchIndexQuote('^GSPC'),
+      fetchIndexQuote('^IXIC'),
+      fetchIndexQuote('^DJI'),
     ]);
     const payload = {
       nifty50:   { name: 'NIFTY 50',   ...nifty },
       bankNifty: { name: 'BANK NIFTY', ...bank },
+      sp500:     { name: 'S&P 500',    ...sp500 },
+      nasdaq:    { name: 'NASDAQ',     ...nasdaq },
+      dow:       { name: 'DOW',        ...dow },
       updatedAt: new Date(),
     };
     _indicesCache = payload;

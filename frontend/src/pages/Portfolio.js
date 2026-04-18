@@ -62,9 +62,32 @@ function Portfolio({ user }) {
   const subscribedBaskets = baskets.filter(b =>
     subscribedIds.includes(b._id) || b.subscribers?.includes(email)
   );
-  const totalValue = subscribedBaskets.reduce(
-    (s, b) => s + (b.stocks?.reduce((ss, st) => ss + ((st.currentPrice || 0) * (st.quantity || 1)), 0) || 0), 0
+
+  // Separate Indian and US baskets for correct currency display
+  const indianBaskets = subscribedBaskets.filter(b => (b.country || 'IN') === 'IN');
+  const usBaskets = subscribedBaskets.filter(b => (b.country || 'IN') === 'US');
+  const inTotalValue = indianBaskets.reduce(
+    (s, b) => s + (b.stocks?.filter(st => st.status !== 'removed').reduce((ss, st) => ss + ((st.currentPrice || 0) * (st.quantity || 1)), 0) || 0), 0
   );
+  const usTotalValue = usBaskets.reduce(
+    (s, b) => s + (b.stocks?.filter(st => st.status !== 'removed').reduce((ss, st) => ss + ((st.currentPrice || 0) * (st.quantity || 1)), 0) || 0), 0
+  );
+
+  // Overall since-launch return across all subscribed baskets (Indian only, as $ and ₹ can't mix)
+  const inReturnPct = (() => {
+    const allActive = indianBaskets.flatMap(b => (b.stocks || []).filter(s => s.status !== 'removed' && s.buyPrice > 0 && s.currentPrice > 0));
+    if (allActive.length === 0) return null;
+    const inv = allActive.reduce((s, st) => s + st.buyPrice * (st.quantity || 1), 0);
+    const cur = allActive.reduce((s, st) => s + st.currentPrice * (st.quantity || 1), 0);
+    return inv > 0 ? ((cur - inv) / inv * 100) : null;
+  })();
+  const usReturnPct = (() => {
+    const allActive = usBaskets.flatMap(b => (b.stocks || []).filter(s => s.status !== 'removed' && s.buyPrice > 0 && s.currentPrice > 0));
+    if (allActive.length === 0) return null;
+    const inv = allActive.reduce((s, st) => s + st.buyPrice * (st.quantity || 1), 0);
+    const cur = allActive.reduce((s, st) => s + st.currentPrice * (st.quantity || 1), 0);
+    return inv > 0 ? ((cur - inv) / inv * 100) : null;
+  })();
 
   return (
     <div className="sc-portfolio">
@@ -75,10 +98,28 @@ function Portfolio({ user }) {
           <div className="sc-pf-count">{subscribedBaskets.length} basket{subscribedBaskets.length !== 1 ? 's' : ''}</div>
         </div>
         <div className="sc-pf-totals">
-          <div className="sc-pf-total-block">
-            <div className="sc-pf-total-label">Current Value</div>
-            <div className="sc-pf-total-val">₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
-          </div>
+          {indianBaskets.length > 0 && (
+            <div className="sc-pf-total-block">
+              <div className="sc-pf-total-label">India Value</div>
+              <div className="sc-pf-total-val">₹{inTotalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+              {inReturnPct != null && (
+                <div className={`sc-pf-total-return ${inReturnPct >= 0 ? 'green' : 'red'}`} style={{ fontSize: '12px', fontWeight: '600' }}>
+                  {inReturnPct >= 0 ? '+' : ''}{inReturnPct.toFixed(2)}% returns
+                </div>
+              )}
+            </div>
+          )}
+          {usBaskets.length > 0 && (
+            <div className="sc-pf-total-block">
+              <div className="sc-pf-total-label">US Value</div>
+              <div className="sc-pf-total-val">${usTotalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
+              {usReturnPct != null && (
+                <div className={`sc-pf-total-return ${usReturnPct >= 0 ? 'green' : 'red'}`} style={{ fontSize: '12px', fontWeight: '600' }}>
+                  {usReturnPct >= 0 ? '+' : ''}{usReturnPct.toFixed(2)}% returns
+                </div>
+              )}
+            </div>
+          )}
           <div className="sc-pf-total-block">
             <div className="sc-pf-total-label">Baskets</div>
             <div className="sc-pf-total-val green">{subscribedBaskets.length} / {baskets.length}</div>
@@ -96,10 +137,20 @@ function Portfolio({ user }) {
         <div className="sc-pf-list">
           {subscribedBaskets.map(b => {
             const meta = THEME_META[b.theme] || THEME_META['Large Cap'];
-            const bValue = b.stocks?.reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0) || 0;
+            const isUS = (b.country || 'IN') === 'US';
+            const bCur = isUS ? '$' : '₹';
+            const bLoc = isUS ? 'en-US' : 'en-IN';
+            const bValue = (b.stocks || []).filter(s => s.status !== 'removed').reduce((s, st) => s + ((st.currentPrice || 0) * (st.quantity || 1)), 0);
+            const bReturnPct = (() => {
+              const active = (b.stocks || []).filter(s => s.status !== 'removed' && s.buyPrice > 0 && s.currentPrice > 0);
+              if (active.length === 0) return null;
+              const inv = active.reduce((s, st) => s + st.buyPrice * (st.quantity || 1), 0);
+              const cur = active.reduce((s, st) => s + st.currentPrice * (st.quantity || 1), 0);
+              return inv > 0 ? ((cur - inv) / inv * 100) : null;
+            })();
             const lastRebal = b.lastRebalanceDate ? new Date(b.lastRebalanceDate) : null;
             const daysSince = lastRebal ? Math.floor((Date.now() - lastRebal) / 86400000) : null;
-            const nextRebal = b.nextRebalanceDate ? new Date(b.nextRebalanceDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : null;
+            const nextRebal = b.nextRebalanceDate ? new Date(b.nextRebalanceDate).toLocaleDateString(bLoc, { day: 'numeric', month: 'short' }) : null;
 
             return (
               <Link to={`/basket/${b._id}`} key={b._id} className="sc-pf-row-link">
@@ -109,12 +160,17 @@ function Portfolio({ user }) {
                       {meta.letter}
                     </div>
                     <div className="sc-pf-info">
-                      <div className="sc-pf-name">{b.name}</div>
-                      <span className="sc-subscribed-badge">✦ Subscribed</span>
+                      <div className="sc-pf-name">{b.name?.replace(/ \(\d{10,}\)$/, '')}</div>
+                      <span className="sc-subscribed-badge">✦ {isUS ? '🇺🇸 US' : '🇮🇳 India'} · Subscribed</span>
                     </div>
                     <div className="sc-pf-right">
-                      <div className="sc-pf-value">₹{bValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
-                      <div className="sc-pf-stocks green">{b.stocks?.length || 0} stocks</div>
+                      <div className="sc-pf-value">{bCur}{bValue.toLocaleString(bLoc, { maximumFractionDigits: 0 })}</div>
+                      <div className="sc-pf-stocks green">{(b.stocks || []).filter(s => s.status !== 'removed').length} stocks</div>
+                      {bReturnPct != null && (
+                        <div className={`sc-pf-stocks ${bReturnPct >= 0 ? 'green' : 'red'}`} style={{ fontWeight: '600' }}>
+                          {bReturnPct >= 0 ? '+' : ''}{bReturnPct.toFixed(1)}% return
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="sc-pf-row-sub">
@@ -145,35 +201,55 @@ function Portfolio({ user }) {
                   <th>Basket</th>
                   <th>Company</th>
                   <th>Qty</th>
+                  <th>Buy Price</th>
                   <th>Price</th>
                   <th>Day Change</th>
+                  <th>Return</th>
                   <th>Value</th>
                 </tr>
               </thead>
               <tbody>
-                {subscribedBaskets.flatMap(b =>
-                  (b.stocks || []).filter(s => s.status !== 'removed').map((s, i) => (
-                    <tr key={`${b._id}-${i}`}>
-                      <td style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>{b.name}</td>
-                      <td>
-                        <div style={{ fontWeight: '500', fontSize: '13px' }}>{s.companyName || s.ticker?.replace('.NS', '')}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>{s.ticker?.replace('.NS', '')}</div>
-                      </td>
-                      <td style={{ fontWeight: '500' }}>{s.quantity || 1}</td>
-                      <td>₹{s.currentPrice?.toFixed(0) || '—'}</td>
-                      <td>
-                        {s.dayChangePercent != null ? (
-                          <span className={s.dayChangePercent >= 0 ? 'price-positive' : 'price-negative'} style={{ fontWeight: '500' }}>
-                            {s.dayChangePercent >= 0 ? '+' : ''}{s.dayChangePercent.toFixed(2)}%
-                          </span>
-                        ) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}
-                      </td>
-                      <td style={{ fontWeight: '500' }}>
-                        ₹{((s.currentPrice || 0) * (s.quantity || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                      </td>
-                    </tr>
-                  ))
-                )}
+                {subscribedBaskets.flatMap(b => {
+                  const isUS = (b.country || 'IN') === 'US';
+                  const bCur = isUS ? '$' : '₹';
+                  const bLoc = isUS ? 'en-US' : 'en-IN';
+                  return (b.stocks || []).filter(s => s.status !== 'removed').map((s, i) => {
+                    const stockReturn = s.buyPrice > 0 ? ((( s.currentPrice || s.buyPrice) - s.buyPrice) / s.buyPrice * 100) : null;
+                    return (
+                      <tr key={`${b._id}-${i}`}>
+                        <td style={{ fontSize: '11px', color: 'var(--color-text-secondary)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {b.name?.replace(/ \(\d{10,}\)$/, '')}
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: '500', fontSize: '13px' }}>{s.companyName || s.ticker?.replace('.NS', '')}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>{s.ticker?.replace('.NS', '')}</div>
+                        </td>
+                        <td style={{ fontWeight: '500' }}>{s.quantity || 1}</td>
+                        <td style={{ color: 'var(--color-text-secondary)', fontSize: '12px' }}>
+                          {s.buyPrice > 0 ? `${bCur}${s.buyPrice.toFixed(0)}` : '—'}
+                        </td>
+                        <td>{s.currentPrice > 0 ? `${bCur}${s.currentPrice.toFixed(0)}` : '—'}</td>
+                        <td>
+                          {s.dayChangePercent != null ? (
+                            <span className={s.dayChangePercent >= 0 ? 'price-positive' : 'price-negative'} style={{ fontWeight: '500' }}>
+                              {s.dayChangePercent >= 0 ? '+' : ''}{s.dayChangePercent.toFixed(2)}%
+                            </span>
+                          ) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}
+                        </td>
+                        <td>
+                          {stockReturn != null ? (
+                            <span className={stockReturn >= 0 ? 'price-positive' : 'price-negative'} style={{ fontWeight: '500' }}>
+                              {stockReturn >= 0 ? '+' : ''}{stockReturn.toFixed(1)}%
+                            </span>
+                          ) : <span style={{ color: 'var(--color-text-secondary)' }}>—</span>}
+                        </td>
+                        <td style={{ fontWeight: '500' }}>
+                          {bCur}{((s.currentPrice || 0) * (s.quantity || 1)).toLocaleString(bLoc, { maximumFractionDigits: 0 })}
+                        </td>
+                      </tr>
+                    );
+                  });
+                })}
               </tbody>
             </table>
           </div>

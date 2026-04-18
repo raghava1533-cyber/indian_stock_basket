@@ -175,6 +175,15 @@ function Dashboard({ baskets, onReload }) {
             ? new Date(basket.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
             : null;
 
+          // Since-launch return using actual stored buyPrice vs currentPrice
+          const returnPct = (() => {
+            const active = stocks.filter(s => s.status !== 'removed' && s.buyPrice > 0 && s.currentPrice > 0);
+            if (active.length === 0) return null;
+            const inv = active.reduce((s, st) => s + st.buyPrice * (st.quantity || 1), 0);
+            const cur = active.reduce((s, st) => s + st.currentPrice * (st.quantity || 1), 0);
+            return inv > 0 ? ((cur - inv) / inv * 100) : null;
+          })();
+
           return (
             <div key={basket._id} className="sc-card">
               <Link to={`/basket/${basket._id}`} className="sc-card-body">
@@ -202,6 +211,12 @@ function Dashboard({ baskets, onReload }) {
                     <div className="sc-stat-label">Today</div>
                     <div className={`sc-stat-val${hasChange ? (basketDayChangePct >= 0 ? ' green' : ' red') : ''}`}>
                       {hasChange ? `${basketDayChangePct >= 0 ? '+' : ''}${basketDayChangePct.toFixed(2)}%` : '—'}
+                    </div>
+                  </div>
+                  <div className="sc-stat">
+                    <div className="sc-stat-label">Returns</div>
+                    <div className={`sc-stat-val${returnPct != null ? (returnPct >= 0 ? ' green' : ' red') : ''}`}>
+                      {returnPct != null ? `${returnPct >= 0 ? '+' : ''}${returnPct.toFixed(1)}%` : '—'}
                     </div>
                   </div>
                 </div>
@@ -243,6 +258,13 @@ function Dashboard({ baskets, onReload }) {
               const rawPct = liveSummary[basket._id];
               const basketDayChangePct = rawPct != null ? rawPct : null;
               const hasChange = basketDayChangePct != null;
+              const userReturnPct = (() => {
+                const active = basket.stocks.filter(s => s.status !== 'removed' && s.buyPrice > 0 && s.currentPrice > 0);
+                if (active.length === 0) return null;
+                const inv = active.reduce((s, st) => s + st.buyPrice * (st.quantity || 1), 0);
+                const cur = active.reduce((s, st) => s + st.currentPrice * (st.quantity || 1), 0);
+                return inv > 0 ? ((cur - inv) / inv * 100) : null;
+              })();
               return (
                 <div key={basket._id} className="sc-card sc-card-user">
                   <Link to={`/basket/${basket._id}`} className="sc-card-body">
@@ -268,6 +290,12 @@ function Dashboard({ baskets, onReload }) {
                         <div className="sc-stat-label">Today</div>
                         <div className={`sc-stat-val${hasChange ? (basketDayChangePct >= 0 ? ' green' : ' red') : ''}`}>
                           {hasChange ? `${basketDayChangePct >= 0 ? '+' : ''}${basketDayChangePct.toFixed(2)}%` : '—'}
+                        </div>
+                      </div>
+                      <div className="sc-stat">
+                        <div className="sc-stat-label">Returns</div>
+                        <div className={`sc-stat-val${userReturnPct != null ? (userReturnPct >= 0 ? ' green' : ' red') : ''}`}>
+                          {userReturnPct != null ? `${userReturnPct >= 0 ? '+' : ''}${userReturnPct.toFixed(1)}%` : '—'}
                         </div>
                       </div>
                     </div>

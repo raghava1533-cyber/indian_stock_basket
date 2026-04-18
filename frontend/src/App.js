@@ -81,7 +81,7 @@ function App() {
               <NavLink to="/create-basket" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>+ Create Basket</NavLink>
               <NavLink to="/portfolio" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Portfolio</NavLink>
             </nav>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               {indices && (
                 <>
                   <div className="index-chip">
@@ -102,9 +102,31 @@ function App() {
                       </span>
                     )}
                   </div>
+                  {indices.sp500?.price > 0 && (
+                    <div className="index-chip">
+                      <span className="index-name">S&amp;P 500</span>
+                      <span className="index-price">{indices.sp500.price?.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                      {indices.sp500?.dayChangePercent != null && (
+                        <span className={`index-change ${indices.sp500.dayChangePercent >= 0 ? 'pos' : 'neg'}`}>
+                          {indices.sp500.dayChangePercent >= 0 ? '+' : ''}{indices.sp500.dayChangePercent.toFixed(2)}%
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {indices.nasdaq?.price > 0 && (
+                    <div className="index-chip">
+                      <span className="index-name">NASDAQ</span>
+                      <span className="index-price">{indices.nasdaq.price?.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                      {indices.nasdaq?.dayChangePercent != null && (
+                        <span className={`index-change ${indices.nasdaq.dayChangePercent >= 0 ? 'pos' : 'neg'}`}>
+                          {indices.nasdaq.dayChangePercent >= 0 ? '+' : ''}{indices.nasdaq.dayChangePercent.toFixed(2)}%
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
-              <span className="live-badge"><span className="live-dot"></span> Live NSE/BSE</span>
+              <span className="live-badge"><span className="live-dot"></span> Live</span>
               {user ? (
                 <div className="auth-user-chip">
                   <span className="auth-user-name">{user.name}</span>
