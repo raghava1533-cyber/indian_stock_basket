@@ -743,15 +743,31 @@ function BasketDetail({ onReload }) {
                                 </span>
                               )}
                               {stock.recommendationKey && (
-                                <span className={`why-pill ${stock.recommendationKey === 'buy' || stock.recommendationKey === 'strong_buy' ? 'accent' : stock.recommendationKey === 'sell' || stock.recommendationKey === 'strong_sell' ? 'negative' : ''}`}>
-                                  Analyst: {stock.recommendationKey.replace('_', ' ').toUpperCase()}
-                                  {stock.numberOfAnalysts ? ` (${stock.numberOfAnalysts})` : ''}
-                                </span>
+                                  <span className={`why-pill ${stock.recommendationKey === 'buy' || stock.recommendationKey === 'strong_buy' ? 'accent' : stock.recommendationKey === 'sell' || stock.recommendationKey === 'strong_sell' ? 'negative' : ''}`}>
+                                    Analyst: {stock.recommendationKey.replace('_', ' ').toUpperCase()}
+                                    {stock.numberOfAnalysts ? ` (${stock.numberOfAnalysts})` : ''}
+                                    {/* Analysis Rating: show Buy (10) or Hold (5) */}
+                                    {stock.recommendationKey === 'buy' || stock.recommendationKey === 'strong_buy' ? (
+                                      <span style={{ marginLeft: 8, color: '#1D9E75', fontWeight: 600 }}>
+                                        Buy (10)
+                                      </span>
+                                    ) : stock.recommendationKey === 'hold' ? (
+                                      <span style={{ marginLeft: 8, color: '#f59e0b', fontWeight: 600 }}>
+                                        Hold (5)
+                                      </span>
+                                    ) : null}
+                                  </span>
                               )}
                               {stock.targetMeanPrice != null && stock.currentPrice > 0 && (
                                 <span className={`why-pill ${stock.targetMeanPrice > stock.currentPrice ? 'accent' : 'negative'}`}>
                                   Target: {cur}{Math.round(stock.targetMeanPrice).toLocaleString(loc)}
                                   {' '}({stock.targetMeanPrice > stock.currentPrice ? '+' : ''}{((stock.targetMeanPrice - stock.currentPrice) / stock.currentPrice * 100).toFixed(1)}%)
+                                </span>
+                              )}
+                              {/* Show average target price explicitly for clarity */}
+                              {stock.targetMeanPrice != null && (
+                                <span className="why-pill" style={{ background: '#e0e7ff', color: '#3730a3', marginLeft: 8 }}>
+                                  Avg Target Price: {cur}{Math.round(stock.targetMeanPrice).toLocaleString(loc)}
                                 </span>
                               )}
                               {stock.sma50 != null && (
