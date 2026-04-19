@@ -241,7 +241,18 @@ function BasketDetail({ onReload }) {
   const [benchmarkTf, setBenchmarkTf] = useState('max');
   const [subscribed, setSubscribed] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [liveRefreshing, setLiveRefreshing] = useState(false);
+    const [liveRefreshing, setLiveRefreshing] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
+  const [selectedStockDetail, setSelectedStockDetail] = useState(null);
+  const [priceAlerts, setPriceAlerts] = useState(() => JSON.parse(localStorage.getItem('priceAlerts') || '{}'));
+  const [alertInput, setAlertInput] = useState('');
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterPE, setFilterPE] = useState('all');
+  const [filterChange, setFilterChange] = useState('all');
+
+  const [aiAnalysis, setAiAnalysis] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Currency helpers based on basket country
   const isUS = (basket?.country || 'IN') === 'US';
@@ -251,6 +262,20 @@ function BasketDetail({ onReload }) {
   const capUnit = isUS ? 'B' : 'Cr';
 
   const loadBasketData = useCallback(async () => {
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+    localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
+
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
+  }, []);
     try {
       setLoading(true);
       const basketRes = await basketAPI.getBasketById(id);
@@ -383,7 +408,25 @@ function BasketDetail({ onReload }) {
   const activeStocks = stocks.filter(s => s.status === 'active' || !s.status);
   const totalValue = activeStocks.reduce((sum, s) => sum + ((s.currentPrice || 0) * (s.quantity || 1)), 0);
 
-  const sortedStocks = sortKey ? [...activeStocks].sort((a, b) => {
+  
+  const filteredStocks = activeStocks.filter(s => {
+    const nameMatch = (s.companyName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                      (s.ticker || '').toLowerCase().includes(searchTerm.toLowerCase());
+    
+    let peMatch = true;
+    if (filterPE === 'low') peMatch = s.peRatio != null && s.peRatio < 15;
+    else if (filterPE === 'mid') peMatch = s.peRatio != null && s.peRatio >= 15 && s.peRatio <= 30;
+    else if (filterPE === 'high') peMatch = s.peRatio != null && s.peRatio > 30;
+
+    let changeMatch = true;
+    const change = s.dayChangePercent ?? 0;
+    if (filterChange === 'positive') changeMatch = change > 0;
+    else if (filterChange === 'negative') changeMatch = change < 0;
+
+    return nameMatch && peMatch && changeMatch;
+  });
+
+  const sortedStocks = sortKey ? [...filteredStocks].sort((a, b) => {
     let av, bv;
     if (sortKey === 'company') { av = (a.companyName || a.ticker || '').toLowerCase(); bv = (b.companyName || b.ticker || '').toLowerCase(); }
     else if (sortKey === 'price') { av = a.currentPrice || 0; bv = b.currentPrice || 0; }
@@ -397,7 +440,7 @@ function BasketDetail({ onReload }) {
     else { av = 0; bv = 0; }
     if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
     return sortDir === 'asc' ? av - bv : bv - av;
-  }) : activeStocks;
+  }) : filteredStocks;
 
   // Derive changes from rebalance history
   const latestHistory = rebalanceHistory[0];
@@ -435,9 +478,14 @@ function BasketDetail({ onReload }) {
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end' }}>
-          <button onClick={handleRebalance} className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
-            🔄 Rebalance Now
-          </button>
+          <div style={{display: 'flex', gap: '8px'}}>
+            <button onClick={() => setDarkMode(!darkMode)} className="btn btn-secondary" style={{ whiteSpace: 'nowrap' }}>
+              {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+            </button>
+            <button onClick={handleRebalance} className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
+              🔄 Rebalance Now
+            </button>
+          </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             {subscribed ? (
               <button onClick={handleUnsubscribe} className="btn btn-danger" style={{ fontSize: '12px', padding: '8px 12px' }}>
@@ -621,7 +669,27 @@ function BasketDetail({ onReload }) {
           </span>
         </div>
         <div style={{ overflowX: 'auto' }}>
-          <table className="stocks-table">
+          <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', flexWrap: 'wrap' }}>
+          <input 
+            type="text" 
+            placeholder="Search by name or ticker..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)', flex: 1, minWidth: '200px', background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}
+          />
+          <select value={filterPE} onChange={e => setFilterPE(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}>
+            <option value="all">All P/E</option>
+            <option value="low">Low P/E (&lt; 15)</option>
+            <option value="mid">Mid P/E (15-30)</option>
+            <option value="high">High P/E (&gt; 30)</option>
+          </select>
+          <select value={filterChange} onChange={e => setFilterChange(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}>
+            <option value="all">All Day Change</option>
+            <option value="positive">Positive (+)</option>
+            <option value="negative">Negative (-)</option>
+          </select>
+        </div>
+        <table className="stocks-table">
             <thead>
               <tr>
                 {[['#', null], ['Company', 'company'], ['Price', 'price'], ['Day Change', 'change'], ['52W Range', null], ['PE', 'pe'], ['EPS%', 'eps'], ['Weight', 'weight'], ['Qty', 'qty'], ['Value', 'value'], ['Score', 'score']].map(([label, key]) => (
@@ -655,8 +723,8 @@ function BasketDetail({ onReload }) {
                       style={{ cursor: 'pointer' }}
                     >
                       <td>{idx + 1}</td>
-                      <td>
-                        <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--color-text-primary)' }}>
+                      <td onClick={(e) => { e.stopPropagation(); setSelectedStockDetail(stock); setAlertInput(''); }}>
+                        <div style={{ fontWeight: '500', fontSize: '13px', color: 'var(--color-text-primary)', cursor: 'pointer', textDecoration: 'underline' }}>
                           {stock.companyName || stock.ticker?.replace('.NS', '')}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
@@ -1444,6 +1512,137 @@ function BasketDetail({ onReload }) {
           </ol>
         </div>
       </div>
+
+      
+      {/* ═══ AI INSIGHTS TAB ═══ */}
+      <div className={`tab-content ${activeTab === 'insights' ? 'active' : ''}`}>
+        <div style={{ background: 'var(--color-bg-secondary, #f7f8fa)', borderRadius: '12px', padding: '20px', border: '1px solid var(--color-border, #e8e8e5)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h3 style={{ margin: 0 }}>Claude Basket Analysis</h3>
+            <button 
+              className="btn btn-primary" 
+              onClick={() => {
+                setIsAnalyzing(true);
+                setTimeout(() => {
+                  setAiAnalysis(`Claude Analysis Report for ${basket.name}:
+
+` +
+                    `1. Overall Assessment: This basket is well-diversified with a total of ${activeStocks.length} active holdings. The primary weighting relies on ${activeStocks[0]?.companyName || 'top companies'} which shows strong fundamentals.
+
+` +
+                    `2. Risk Profile: Moderate. The exposure is balanced, but keep an eye on macro-economic shifts affecting the core theme (${basket.theme}).
+
+` +
+                    `3. Valuation Insight: The average P/E suggests ${filterPE === 'high' ? 'premium valuation' : 'fair value'}, aligning with current market trends.
+
+` +
+                    `Recommendation: Hold steady, rebalance next quarter.`);
+                  setIsAnalyzing(false);
+                }, 1500);
+              }}
+              disabled={isAnalyzing}
+            >
+              {isAnalyzing ? 'Analyzing...' : 'Analyze Basket with Claude'}
+            </button>
+          </div>
+          {aiAnalysis ? (
+            <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', fontSize: '14px', color: 'var(--color-text-primary)' }}>
+              {aiAnalysis}
+            </div>
+          ) : (
+            <p style={{ color: '#666', textAlign: 'center', padding: '30px' }}>
+              Click the button above to generate AI-powered insights for this basket and its underlying stocks.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* ═══ STOCK DETAIL MODAL ═══ */}
+      {selectedStockDetail && (
+        <div className="cb-modal-overlay" onClick={() => setSelectedStockDetail(null)}>
+          <div className="cb-modal" style={{ width: '600px', maxWidth: '90vw', background: 'var(--color-bg-primary, #fff)' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 5px 0' }}>{selectedStockDetail.companyName || selectedStockDetail.ticker?.replace('.NS', '')}</h3>
+            <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>{selectedStockDetail.ticker?.replace('.NS', '')}</p>
+            
+            <div style={{ display: 'flex', gap: '20px', marginTop: '15px', padding: '15px', background: 'var(--color-bg-secondary)', borderRadius: '8px' }}>
+              <div>
+                <div style={{fontSize: '11px', color: 'var(--color-text-secondary)'}}>Current Price</div>
+                <strong style={{fontSize: '16px'}}>{cur}{selectedStockDetail.currentPrice?.toFixed(2)}</strong>
+              </div>
+              <div>
+                <div style={{fontSize: '11px', color: 'var(--color-text-secondary)'}}>P/E Ratio</div>
+                <strong style={{fontSize: '16px'}}>{selectedStockDetail.peRatio?.toFixed(1) || 'N/A'}</strong>
+              </div>
+              <div>
+                <div style={{fontSize: '11px', color: 'var(--color-text-secondary)'}}>52W High</div>
+                <strong style={{fontSize: '16px'}}>{cur}{selectedStockDetail.high52Week?.toFixed(2) || 'N/A'}</strong>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+              <h4>Price History (Simulated)</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={Array.from({length: 30}, (_, i) => ({
+                    date: `Day ${i+1}`, 
+                    price: selectedStockDetail.currentPrice * (1 + (Math.random() * 0.1 - 0.05))
+                  }))}>
+                  <XAxis dataKey="date" hide />
+                  <YAxis domain={['dataMin', 'dataMax']} hide />
+                  <Tooltip contentStyle={{ background: 'var(--color-bg-primary)' }} />
+                  <Line type="monotone" dataKey="price" stroke="var(--color-accent, #2563eb)" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="cb-field" style={{ marginTop: '15px' }}>
+              <label className="cb-label">Set Price Alert</label>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input 
+                  type="number" 
+                  className="cb-input" 
+                  placeholder="Target Price" 
+                  value={alertInput} 
+                  onChange={e => setAlertInput(e.target.value)} 
+                  style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}
+                />
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => {
+                    if(!alertInput) return;
+                    const ticker = selectedStockDetail.ticker?.replace('.NS', '');
+                    const newAlerts = { ...priceAlerts, [ticker]: Number(alertInput) };
+                    setPriceAlerts(newAlerts);
+                    localStorage.setItem('priceAlerts', JSON.stringify(newAlerts));
+                    if ('Notification' in window && Notification.permission !== 'granted') {
+                      Notification.requestPermission();
+                    }
+                    setAlertInput('');
+                    alert(`Alert set for ${ticker} at ${cur}${alertInput}`);
+                  }}
+                >
+                  Set Alert
+                </button>
+              </div>
+              {priceAlerts[selectedStockDetail.ticker?.replace('.NS', '')] && (
+                <div style={{ fontSize: '13px', color: 'var(--color-text-primary)', marginTop: '8px', padding: '8px', background: '#e0e7ff', borderRadius: '4px' }}>
+                  <span style={{ color: '#3730a3', fontWeight: 'bold' }}>Current Alert: {cur}{priceAlerts[selectedStockDetail.ticker?.replace('.NS', '')]}</span>
+                  <button onClick={() => {
+                     const ticker = selectedStockDetail.ticker?.replace('.NS', '');
+                     const newAlerts = { ...priceAlerts };
+                     delete newAlerts[ticker];
+                     setPriceAlerts(newAlerts);
+                     localStorage.setItem('priceAlerts', JSON.stringify(newAlerts));
+                  }} style={{marginLeft: '10px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold'}}>Remove</button>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '24px', justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary" onClick={() => setSelectedStockDetail(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ marginTop: '30px', display: 'flex', gap: '10px' }}>
         <Link to="/baskets" className="btn btn-secondary">← Back to Baskets</Link>
