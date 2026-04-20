@@ -63,13 +63,29 @@ function MoverRow({ rank, ticker, name, price, pct, cur, locale }) {
 }
 
 function Dashboard({ baskets, indices }) {
-  const [liveSummary, setLiveSummary] = useState({});
-  const [country, setCountry]         = useState('IN');
 
+  const [liveSummary, setLiveSummary] = useState({});
+  const [country, setCountry] = useState('IN');
+  const [indicesLive, setIndicesLive] = useState(indices || null);
+
+  // Fetch live summary once
   useEffect(() => {
     basketAPI.getLiveSummary()
       .then(res => setLiveSummary(res.data || {}))
       .catch(() => {});
+  }, []);
+
+  // Poll indices every 5 seconds
+  useEffect(() => {
+    let mounted = true;
+    const fetchIndices = () => {
+      basketAPI.getMarketIndices()
+        .then(res => { if (mounted) setIndicesLive(res.data); })
+        .catch(() => {});
+    };
+    fetchIndices();
+    const interval = setInterval(fetchIndices, 5000);
+    return () => { mounted = false; clearInterval(interval); };
   }, []);
 
   const currencySymbol    = country === 'US' ? '$' : '₹';
@@ -123,11 +139,15 @@ function Dashboard({ baskets, indices }) {
     .sort((a, b) => b.pct - a.pct)[0];
 
   const shownIndices = country === 'IN'
-    ? [{ name: 'NIFTY 50', data: indices?.nifty50, locale: 'en-IN' },
-       { name: 'BANK NIFTY', data: indices?.bankNifty, locale: 'en-IN' }]
-    : [{ name: 'S&P 500', data: indices?.sp500, locale: 'en-US' },
-       { name: 'NASDAQ',  data: indices?.nasdaq, locale: 'en-US' },
-       { name: 'DOW',     data: indices?.dow,    locale: 'en-US' }];
+    ? [
+        { name: 'NIFTY 50', data: indicesLive?.nifty50, locale: 'en-IN' },
+        { name: 'BANK NIFTY', data: indicesLive?.bankNifty, locale: 'en-IN' }
+      ]
+    : [
+        { name: 'S&P 500', data: indicesLive?.sp500, locale: 'en-US' },
+        { name: 'NASDAQ',  data: indicesLive?.nasdaq, locale: 'en-US' },
+        { name: 'DOW',     data: indicesLive?.dow,    locale: 'en-US' }
+      ];
 
   return (
     <div className="dash-wrap">
