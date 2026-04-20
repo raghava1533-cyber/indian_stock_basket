@@ -283,6 +283,20 @@ router.get('/live-summary', async (req, res) => {
     const dayChanges = await getBatchDayChanges(allTickers);
     const hasData = Object.keys(dayChanges).length > 0;
 
+    // Helper: try to resolve a dayChanges entry for a ticker by direct key
+    // or by matching the base symbol (ignoring exchange suffixes like .NS /.BO).
+    const findDayChange = (ticker) => {
+      if (!ticker) return null;
+      if (dayChanges[ticker]) return dayChanges[ticker];
+      const base = String(ticker).split(/\.|:/)[0].toUpperCase();
+      for (const k of Object.keys(dayChanges)) {
+        if (!k) continue;
+        const kbase = String(k).split(/\.|:/)[0].toUpperCase();
+        if (kbase === base) return dayChanges[k];
+      }
+      return null;
+    };
+
     const summary = {};
     for (const basket of baskets) {
       if (!hasData) { summary[basket._id] = null; continue; }
@@ -291,7 +305,7 @@ router.get('/live-summary', async (req, res) => {
       // Compute total basket value using stored currentPrice, but fall back to
       // live price reported by getBatchDayChanges when stored price is missing.
       const totalValue = stocks.reduce((acc, st) => {
-        const dcEntry = dayChanges[st.ticker];
+        const dcEntry = findDayChange(st.ticker);
         const livePrice = dcEntry && dcEntry.price != null ? dcEntry.price : null;
         const price = (st.currentPrice != null && st.currentPrice > 0) ? st.currentPrice : (livePrice != null ? livePrice : 0);
         return acc + price * (st.quantity || 1);
@@ -302,7 +316,7 @@ router.get('/live-summary', async (req, res) => {
       let weightedSum = 0;
       let coveredWeight = 0;
       for (const st of stocks) {
-        const dcEntry = dayChanges[st.ticker];
+        const dcEntry = findDayChange(st.ticker);
         // dayChanges returns { pct, price } — support both object and legacy numeric
         const pct = dcEntry != null ? (typeof dcEntry === 'object' ? dcEntry.pct : dcEntry) : null;
         const livePrice = dcEntry && dcEntry.price != null ? dcEntry.price : null;
