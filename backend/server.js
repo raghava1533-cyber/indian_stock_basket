@@ -87,7 +87,7 @@ app.get('/health', (req, res) => {
 // ── Live Market Indices (Nifty 50, Bank Nifty) ─────────────────────────────
 let _indicesCache = null;
 let _indicesCacheTime = 0;
-const INDICES_CACHE_TTL = 60 * 1000; // 1 minute
+const INDICES_CACHE_TTL = 10 * 1000; // 10 seconds
 
 app.get('/api/market/indices', async (req, res) => {
   try {
