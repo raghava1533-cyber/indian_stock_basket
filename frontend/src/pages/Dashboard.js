@@ -75,7 +75,13 @@ function Dashboard({ baskets, indices }) {
       .catch(() => {});
   }, []);
 
-  // Poll indices every 5 seconds
+  const fetchIndicesManual = () => {
+    basketAPI.getMarketIndices()
+      .then(res => setIndicesLive(res.data))
+      .catch(() => {});
+  };
+
+  // Poll indices every 10 seconds
   useEffect(() => {
     let mounted = true;
     const fetchIndices = () => {
@@ -84,7 +90,7 @@ function Dashboard({ baskets, indices }) {
         .catch(() => {});
     };
     fetchIndices();
-    const interval = setInterval(fetchIndices, 5000);
+    const interval = setInterval(fetchIndices, 10000);
     return () => { mounted = false; clearInterval(interval); };
   }, []);
 
@@ -165,8 +171,11 @@ function Dashboard({ baskets, indices }) {
       </div>
 
       <section className="dash-section">
-        <div className="dash-section-title">
-          {country === 'IN' ? '\uD83D\uDCCA Indian Indices' : '\uD83D\uDCCA US Indices'}
+        <div className="dash-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{country === 'IN' ? '\uD83D\uDCCA Indian Indices' : '\uD83D\uDCCA US Indices'}</span>
+          <button onClick={fetchIndicesManual} style={{ padding: '4px 10px', fontSize: '13px', cursor: 'pointer', background: 'transparent', border: '1px solid var(--border-color, #ccc)', borderRadius: '4px', color: 'inherit' }} title="Refresh Indices">
+            🔄 Refresh
+          </button>
         </div>
         <div className="idx-tiles-row">
           {shownIndices.map(({ name, data, locale: loc }) => (
