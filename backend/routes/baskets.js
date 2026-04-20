@@ -337,6 +337,25 @@ router.get('/live-summary', async (req, res) => {
   }
 });
 
+// DEBUG: show collected tickers and a sample of day-change results
+// (temporary endpoint to help diagnose why basket "Today" values are null)
+router.get('/debug-live-summary', async (req, res) => {
+  try {
+    const baskets = await Basket.find();
+    const allTickers = [...new Set(baskets.flatMap(b => b.stocks.map(s => s.ticker)))];
+    const dayChanges = await getBatchDayChanges(allTickers);
+    const keys = Object.keys(dayChanges || {});
+    const sample = {};
+    for (let i = 0; i < Math.min(50, keys.length); i++) {
+      const k = keys[i];
+      sample[k] = dayChanges[k];
+    }
+    res.json({ allTickers, totalTickers: allTickers.length, totalDayChanges: keys.length, sampleDayChanges: sample });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // ─── Rebalance ALL baskets for the logged-in user ────────────────────────────
 // Only rebalances baskets that are due (30+ days since last rebalance)
 // Results are scoped to the user — other users' baskets are not touched
