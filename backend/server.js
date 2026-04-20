@@ -92,7 +92,8 @@ const INDICES_CACHE_TTL = 10 * 1000; // 10 seconds
 app.get('/api/market/indices', async (req, res) => {
   try {
     const now = Date.now();
-    if (_indicesCache && now - _indicesCacheTime < INDICES_CACHE_TTL) {
+    const force = req.query?.force === '1' || !!req.query?.t;
+    if (_indicesCache && !force && now - _indicesCacheTime < INDICES_CACHE_TTL) {
       return res.json(_indicesCache);
     }
     const [nifty, bank, sp500, nasdaq, dow] = await Promise.all([
@@ -115,6 +116,10 @@ app.get('/api/market/indices', async (req, res) => {
     res.json(payload);
   } catch (err) {
     console.error('[indices]', err.message);
+    if (_indicesCache) {
+      console.warn('[indices] returning stale cached indices due to fetch error');
+      return res.json(_indicesCache);
+    }
     res.status(500).json({ message: 'Could not fetch indices' });
   }
 });

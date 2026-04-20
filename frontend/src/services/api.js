@@ -94,7 +94,14 @@ export const basketAPI = {
   })(),
   getBasketNews: (id) => api.get(`/baskets/${id}/news`),
   getBasketBenchmark: (id, tf) => api.get(`/baskets/${id}/benchmark${tf ? `?tf=${tf}` : ''}`),
-  getMarketIndices: () => api.get('/market/indices'),
+  getMarketIndices: (force = false) => {
+    const config = {};
+    if (force) {
+      config.params = { t: Date.now() };
+      config.headers = { 'Cache-Control': 'no-cache', Pragma: 'no-cache' };
+    }
+    return api.get('/market/indices', config);
+  },
   createCustomBasket: (data, token) => api.post('/baskets/create-custom', data, {
     headers: { Authorization: `Bearer ${token}` }
   }),

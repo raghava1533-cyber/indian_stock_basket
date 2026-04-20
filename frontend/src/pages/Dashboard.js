@@ -85,9 +85,9 @@ function Dashboard({ baskets, indices }) {
   useEffect(() => {
     let mounted = true;
     const fetchIndices = () => {
-      basketAPI.getMarketIndices()
+      basketAPI.getMarketIndices(true)
         .then(res => { if (mounted) setIndicesLive(res.data); })
-        .catch(() => {});
+        .catch(err => { console.warn('Failed to fetch indices', err?.message || err); });
     };
     fetchIndices();
     const interval = setInterval(fetchIndices, 10000);
@@ -155,6 +155,9 @@ function Dashboard({ baskets, indices }) {
         { name: 'DOW',     data: indicesLive?.dow,    locale: 'en-US' }
       ];
 
+  const _indicesUpdated = indicesLive?.updatedAt || indices?.updatedAt;
+  const indicesUpdatedStr = _indicesUpdated ? new Date(_indicesUpdated).toLocaleString() : null;
+
   return (
     <div className="dash-wrap">
       <div className="sc-page-header">
@@ -172,7 +175,12 @@ function Dashboard({ baskets, indices }) {
 
       <section className="dash-section">
         <div className="dash-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>{country === 'IN' ? '\uD83D\uDCCA Indian Indices' : '\uD83D\uDCCA US Indices'}</span>
+          <span>
+            {country === 'IN' ? '\uD83D\uDCCA Indian Indices' : '\uD83D\uDCCA US Indices'}
+            {indicesUpdatedStr && (
+              <small style={{ marginLeft: 10, color: '#666', fontSize: 12 }}>Last: {indicesUpdatedStr}</small>
+            )}
+          </span>
           <button onClick={fetchIndicesManual} style={{ padding: '4px 10px', fontSize: '13px', cursor: 'pointer', background: 'transparent', border: '1px solid var(--border-color, #ccc)', borderRadius: '4px', color: 'inherit' }} title="Refresh Indices">
             🔄 Refresh
           </button>
@@ -181,7 +189,7 @@ function Dashboard({ baskets, indices }) {
           {shownIndices.map(({ name, data, locale: loc }) => (
             <IndexTile key={name} name={name} data={data} locale={loc} />
           ))}
-          {(!indices || shownIndices.every(i => !i.data?.price)) && (
+          {(!indicesLive || shownIndices.every(i => !i.data?.price)) && (
             <div className="dash-placeholder">Fetching live index data…</div>
           )}
         </div>
