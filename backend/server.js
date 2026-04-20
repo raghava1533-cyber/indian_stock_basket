@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const { rebalanceBasket } = require('./services/rebalanceService');
 const { testEmailConnection } = require('./services/emailService');
 const { getEnrichedUniverseData } = require('./services/stockDataService');
+const { getNSEIndexQuote } = require('./services/nseService');
 const axios = require('axios');
 const Basket = require('./models/Basket');
 
@@ -16,9 +17,25 @@ const Basket = require('./models/Basket');
 const YF_HEADERS = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' };
 
 const fetchIndexQuote = async (ticker) => {
+  // Prefer NSE API for Indian indices
+  if (ticker === '^NSEI' || ticker === '^NSEBANK') {
+    try {
+      const idx = ticker === '^NSEI' ? 'NIFTY' : 'BANKNIFTY';
+      const nres = await getNSEIndexQuote(idx);
+      if (nres && nres.price != null) {
+        console.debug(`[indices][nse] ${ticker} price=${nres.price} time=${nres.timestamp || 'n/a'}`);
+        return { price: nres.price, dayChange: null, dayChangePercent: null };
+      }
+    } catch (e) {
+      console.warn('[indices] NSE index fetch failed, falling back to Yahoo:', e.message || e);
+    }
+  }
+
+  // Fallback to Yahoo Finance
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
+  // Request intraday 1-minute data for up-to-date prices
   const resp = await axios.get(url, {
-    params: { interval: '1d', range: '5d' },
+    params: { interval: '1m', range: '1d' },
     headers: YF_HEADERS,
     timeout: 12000,
   });
@@ -34,6 +51,13 @@ const fetchIndexQuote = async (ticker) => {
     : (meta.chartPreviousClose ?? meta.previousClose ?? null);
   const change    = prev ? price - prev : null;
   const changePct = prev && prev > 0 ? ((price - prev) / prev) * 100 : null;
+  try {
+    const t = meta.regularMarketTime || meta.regularMarketPreviousClose || null;
+    const tstr = t ? new Date((t || 0) * 1000).toISOString() : 'n/a';
+    console.debug(`[indices] ${ticker} price=${price} prev=${prev} pct=${changePct} time=${tstr}`);
+  } catch (e) {
+    // ignore logging errors
+  }
   return { price, dayChange: change, dayChangePercent: changePct };
 };
 

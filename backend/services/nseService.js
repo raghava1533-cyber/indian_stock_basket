@@ -133,3 +133,28 @@ const getBatchNSEQuotes = async (symbols) => {
 };
 
 module.exports = { getBatchNSEQuotes, getNSEQuote, refreshSession };
+
+// ── Index quote helper (NIFTY, BANKNIFTY) ──────────────────────────────────
+/**
+ * Fetch index value from NSE option-chain API (underlyingValue).
+ * indexSymbol: 'NIFTY' or 'BANKNIFTY'
+ */
+async function getNSEIndexQuote(indexSymbol) {
+  try {
+    await getSession();
+    const url = `${NSE_BASE}/api/option-chain-indices?symbol=${encodeURIComponent(indexSymbol)}`;
+    const resp = await axios.get(url, {
+      headers: { ...NSE_HEADERS, Cookie: _cookies || '' },
+      timeout: 10000,
+    });
+    const rec = resp.data?.records || {};
+    const price = rec.underlyingValue ?? null;
+    const timestamp = rec.timestamp ?? null;
+    return { price, timestamp, raw: resp.data };
+  } catch (err) {
+    console.warn(`[NSE] getNSEIndexQuote ${indexSymbol} failed: ${err.message}`);
+    return null;
+  }
+}
+
+module.exports = { getBatchNSEQuotes, getNSEQuote, refreshSession, getNSEIndexQuote };

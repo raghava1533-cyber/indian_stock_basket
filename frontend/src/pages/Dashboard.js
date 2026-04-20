@@ -25,7 +25,7 @@ function IndexTile({ name, data, locale }) {
     <div className="idx-tile">
       <div className="idx-tile-name">{name}</div>
       <div className="idx-tile-price">
-        {data.price.toLocaleString(locale, { maximumFractionDigits: 0 })}
+        {data.price.toLocaleString(locale, { maximumFractionDigits: 2 })}
       </div>
       <div className="idx-tile-change" style={{ color: clr }}>
         {pct != null && <span>{isUp ? '▲' : '▼'} {isUp ? '+' : ''}{pct.toFixed(2)}%</span>}
