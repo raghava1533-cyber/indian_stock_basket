@@ -261,7 +261,7 @@ function BasketDetail({ onReload }) {
   const investBase = isUS ? 1000 : 100000;
   const capUnit = isUS ? 'B' : 'Cr';
 
-  const loadBasketData = useCallback(async () => {
+  // --- Effects for dark mode and notification permission ---
   useEffect(() => {
     if (darkMode) {
       document.body.classList.add('dark-mode');
@@ -276,6 +276,8 @@ function BasketDetail({ onReload }) {
       Notification.requestPermission();
     }
   }, []);
+
+  const loadBasketData = useCallback(async () => {
     try {
       setLoading(true);
       const basketRes = await basketAPI.getBasketById(id);
