@@ -133,7 +133,7 @@ app.get('/api/market/indices', async (req, res) => {
       sp500:     { name: 'S&P 500',    ...sp500 },
       nasdaq:    { name: 'NASDAQ',     ...nasdaq },
       dow:       { name: 'DOW',        ...dow },
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     };
     _indicesCache = payload;
     _indicesCacheTime = now;

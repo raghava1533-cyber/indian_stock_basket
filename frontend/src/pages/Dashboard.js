@@ -155,8 +155,22 @@ function Dashboard({ baskets, indices }) {
         { name: 'DOW',     data: indicesLive?.dow,    locale: 'en-US' }
       ];
 
+  // Handle UTC ISO string and show 'now' if in the future
   const _indicesUpdated = indicesLive?.updatedAt || indices?.updatedAt;
-  const indicesUpdatedStr = _indicesUpdated ? new Date(_indicesUpdated).toLocaleString() : null;
+  let indicesUpdatedStr = null;
+  if (_indicesUpdated) {
+    try {
+      const updatedDate = new Date(_indicesUpdated);
+      const now = new Date();
+      if (updatedDate > now) {
+        indicesUpdatedStr = 'now';
+      } else {
+        indicesUpdatedStr = updatedDate.toLocaleString();
+      }
+    } catch {
+      indicesUpdatedStr = String(_indicesUpdated);
+    }
+  }
 
   return (
     <div className="dash-wrap">
