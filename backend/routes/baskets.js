@@ -287,29 +287,16 @@ router.get('/live-summary', async (req, res) => {
     for (const basket of baskets) {
       if (!hasData) { summary[basket._id] = null; continue; }
       const stocks = basket.stocks || [];
-
-      // Compute total basket value using stored currentPrice, but fall back to
-      // live price reported by getBatchDayChanges when stored price is missing.
-      const totalValue = stocks.reduce((acc, st) => {
-        const dcEntry = dayChanges[st.ticker];
-        const livePrice = dcEntry && dcEntry.price != null ? dcEntry.price : null;
-        const price = (st.currentPrice != null && st.currentPrice > 0) ? st.currentPrice : (livePrice != null ? livePrice : 0);
-        return acc + price * (st.quantity || 1);
-      }, 0);
-
+      const totalValue = stocks.reduce((s, st) => s + (st.currentPrice || 0) * (st.quantity || 1), 0);
       if (totalValue <= 0) { summary[basket._id] = null; continue; }
 
       let weightedSum = 0;
       let coveredWeight = 0;
       for (const st of stocks) {
-        const dcEntry = dayChanges[st.ticker];
-        // dayChanges returns { pct, price } — support both object and legacy numeric
-        const pct = dcEntry != null ? (typeof dcEntry === 'object' ? dcEntry.pct : dcEntry) : null;
-        const livePrice = dcEntry && dcEntry.price != null ? dcEntry.price : null;
-        const price = (st.currentPrice != null && st.currentPrice > 0) ? st.currentPrice : (livePrice != null ? livePrice : 0);
-        if (pct != null && price > 0) {
-          const w = (price * (st.quantity || 1)) / totalValue;
-          weightedSum += pct * w;
+        const dc = dayChanges[st.ticker];
+        if (dc != null) {
+          const w = ((st.currentPrice || 0) * (st.quantity || 1)) / totalValue;
+          weightedSum += dc * w;
           coveredWeight += w;
         }
       }
