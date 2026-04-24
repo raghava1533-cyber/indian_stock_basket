@@ -23,8 +23,14 @@ const fetchIndexQuote = async (ticker) => {
       const idx = ticker === '^NSEI' ? 'NIFTY' : 'BANKNIFTY';
       const nres = await getNSEIndexQuote(idx);
       if (nres && nres.price != null) {
-        console.debug(`[indices][nse] ${ticker} price=${nres.price} time=${nres.timestamp || 'n/a'}`);
-        return { price: nres.price, dayChange: null, dayChangePercent: null };
+        // Market closed detection: if now is outside 9:15-15:30 IST (03:45-10:00 UTC) or no timestamp
+        const now = new Date();
+        const utcHour = now.getUTCHours();
+        const utcMin = now.getUTCMinutes();
+        // Market open: 03:45 <= now <= 10:00 UTC (9:15-15:30 IST)
+        const isOpen = (utcHour > 3 || (utcHour === 3 && utcMin >= 45)) && (utcHour < 10 || (utcHour === 10 && utcMin === 0));
+        // If market is closed, set dayChange and dayChangePercent to 0
+        return { price: nres.price, dayChange: isOpen ? null : 0, dayChangePercent: isOpen ? null : 0 };
       }
     } catch (e) {
       console.warn('[indices] NSE index fetch failed, falling back to Yahoo:', e.message || e);
