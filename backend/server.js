@@ -29,8 +29,30 @@ const fetchIndexQuote = async (ticker) => {
         const utcMin = now.getUTCMinutes();
         // Market open: 03:45 <= now <= 10:00 UTC (9:15-15:30 IST)
         const isOpen = (utcHour > 3 || (utcHour === 3 && utcMin >= 45)) && (utcHour < 10 || (utcHour === 10 && utcMin === 0));
-        // If market is closed, set dayChange and dayChangePercent to 0
-        return { price: nres.price, dayChange: isOpen ? null : 0, dayChangePercent: isOpen ? null : 0 };
+        if (isOpen) {
+          return { price: nres.price, dayChange: null, dayChangePercent: null };
+        } else {
+          // Market closed: get dayChange and percent from Yahoo Finance
+          try {
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
+            const resp = await axios.get(url, {
+              params: { interval: '1d', range: '5d' },
+              headers: YF_HEADERS,
+              timeout: 12000,
+            });
+            const result = resp.data?.chart?.result?.[0];
+            const meta = result?.meta || {};
+            const closes = (result?.indicators?.quote?.[0]?.close || []).filter(c => c != null);
+            const price = meta.regularMarketPrice ?? (closes.length ? closes[closes.length - 1] : 0);
+            const prev = closes.length >= 2 ? closes[closes.length - 2] : (meta.chartPreviousClose ?? meta.previousClose ?? null);
+            const change = prev ? price - prev : null;
+            const changePct = prev && prev > 0 ? ((price - prev) / prev) * 100 : null;
+            return { price: nres.price, dayChange: change, dayChangePercent: changePct };
+          } catch (e) {
+            // fallback: just return price, no change
+            return { price: nres.price, dayChange: null, dayChangePercent: null };
+          }
+        }
       }
     } catch (e) {
       console.warn('[indices] NSE index fetch failed, falling back to Yahoo:', e.message || e);
